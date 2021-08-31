@@ -1,0 +1,19 @@
+name: Build Docker container
+env:
+  port: 8000
+on:
+  push:
+    branches:
+      - release
+      - master
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker compose up -d
+        name: Building service
+      - name: Waiting server to startup
+        run: sleep 50
+      - run: "curl http://127.0.0.1:${{ env.port }}"
+        name: Checking if webpage is up
