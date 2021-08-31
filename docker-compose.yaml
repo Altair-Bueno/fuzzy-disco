@@ -1,0 +1,5 @@
+version: "3.7"
+services:
+  fuzzy-disco:
+    build:
+      dockerfile: ./Dockerfile
