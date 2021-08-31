@@ -2,3 +2,5 @@
 .idea/
 # Cargo build
 target/
+# dev folders
+static/
