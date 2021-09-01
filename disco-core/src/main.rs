@@ -1,4 +1,6 @@
 mod post;
+mod user;
+
 #[macro_use] extern crate rocket;
 
 use crate::post::title::Title;

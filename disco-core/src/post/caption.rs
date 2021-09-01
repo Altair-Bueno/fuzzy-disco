@@ -34,6 +34,7 @@ impl Caption {
     }
 }
 
+#[cfg(test)]
 mod test {
     use crate::post::caption::Caption;
     #[test]
