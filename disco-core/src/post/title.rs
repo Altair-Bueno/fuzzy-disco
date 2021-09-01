@@ -4,12 +4,31 @@ use serde::Serialize;
 use crate::post::result;
 use rocket::serde::de::Error;
 use rocket::serde::Deserializer;
-use validator::Validate;
+use validator::{Validate, ValidationError};
+use regex::Regex;
+use crate::post::result::PostError;
+use lazy_static::lazy_static;
 
+lazy_static!{
+    static ref RE: Regex = Regex::new(r"^(\S+.*\S)$").unwrap();
+}
+const MAX_TITLE_LENGTH: usize= 24;
 
-#[derive(Ord, PartialOrd, PartialEq,Eq, Debug, Serialize, Deserialize)]
+#[derive(Validate, Ord, PartialOrd, PartialEq,Eq, Debug, Serialize, Deserialize)]
 pub struct Title {
+    #[validate(custom = "validate_title")]
     title: String
+}
+
+fn validate_title (s : &str)-> Result<(),ValidationError> {
+    let reg = RE.is_match(s);
+    if reg && s.len() <= MAX_TITLE_LENGTH {
+        Ok(())
+    } else if reg {
+        Err(ValidationError::new("Title too small"))
+    } else {
+        Err(ValidationError::new("Title is not trimmed"))
+    }
 }
 
 impl FromStr for Title {
@@ -22,13 +41,9 @@ impl FromStr for Title {
 
 impl Title {
     pub fn new(s:&str) -> result::Result<Title> {
-        let trim = s.trim();
-        if trim.is_empty() {
-            Err(crate::post::result::PostError::InvalidTitle)
-        } else {
-            Ok(Title{
-                title: trim.to_string()
-            })
+        match validate_title(s) {
+            Ok(_) => Ok(Title { title: s.to_string()  }),
+            Err(_) => Err(PostError::InvalidTitle)
         }
     }
     pub fn get_title(&self) -> &str {
@@ -56,13 +71,20 @@ mod test {
     #[test]
     pub fn non_empty() {
         let list = vec![
-            (" hello world    ", "hello world"),
-            ("favourite music", "favourite music"),
-            ("Valid char&", "Valid char&")
+            " hello world    ",
+            "        world",
+            "         world     "
         ];
-        for (s, expect) in list {
-            let title = Title::new(s).unwrap();
-            assert_eq!(title.get_title(), expect)
+        for s in list {
+            let title = Title::new(s);
+            assert!(matches!(title,Err(_)))
         }
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn long() {
+        let string = "iksadfjlisfdajkhlsdfafsdhjkfdsjkhfdsajkhfsdahjkfdsahjkfdasfdsjkhadfsajkhldfasjkhdfsajkhsdfakhjldfsajkhfdsahjkdfsa";
+        let title = Title::new(string).unwrap();
     }
 }
