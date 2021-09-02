@@ -6,4 +6,3 @@ mod alias;
 mod password;
 pub mod result;
 mod user;
-

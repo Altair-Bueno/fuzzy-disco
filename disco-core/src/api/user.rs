@@ -1,7 +1,8 @@
-use serde::Serialize;
-use serde::Deserialize;
 use chrono::{DateTime, Utc};
-#[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq,Default)]
+use serde::Deserialize;
+use serde::Serialize;
+
+#[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Default)]
 pub struct User {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<String>,
@@ -12,7 +13,7 @@ pub struct User {
     #[serde(skip_serializing_if = "Option::is_none")]
     posts_id: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    creation_date: Option<DateTime<Utc>>
+    creation_date: Option<DateTime<Utc>>,
 }
 impl User {
     pub fn build() -> User {
@@ -57,6 +58,6 @@ mod test {
     #[test]
     pub fn serializing() {
         let json = "{\"creation_date\": \"2012-04-23T18:25:43.511Z\"}";
-        let _:User = serde_json::from_str(json).unwrap();
+        let _: User = serde_json::from_str(json).unwrap();
     }
 }

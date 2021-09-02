@@ -1,12 +1,12 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq,Default)]
+#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq, Default)]
 pub struct Post {
     id: Option<String>,
     title: Option<String>,
     caption: Option<String>,
-    author_id : Option<String>,
+    author_id: Option<String>,
     audio_path: Option<String>,
     photo_path: Option<String>,
 }
@@ -60,6 +60,6 @@ mod test {
     #[test]
     pub fn test() {
         let json = "{  \"id\": \"278348jfwduhq32r\",  \"title\": \"Hello world\",  \"caption\": \"The caption for the text\",  \"author_id\": \"u8ssdafjjk23uh4ro\",  \"audio_path\": \"/route\",  \"photo_path\": \"/route/photo\"}";
-        let _ : Post = serde_json::from_str(json).unwrap();
+        let _: Post = serde_json::from_str(json).unwrap();
     }
 }
