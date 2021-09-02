@@ -1,42 +1,42 @@
 #[macro_use]
 extern crate rocket;
 
+use std::future::Future;
+
 use mongodb::bson::doc;
 use mongodb::options::ClientOptions;
+use rocket::fs::FileServer;
 use rocket::futures::TryStreamExt;
 
 use crate::mongo::post::Post;
 use crate::mongo::post::Title;
 
-mod mongo;
 mod api;
 mod auth;
+mod init;
+mod mongo;
+mod server;
 
 #[rocket::main]
-async fn main() {
-    let mongo_username_pass = std::env::var("MONGO_USER_PASS")
-        .map(|x| format!("{}@", x))
-        .unwrap_or("".to_string());
-    let mongo_at = std::env::var("MONGO_IP_PORT").unwrap_or("0.0.0.0:27019".to_string());
+async fn main() -> Result<(), String> {
+    // Setting up mongodb connection
+    let mongodb_client = match init::init_mongo_client() {
+        Ok(client) => client,
+        Err(err) => return Err(format!("{:?}", err)),
+    };
+    let mongo_database = mongodb_client.database("fuzzy-disco");
+    let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
+    let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
 
-    let url = format!("mongodb+srv://{}{}/", mongo_username_pass, mongo_at);
+    // Setting up Redis connection
+    // todo https://docs.rs/redis/0.21.1/redis/
 
-    let mongo = mongodb::Client::with_uri_str(url).await.unwrap();
-    let collection = mongo.database("Test").collection::<Post>("Test");
-    let doc = Post::new(
-        "Hello world".parse().unwrap(),
-        "Caption text".parse().unwrap(),
-        "joselito el panadero".parse().unwrap(),
-        "/path/to/file".to_string(),
-        "path/to/photo".to_string(),
-    );
-    let res = collection.insert_one(doc, None).await;
-    println!("{:?}", res);
-
-    let filter = doc! { "title": "Hello world" };
-    let mut cursor = collection.find(filter, None).await.unwrap();
-
-    while let Some(p) = cursor.try_next().await.unwrap() {
-        println!("title: {:?}", p);
+    let rocket_result = rocket::build()
+        .mount("/", FileServer::from("static"))
+        .launch()
+        .await;
+    match rocket_result {
+        Err(e) => Err(format!("{:?}", e)),
+        _ => Ok(()),
     }
 }

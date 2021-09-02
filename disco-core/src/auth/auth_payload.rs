@@ -15,7 +15,6 @@ pub struct AuthPayload {
     expires: DateTime<Utc>,
 }
 
-
 impl AuthPayload {
     pub fn new(user_id: ObjectId) -> Self {
         let created = Utc::now();

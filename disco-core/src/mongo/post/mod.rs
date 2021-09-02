@@ -6,4 +6,3 @@ mod caption;
 mod post;
 pub mod result;
 mod title;
-
