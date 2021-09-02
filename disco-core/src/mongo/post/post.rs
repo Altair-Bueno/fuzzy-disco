@@ -61,4 +61,10 @@ mod test {
 
         assert_eq!(des, post)
     }
+
+    #[test]
+    pub fn deserialize() {
+        let json = "{\"_id\":{\"$oid\":\"612fc6d4b57f3339cf097434\"},\"title\":\"Hello world\",\"caption\":\"Caption text\",\"author_id\":{\"$oid\":\"612fc6d4b57f3339cf097434\"},\"audio_path\":\"/path/to/file\",\"photo_path\":\"path/to/photo\"}";
+        let _:Post = serde_json::from_str(json).unwrap();
+    }
 }

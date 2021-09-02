@@ -1,1 +1,2 @@
-pub mod payloads;
+pub mod get;
+pub mod result;

@@ -7,6 +7,7 @@ use rocket::futures::TryStreamExt;
 
 use crate::mongo::post::Post;
 use crate::mongo::post::Title;
+use rocket::fs::FileServer;
 
 mod mongo;
 mod api;
@@ -14,6 +15,12 @@ mod auth;
 
 #[rocket::main]
 async fn main() {
+    rocket::build()
+        .mount("/",FileServer::from("static"))
+        .launch()
+        .await;
+
+    /*
     let mongo_username_pass = std::env::var("MONGO_USER_PASS")
         .map(|x| format!("{}@", x))
         .unwrap_or("".to_string());
@@ -39,4 +46,6 @@ async fn main() {
     while let Some(p) = cursor.try_next().await.unwrap() {
         println!("title: {:?}", p);
     }
+
+     */
 }
