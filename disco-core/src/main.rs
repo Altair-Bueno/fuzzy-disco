@@ -9,6 +9,8 @@ use crate::mongo::post::Post;
 use crate::mongo::post::Title;
 
 mod mongo;
+mod api;
+mod auth;
 
 #[rocket::main]
 async fn main() {
