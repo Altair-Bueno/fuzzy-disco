@@ -32,6 +32,8 @@ async fn main() -> Result<(), String> {
     // todo https://docs.rs/redis/0.21.1/redis/
 
     let rocket_result = rocket::build()
+        .manage(mongo_user_collection)
+        .manage(mongo_post_collection)
         .mount("/", FileServer::from("static"))
         .launch()
         .await;

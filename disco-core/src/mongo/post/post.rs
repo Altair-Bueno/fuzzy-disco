@@ -41,6 +41,43 @@ impl Post {
             photo_path,
         }
     }
+
+    pub fn id(&self) -> Option<ObjectId> {
+        self.id
+    }
+    pub fn title(&self) -> &Title {
+        &self.title
+    }
+    pub fn caption(&self) -> &Caption {
+        &self.caption
+    }
+    pub fn author_id(&self) -> ObjectId {
+        self.author_id
+    }
+    pub fn audio_path(&self) -> &str {
+        &self.audio_path
+    }
+    pub fn photo_path(&self) -> &str {
+        &self.photo_path
+    }
+    pub fn set_id(&mut self, id: Option<ObjectId>) {
+        self.id = id;
+    }
+    pub fn set_title(&mut self, title: Title) {
+        self.title = title;
+    }
+    pub fn set_caption(&mut self, caption: Caption) {
+        self.caption = caption;
+    }
+    pub fn set_author_id(&mut self, author_id: ObjectId) {
+        self.author_id = author_id;
+    }
+    pub fn set_audio_path(&mut self, audio_path: String) {
+        self.audio_path = audio_path;
+    }
+    pub fn set_photo_path(&mut self, photo_path: String) {
+        self.photo_path = photo_path;
+    }
 }
 
 #[cfg(test)]
