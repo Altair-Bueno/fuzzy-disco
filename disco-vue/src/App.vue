@@ -1,16 +1,21 @@
 <template>
   <div id="app">
     <CardItem></CardItem>
+    <CardItem></CardItem>
+    <CardItem></CardItem>
+    <CardItem></CardItem>
   </div>
 </template>
 
 <script>
+
 import CardItem from "@/components/Card";
 
 export default {
   name: 'App',
   components: {
-    CardItem
+    CardItem,
+
   }
 }
 </script>
