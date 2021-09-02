@@ -1,2 +1,2 @@
-pub mod get;
-pub mod result;
+pub mod post;
+pub mod user;

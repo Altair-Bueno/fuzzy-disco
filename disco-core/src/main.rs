@@ -12,6 +12,7 @@ use rocket::fs::FileServer;
 mod mongo;
 mod api;
 mod auth;
+mod server;
 
 #[rocket::main]
 async fn main() {
