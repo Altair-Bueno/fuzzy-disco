@@ -1,6 +1,5 @@
 use crate::mongo::post::result::PostError;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::str::FromStr;
 use validator::Validate;
 use lazy_static::lazy_static;
@@ -58,9 +57,8 @@ mod test {
         let _: Media = a.parse().unwrap();
     }
     #[test]
-    #[should_panic]
     pub fn invalid() {
         let a = "Hello world";
-        let _: Media = a.parse().unwrap();
+        assert!(matches!(a.parse::<Media>(),Err(_)))
     }
 }

@@ -74,7 +74,6 @@ impl User {
 
 #[cfg(test)]
 mod test {
-    use crate::mongo::user::password::Password;
     use crate::mongo::user::user::User;
 
     #[test]
@@ -92,7 +91,6 @@ mod test {
         );
         let ser = serde_json::to_string(&user).unwrap();
         let des: User = serde_json::from_str(ser.as_str()).unwrap();
-        println!("{}",ser);
         assert_eq!(des, user)
     }
 }

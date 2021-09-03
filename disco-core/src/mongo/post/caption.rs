@@ -56,9 +56,8 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
     pub fn not_allowed() {
         let caption = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        let _: Caption = caption.parse().unwrap();
+        assert!(matches!(caption.parse::<Caption>(),Err(_)));
     }
 }

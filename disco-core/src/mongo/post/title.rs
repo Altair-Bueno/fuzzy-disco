@@ -84,9 +84,8 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
     pub fn long() {
         let string = "iksadfjlisfdajkhlsdfafsdhjkfdsjkhfdsajkhfsdahjkfdsahjkfdasfdsjkhadfsajkhldfasjkhdfsajkhsdfakhjldfsajkhfdsahjkdfsa";
-        let _title = Title::new(string).unwrap();
+        assert!(matches!(string.parse::<Title>(),Err(_)))
     }
 }

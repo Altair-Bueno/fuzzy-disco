@@ -58,9 +58,8 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
     fn invalid() {
         let username = "Hello world";
-        let _: Alias = username.parse().unwrap();
+        assert!(matches!(username.parse::<Alias>(),Err(_)))
     }
 }

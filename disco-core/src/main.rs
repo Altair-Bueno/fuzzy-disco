@@ -1,12 +1,8 @@
 #[macro_use]
 extern crate rocket;
 
-use std::future::Future;
 
-use mongodb::bson::doc;
-use mongodb::options::ClientOptions;
 use rocket::fs::FileServer;
-use rocket::futures::TryStreamExt;
 
 use crate::mongo::post::Post;
 use crate::mongo::post::Title;
