@@ -3,14 +3,18 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::str::FromStr;
 use validator::Validate;
+use lazy_static::lazy_static;
+use regex::Regex;
+
+lazy_static!{
+    static ref RE :Regex = Regex::new(r"^[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]$").unwrap();
+}
 
 /// A Media instance contains information about how to locate a resource
-
-// TODO validate that the URI is valid, or check if we can provide a mediaID
 #[derive(Validate, Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Media {
-    //#[validate(url)]
+    #[validate(regex = "RE")]
     uri: String,
 }
 
@@ -29,7 +33,11 @@ impl FromStr for Media {
 
 impl Media {
     pub fn new(s: &str) -> crate::mongo::post::result::Result<Media> {
-        Ok(Media { uri: s.to_string() })
+        if RE.is_match(s) {
+            Ok(Media { uri: s.to_string() })
+        } else {
+            Err(PostError::InvalidURI)
+        }
     }
 }
 
@@ -49,7 +57,6 @@ mod test {
     }
     #[test]
     #[should_panic]
-    #[ignore]
     pub fn invalid() {
         let a = "Hello world";
         let _: Media = a.parse().unwrap();

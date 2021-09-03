@@ -49,9 +49,9 @@ pub async fn get_post_content(
         "id" => post.id().unwrap().to_string(),
         "title" => post.title().to_string(),
         "caption" => post.caption().to_string(),
-        "author_id" => post.author_id().to_string(),
-        "audio_path" => post.audio_path().to_string(),
-        "photo_path" => post.photo_path().to_string(),
+        "author" => post.author_id().to_string(),
+        "audio" => post.audio_path().to_string(),
+        "photo" => post.photo_path().to_string(),
     };
 
     Ok(Json(resonse))
