@@ -5,4 +5,5 @@ pub use user::User;
 mod alias;
 mod password;
 pub mod result;
+#[allow(dead_code)]
 mod user;

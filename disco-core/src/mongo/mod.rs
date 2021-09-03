@@ -1,4 +1,3 @@
-
 /// Contains data structures that represents users' posts on a document-based
 /// database
 pub mod post;

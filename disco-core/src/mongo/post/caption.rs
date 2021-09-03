@@ -12,6 +12,7 @@ const MAX_LENGTH_CAPTION: usize = 150;
 /// A caption is a string of text that contains between 0 and [MAX_LENGTH_CAPTION]
 /// characters
 #[derive(Serialize, Deserialize, Validate, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[serde(transparent)]
 pub struct Caption {
     #[validate(length(max = "MAX_LENGTH_CAPTION"))]
     caption: String,
@@ -42,7 +43,6 @@ impl Caption {
             })
         }
     }
-
 }
 
 #[cfg(test)]

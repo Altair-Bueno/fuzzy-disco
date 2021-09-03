@@ -23,13 +23,11 @@ pub struct Post {
     id: Option<ObjectId>,
 
     #[validate]
-    #[serde(flatten)]
     title: Title,
 
     #[validate]
-    #[serde(flatten)]
     caption: Caption,
-// TODO audio and photo path must be valid!!!!
+    // TODO audio and photo path must be valid!!!!
     author_id: ObjectId,
     audio_path: String,
     photo_path: String,

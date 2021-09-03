@@ -24,11 +24,9 @@ pub struct User {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
 
-    #[serde(flatten)]
     #[validate]
     alias: Alias,
 
-    #[serde(flatten)]
     #[validate]
     password: Password,
 

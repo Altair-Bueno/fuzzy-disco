@@ -1,27 +1,35 @@
 use crate::api::posts_payload::PostPayload;
-use mongodb::bson::oid::ObjectId;
-use std::str::FromStr;
-use rocket::State;
-use mongodb::Collection;
 use crate::mongo::post::Post;
 use mongodb::bson::doc;
-use rocket::serde::json::Json;
-use rocket::response::status;
-use rocket::http::Status;
+use mongodb::bson::oid::ObjectId;
+use mongodb::Collection;
 use rocket::futures::StreamExt;
+use rocket::http::Status;
+use rocket::response::status;
+use rocket::serde::json::Json;
+use rocket::State;
+use std::str::FromStr;
 
 #[get("/<oid>", format = "json")]
-pub async fn get_post_content(oid:&str, mongo:&State<Collection<Post>>) -> Result<Json<PostPayload>, status::Custom<String>>{
+pub async fn get_post_content(
+    oid: &str,
+    mongo: &State<Collection<Post>>,
+) -> Result<Json<PostPayload>, status::Custom<String>> {
     let not_found = doc! {"message":"Not found"}.to_string();
     let oid = match ObjectId::from_str(oid) {
         Ok(x) => x,
         Err(_) => return Err(status::Custom(Status::NotFound, not_found)),
     };
     let filter = doc! { "_id": oid };
-    let post = match mongo.find_one(Some(filter),None).await {
+    let post = match mongo.find_one(Some(filter), None).await {
         Ok(Some(x)) => x,
         Ok(None) => return Err(status::Custom(Status::NotFound, not_found)),
-        Err(_) => return Err(status::Custom(Status::InternalServerError,doc! {"message": "Couldn't load post from database"}.to_string()))
+        Err(_) => {
+            return Err(status::Custom(
+                Status::InternalServerError,
+                doc! {"message": "Couldn't load post from database"}.to_string(),
+            ))
+        }
     };
 
     let mut post_response = PostPayload::new();
@@ -36,10 +44,17 @@ pub async fn get_post_content(oid:&str, mongo:&State<Collection<Post>>) -> Resul
 }
 
 #[get("/", format = "json")]
-pub async fn get_posts(mongo:&State<Collection<Post>>) -> Result<Json<Vec<PostPayload>>, status::Custom<String>>{
+pub async fn get_posts(
+    mongo: &State<Collection<Post>>,
+) -> Result<Json<Vec<PostPayload>>, status::Custom<String>> {
     let mut cursor = match mongo.find(None, None).await {
         Ok(cursor) => cursor,
-        Err(_) => return Err(status::Custom(Status::InternalServerError, doc! {"message": "Couldn't connect to database"}.to_string()))
+        Err(_) => {
+            return Err(status::Custom(
+                Status::InternalServerError,
+                doc! {"message": "Couldn't connect to database"}.to_string(),
+            ))
+        }
     };
     let mut vec = Vec::new();
     while let Some(post) = cursor.next().await {

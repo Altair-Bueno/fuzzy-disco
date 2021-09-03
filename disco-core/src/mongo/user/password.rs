@@ -9,6 +9,8 @@ use crate::mongo::user::result::UserError;
 /// the database. The hash is used to autheticate the user without storing the
 /// real password
 #[derive(Serialize, Deserialize, Debug, Validate, Ord, PartialOrd, PartialEq, Eq)]
+#[serde(transparent)]
+
 pub struct Password {
     // Check for non empty hashed string
     #[validate(length(min = 1))]

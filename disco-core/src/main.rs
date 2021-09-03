@@ -34,12 +34,15 @@ async fn main() -> Result<(), String> {
     let rocket_result = rocket::build()
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
-        .mount("/api/posts",routes![
-            api::posts::get::get_post_content,
-            api::posts::get::get_posts,
-        ])
+        .mount(
+            "/api/posts",
+            routes![
+                api::posts::get::get_post_content,
+                api::posts::get::get_posts,
+            ],
+        )
         //.mount("/api/users/", routes![])
-        .mount("/api/media",FileServer::from("media").rank(9))
+        .mount("/api/media", FileServer::from("media").rank(9))
         .mount("/", FileServer::from("static"))
         .launch()
         .await;
