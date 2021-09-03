@@ -62,7 +62,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ${{ working-directory }}/target/
+            ${{ env.working-directory }}/target/
           key: ${{ matrix.target }}-${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set up target ${{ matrix.target }}
