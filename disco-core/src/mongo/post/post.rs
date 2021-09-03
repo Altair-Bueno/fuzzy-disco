@@ -4,6 +4,7 @@ use validator::Validate;
 
 use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
+use crate::mongo::post::media::Media;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -29,8 +30,8 @@ pub struct Post {
     caption: Caption,
     // TODO audio and photo path must be valid!!!!
     author_id: ObjectId,
-    audio_path: String,
-    photo_path: String,
+    audio_path: Media,
+    photo_path: Media,
 }
 
 impl Post {
@@ -39,8 +40,8 @@ impl Post {
         title: Title,
         caption: Caption,
         author_id: ObjectId,
-        audio_path: String,
-        photo_path: String,
+        audio_path: Media,
+        photo_path: Media,
     ) -> Self {
         Post {
             id: None,
@@ -64,10 +65,10 @@ impl Post {
     pub fn author_id(&self) -> ObjectId {
         self.author_id
     }
-    pub fn audio_path(&self) -> &str {
+    pub fn audio_path(&self) -> &Media {
         &self.audio_path
     }
-    pub fn photo_path(&self) -> &str {
+    pub fn photo_path(&self) -> &Media {
         &self.photo_path
     }
     pub fn set_id(&mut self, id: Option<ObjectId>) {
@@ -82,10 +83,10 @@ impl Post {
     pub fn set_author_id(&mut self, author_id: ObjectId) {
         self.author_id = author_id;
     }
-    pub fn set_audio_path(&mut self, audio_path: String) {
+    pub fn set_audio_path(&mut self, audio_path: Media) {
         self.audio_path = audio_path;
     }
-    pub fn set_photo_path(&mut self, photo_path: String) {
+    pub fn set_photo_path(&mut self, photo_path: Media) {
         self.photo_path = photo_path;
     }
 }
@@ -100,8 +101,8 @@ mod test {
             "My post".parse().unwrap(),
             "Amazing post".parse().unwrap(),
             mongodb::bson::oid::ObjectId::new(),
-            "/path".to_string(),
-            "/path".to_string(),
+            "/path".parse().unwrap(),
+            "/path".parse().unwrap(),
         );
         let ser = serde_json::to_string(&post).unwrap();
         let des: Post = serde_json::from_str(ser.as_str()).unwrap();

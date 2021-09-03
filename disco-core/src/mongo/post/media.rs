@@ -2,11 +2,15 @@ use crate::mongo::post::result::PostError;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use validator::Validate;
+use std::path::PathBuf;
 
+/// A Media instance contains information about how to locate a resource
+
+// TODO validate that the URI is valid, or check if we can provide a mediaID
 #[derive(Validate, Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Media {
-    #[validate(url)]
+    //#[validate(url)]
     uri: String,
 }
 
@@ -25,11 +29,7 @@ impl FromStr for Media {
 
 impl Media {
     pub fn new(s: &str) -> crate::mongo::post::result::Result<Media> {
-        if validator::validate_url(s) {
-            Ok(Media { uri: s.to_string() })
-        } else {
-            Err(PostError::InvalidURI)
-        }
+        Ok(Media { uri: s.to_string() })
     }
 }
 
@@ -43,7 +43,13 @@ mod test {
         let _: Media = a.parse().unwrap();
     }
     #[test]
+    pub fn valid2() {
+        let a = "/hello";
+        let _ : Media = a.parse().unwrap();
+    }
+    #[test]
     #[should_panic]
+    #[ignore]
     pub fn invalid() {
         let a = "Hello world";
         let _: Media = a.parse().unwrap();
