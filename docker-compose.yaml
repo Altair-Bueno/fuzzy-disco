@@ -9,7 +9,7 @@ services:
       - "redis-cache"
       - "mongodb"
     environment:
-      MONGODB_URI: mongodb://root:example@127.0.0.1:27017/
+      MONGODB_URI: mongodb://127.0.0.1/
   redis-cache:
     container_name: redis-cache
     build: redis/

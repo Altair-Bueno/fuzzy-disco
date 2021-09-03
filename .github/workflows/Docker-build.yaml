@@ -17,3 +17,4 @@ jobs:
         run: sleep 50
       - run: "curl http://127.0.0.1:${{ env.port }}"
         name: Checking if webpage is up
+      #- run: "curl http://127.0.0.1:${{ env.port }}/api/posts"

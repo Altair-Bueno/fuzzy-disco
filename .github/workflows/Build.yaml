@@ -1,0 +1,80 @@
+name: Build project componets
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-disco-vue:
+    name: Build disco vue
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./disco-vue
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - run: npm install
+        working-directory: ${{ env.working-directory }}
+      - run: npm run build
+        working-directory: ${{ env.working-directory }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: disco-vue
+          path: ${{ env.working-directory }}/dist
+ 
+  build-disco-core:
+    name: Build disco-core for ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Linux
+          - target: "x86_64-unknown-linux-gnu"
+            os: ubuntu-latest
+          # Windows
+          - target: "aarch64-pc-windows-msvc"
+            os: windows-latest
+          - target: "x86_64-pc-windows-msvc"
+            os: windows-latest
+          # macOS
+          - target: "aarch64-apple-darwin"
+            os: macos-11
+          - target: "x86_64-apple-darwin"
+            os: macos-11
+    runs-on: ${{ matrix.os }}
+    env:
+      TARGET: ${{ matrix.target }}
+      MACOSX_DEPLOYMENT_TARGET: 11.0
+      TARGET_NAME: ${{ matrix.os == 'windows-latest' && 'disco-core.exe' || 'disco-core' }}
+      working-directory: ./disco-core
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ${{ working-directory }}/target/
+          key: ${{ matrix.target }}-${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Set up target ${{ matrix.target }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Build binary for target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
+        working-directory: ${{ env.working-directory }}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: disco-core-${{ matrix.target }}
+          path: ${{ env.working-directory }}/target/${{ matrix.target }}/release/${{ env.TARGET_NAME }}
