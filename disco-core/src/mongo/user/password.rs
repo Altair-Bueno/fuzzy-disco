@@ -11,6 +11,11 @@ pub struct Password {
     #[validate(length(min = 1))]
     password: String,
 }
+impl ToString for Password {
+    fn to_string(&self) -> String {
+        self.password.to_string()
+    }
+}
 
 impl Password {
     pub fn new(s: &str) -> result::Result<Password> {

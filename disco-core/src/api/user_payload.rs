@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Default)]
-pub struct User {
+pub struct UserPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -15,8 +15,8 @@ pub struct User {
     #[serde(skip_serializing_if = "Option::is_none")]
     creation_date: Option<DateTime<Utc>>,
 }
-impl User {
-    pub fn build() -> User {
+impl UserPayload {
+    pub fn build() -> UserPayload {
         Default::default()
     }
     pub fn id(&self) -> &Option<String> {
@@ -53,11 +53,11 @@ impl User {
 
 #[cfg(test)]
 mod test {
-    use crate::api::user::User;
+    use crate::api::user_payload::UserPayload;
 
     #[test]
     pub fn serializing() {
         let json = "{\"creation_date\": \"2012-04-23T18:25:43.511Z\"}";
-        let _: User = serde_json::from_str(json).unwrap();
+        let _: UserPayload = serde_json::from_str(json).unwrap();
     }
 }

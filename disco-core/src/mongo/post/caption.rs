@@ -14,6 +14,12 @@ pub struct Caption {
     caption: String,
 }
 
+impl ToString for Caption {
+    fn to_string(&self) -> String {
+        self.caption.to_string()
+    }
+}
+
 impl FromStr for Caption {
     type Err = crate::mongo::post::result::PostError;
 
@@ -33,9 +39,6 @@ impl Caption {
         }
     }
 
-    pub fn caption(&self) -> &str {
-        self.caption.as_str()
-    }
 }
 
 #[cfg(test)]

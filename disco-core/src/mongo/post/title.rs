@@ -31,6 +31,11 @@ fn validate_title(s: &str) -> Result<(), ValidationError> {
     }
 }
 
+impl ToString for Title {
+    fn to_string(&self) -> String {
+        self.title.to_string()
+    }
+}
 impl FromStr for Title {
     type Err = crate::mongo::post::result::PostError;
 
@@ -47,9 +52,6 @@ impl Title {
             }),
             Err(_) => Err(PostError::InvalidTitle),
         }
-    }
-    pub fn get_title(&self) -> &str {
-        self.title.as_str()
     }
 }
 
