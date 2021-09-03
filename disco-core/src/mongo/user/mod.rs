@@ -7,3 +7,4 @@ mod password;
 pub mod result;
 #[allow(dead_code)]
 mod user;
+mod email;

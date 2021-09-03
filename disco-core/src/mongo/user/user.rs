@@ -5,6 +5,7 @@ use validator::Validate;
 
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::password::Password;
+use crate::mongo::user::email::Email;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -28,6 +29,9 @@ pub struct User {
     alias: Alias,
 
     #[validate]
+    email:Email,
+
+    #[validate]
     password: Password,
 
     posts_id: Vec<ObjectId>,
@@ -36,10 +40,11 @@ pub struct User {
 
 impl User {
     /// Creates a new user with the current time and empty list of posts
-    pub fn new(alias: Alias, password: Password) -> Self {
+    pub fn new(alias: Alias,email:Email, password: Password) -> Self {
         User {
             id: None,
             alias,
+            email,
             password,
             posts_id: vec![],
             creation_date: mongodb::bson::DateTime::now(),
@@ -61,6 +66,10 @@ impl User {
     pub fn creation_date(&self) -> DateTime {
         self.creation_date
     }
+
+    pub fn email(&self) -> &Email {
+        &self.email
+    }
 }
 
 #[cfg(test)]
@@ -70,24 +79,7 @@ mod test {
 
     #[test]
     pub fn deserialization() {
-        /*
-        Original YAML
-        _id: "612e1913c63244f6b37b1c8f"
-        alias: "Altair-Bueno"
-        password: "123456789dasfwa"
-        posts_id:
-        - "632e1913c63244f6b37b1c8f"
-        creation_date: 2021-09-01 22:29:13.769 UTC
-        */
-        let json = "{
-  \"_id\": \"612e1913c63244f6b37b1c8f\",
-  \"alias\": \"Altair-Bueno\",
-  \"password\": \"123456789dasfwa\",
-  \"posts_id\": [
-    \"632e1913c63244f6b37b1c8f\"
-  ],
-  \"creation_date\": {\"$date\":{\"$numberLong\":\"1630535430467\"}}
-}";
+        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"posts_id\":[],\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
         let _: User = serde_json::from_str(json).unwrap();
     }
 
@@ -95,11 +87,12 @@ mod test {
     pub fn serlialization() {
         let user = User::new(
             "Altair-Bueno".parse().unwrap(),
-            Password::new("Helloworld").unwrap(),
+            "hello@world.com".parse().unwrap(),
+            "helloworld".parse().unwrap(),
         );
         let ser = serde_json::to_string(&user).unwrap();
         let des: User = serde_json::from_str(ser.as_str()).unwrap();
-
+        println!("{}",ser);
         assert_eq!(des, user)
     }
 }

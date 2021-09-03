@@ -8,4 +8,5 @@ pub enum UserError {
     InvalidPassword,
     HashPassword,
     InvalidUsername,
+    InvalidEmail,
 }

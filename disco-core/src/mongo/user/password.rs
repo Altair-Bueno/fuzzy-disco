@@ -4,6 +4,7 @@ use validator::Validate;
 
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
+use std::str::FromStr;
 
 /// A Password instance represents a [bcrypt] encripted hash that is stored on
 /// the database. The hash is used to autheticate the user without storing the
@@ -19,6 +20,13 @@ pub struct Password {
 impl ToString for Password {
     fn to_string(&self) -> String {
         self.password.to_string()
+    }
+}
+impl FromStr for Password {
+    type Err = UserError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Password::new(s)
     }
 }
 

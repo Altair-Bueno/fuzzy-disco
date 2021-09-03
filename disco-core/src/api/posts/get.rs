@@ -38,7 +38,7 @@ use crate::mongo::post::Post;
 /// }
 /// ```
 ///
-/// | code | Description |
+/// | Code | Description |
 /// | -----| ----------- |
 /// | 400 | `id` isn't correctly formated |
 /// | 404 | Post doesn't exist |
