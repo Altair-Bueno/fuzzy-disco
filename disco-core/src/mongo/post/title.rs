@@ -10,10 +10,14 @@ use crate::mongo::post::result;
 use crate::mongo::post::result::PostError;
 
 lazy_static! {
+    /// Valid title must match r"^(\S+.*\S)$"
     static ref RE: Regex = Regex::new(r"^(\S+.*\S)$").unwrap();
 }
+/// Max title legth
 const MAX_TITLE_LENGTH: usize = 24;
 
+/// A title represents a non empty string of text that is trimmed and matches the
+/// [RE] regex with legth <= [MAX_TITLE_LENGTH]
 #[derive(Validate, Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Title {
     #[validate(custom = "validate_title")]
@@ -45,6 +49,7 @@ impl FromStr for Title {
 }
 
 impl Title {
+    /// Creates a new title, if possible
     pub fn new(s: &str) -> result::Result<Title> {
         match validate_title(s) {
             Ok(_) => Ok(Title {

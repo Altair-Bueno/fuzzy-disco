@@ -5,6 +5,9 @@ use validator::Validate;
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
 
+/// A Password instance represents a [bcrypt] encripted hash that is stored on
+/// the database. The hash is used to autheticate the user without storing the
+/// real password
 #[derive(Serialize, Deserialize, Debug, Validate, Ord, PartialOrd, PartialEq, Eq)]
 pub struct Password {
     // Check for non empty hashed string
@@ -18,6 +21,8 @@ impl ToString for Password {
 }
 
 impl Password {
+    /// Creates a new hashed password from a text string. All strings used as
+    /// passwords should be at least 8 characters long
     pub fn new(s: &str) -> result::Result<Password> {
         if s.len() < 8 {
             Err(UserError::InvalidPassword)

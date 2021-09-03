@@ -1,4 +1,5 @@
 pub mod posts_payload;
 pub mod user_payload;
-pub mod get;
-pub mod err;
+pub mod media;
+pub mod posts;
+mod users;

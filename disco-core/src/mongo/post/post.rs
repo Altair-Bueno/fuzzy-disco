@@ -5,6 +5,17 @@ use validator::Validate;
 use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
 
+/// Represents a stored document on a document based database such as MongoDB.
+/// Althought JSON does not enforce any kind of schema, Rust type safety allows
+/// us to enforce certain rules
+///
+/// # Valid document
+///
+/// A Post document is considered to be **valid** when all of his childs are
+/// valid too. For more information check their childs
+/// - [mongodb::bson::oid::ObjectId]
+/// - [crate::mongo::post::title::Title]
+/// - [crate::mongo::post::caption::Caption]
 #[derive(Serialize, Deserialize, Debug, Validate, Ord, PartialOrd, PartialEq, Eq)]
 pub struct Post {
     #[serde(rename = "_id")]
@@ -18,13 +29,14 @@ pub struct Post {
     #[validate]
     #[serde(flatten)]
     caption: Caption,
-
+// TODO audio and photo path must be valid!!!!
     author_id: ObjectId,
     audio_path: String,
     photo_path: String,
 }
 
 impl Post {
+    /// Creates a new post instance with the recived arguments
     pub fn new(
         title: Title,
         caption: Caption,

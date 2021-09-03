@@ -3,9 +3,10 @@ use chrono::{DateTime, Duration, Utc};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
-// 2 days of TTL
+/// JWT Time To Live
 const TTL_AUTH: i64 = 2;
 
+/// Represents a JWT's payload. Visit https://jwt.io to learn more about JWT
 #[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord)]
 pub struct AuthPayload {
     user_id: ObjectId,
@@ -16,6 +17,7 @@ pub struct AuthPayload {
 }
 
 impl AuthPayload {
+    /// Creates a new JWT that is linked to the user ID on the database
     pub fn new(user_id: ObjectId) -> Self {
         let created = Utc::now();
         let expires = created + Duration::days(TTL_AUTH);

@@ -6,6 +6,18 @@ use validator::Validate;
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::password::Password;
 
+/// Represents a stored document on a document based database such as MongoDB.
+/// Althought JSON does not enforce any kind of schema, Rust type safety allows
+/// us to enforce certain rules
+///
+/// # Valid document
+///
+/// A User document is considered to be **valid** when all of his childs are
+/// valid too. For more information check their childs
+/// - [mongodb::bson::oid::ObjectId]
+/// - [crate::mongo::user::alias::Alias]
+/// - [crate::mongo::user::password::Password]
+/// - [mongodb::bson::DateTime]
 #[derive(Debug, Serialize, Deserialize, Validate, Ord, PartialOrd, PartialEq, Eq)]
 pub struct User {
     #[serde(rename = "_id")]
@@ -25,6 +37,7 @@ pub struct User {
 }
 
 impl User {
+    /// Creates a new user with the current time and empty list of posts
     pub fn new(alias: Alias, password: Password) -> Self {
         User {
             id: None,
