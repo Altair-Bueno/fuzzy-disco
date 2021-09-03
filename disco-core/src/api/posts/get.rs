@@ -1,5 +1,7 @@
-use crate::api::posts_payload::PostPayload;
-use crate::mongo::post::Post;
+use std::collections::HashMap;
+use std::str::FromStr;
+
+use maplit::hashmap;
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 use mongodb::Collection;
@@ -8,45 +10,57 @@ use rocket::http::Status;
 use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::State;
-use std::str::FromStr;
+
+use crate::mongo::post::Post;
 
 #[get("/<oid>", format = "json")]
 pub async fn get_post_content(
     oid: &str,
     mongo: &State<Collection<Post>>,
-) -> Result<Json<PostPayload>, status::Custom<String>> {
-    let not_found = doc! {"message":"Not found"}.to_string();
+) -> Result<Json<HashMap<&'static str, String>>, status::Custom<String>> {
     let oid = match ObjectId::from_str(oid) {
         Ok(x) => x,
-        Err(_) => return Err(status::Custom(Status::NotFound, not_found)),
-    };
-    let filter = doc! { "_id": oid };
-    let post = match mongo.find_one(Some(filter), None).await {
-        Ok(Some(x)) => x,
-        Ok(None) => return Err(status::Custom(Status::NotFound, not_found)),
         Err(_) => {
             return Err(status::Custom(
-                Status::InternalServerError,
-                doc! {"message": "Couldn't load post from database"}.to_string(),
+                Status::BadRequest,
+                doc! {"message": "Invalid ID"}.to_string(),
             ))
         }
     };
 
-    let mut post_response = PostPayload::new();
-    post_response.set_audio_path(Some(post.audio_path().to_string()));
-    post_response.set_author_id(Some(post.author_id().to_string()));
-    post_response.set_caption(Some(post.caption().to_string()));
-    post_response.set_id(Some(post.id().unwrap().to_string()));
-    post_response.set_photo_path(Some(post.photo_path().to_string()));
-    post_response.set_title(Some(post.title().to_string()));
+    let filter = doc! { "_id": oid };
+    let post = match mongo.find_one(Some(filter), None).await {
+        Ok(Some(x)) => x,
+        Ok(None) => {
+            return Err(status::Custom(
+                Status::NotFound,
+                doc! {"message":"Not found"}.to_string(),
+            ))
+        }
+        Err(_) => {
+            return Err(status::Custom(
+                Status::InternalServerError,
+                doc! {"message": "Couldn't load posts from database"}.to_string(),
+            ))
+        }
+    };
 
-    Ok(Json(post_response))
+    let resonse = hashmap! {
+        "id" => post.id().unwrap().to_string(),
+        "title" => post.title().to_string(),
+        "caption" => post.caption().to_string(),
+        "author_id" => post.author_id().to_string(),
+        "audio_path" => post.audio_path().to_string(),
+        "photo_path" => post.photo_path().to_string(),
+    };
+
+    Ok(Json(resonse))
 }
 
 #[get("/", format = "json")]
 pub async fn get_posts(
     mongo: &State<Collection<Post>>,
-) -> Result<Json<Vec<PostPayload>>, status::Custom<String>> {
+) -> Result<Json<Vec<String>>, status::Custom<String>> {
     let mut cursor = match mongo.find(None, None).await {
         Ok(cursor) => cursor,
         Err(_) => {
@@ -57,15 +71,9 @@ pub async fn get_posts(
         }
     };
     let mut vec = Vec::new();
-    while let Some(post) = cursor.next().await {
-        let mut payload = PostPayload::new();
-        match post {
-            Ok(post) => {
-                payload.set_id(post.id().map(|x| x.to_string()));
-                vec.push(payload);
-            }
-            Err(_) => break,
-        }
+    while let Some(Ok(post)) = cursor.next().await {
+        let id = post.id().unwrap().to_string();
+        vec.push(id);
     }
     Ok(Json(vec))
 }

@@ -1,8 +1,8 @@
 use crate::mongo::post::result::PostError;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use std::str::FromStr;
 use validator::Validate;
-use std::path::PathBuf;
 
 /// A Media instance contains information about how to locate a resource
 
@@ -45,7 +45,7 @@ mod test {
     #[test]
     pub fn valid2() {
         let a = "/hello";
-        let _ : Media = a.parse().unwrap();
+        let _: Media = a.parse().unwrap();
     }
     #[test]
     #[should_panic]
