@@ -30,13 +30,16 @@ async fn main() -> Result<(), String> {
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
 
+    // launch Rocket server
     let rocket_result = rocket::build()
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
         .mount("/api/posts",routes![
-            api::get::get_post_content,
-            api::get::get_posts,
+            api::posts::get::get_post_content,
+            api::posts::get::get_posts,
         ])
+        //.mount("/api/users/", routes![])
+        .mount("/api/media",FileServer::from("media").rank(9))
         .mount("/", FileServer::from("static"))
         .launch()
         .await;

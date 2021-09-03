@@ -2,7 +2,8 @@ name: Build project componets
 on:
   push:
     branches:
-      - master
+      - rustdev
+      - vuedev
 
 jobs:
   build-disco-vue:

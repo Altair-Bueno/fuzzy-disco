@@ -10,6 +10,9 @@ services:
       - "mongodb"
     environment:
       MONGODB_URI: mongodb://127.0.0.1/
+      REDIS_URI: redis://127.0.0.1:6379/
+    volumes:
+      - fuzzy-disco-storage:/fuzzy-disco/media
   redis-cache:
     container_name: redis-cache
     build: redis/
@@ -28,3 +31,4 @@ services:
       - mongodb-storage:/data/db
 volumes:
   mongodb-storage:
+  fuzzy-disco-storage:

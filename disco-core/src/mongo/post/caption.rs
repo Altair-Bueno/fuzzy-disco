@@ -6,8 +6,11 @@ use validator::Validate;
 
 use crate::mongo::post::result::PostError;
 
+/// Max allowed characters for this caption
 const MAX_LENGTH_CAPTION: usize = 150;
 
+/// A caption is a string of text that contains between 0 and [MAX_LENGTH_CAPTION]
+/// characters
 #[derive(Serialize, Deserialize, Validate, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Caption {
     #[validate(length(max = "MAX_LENGTH_CAPTION"))]
@@ -29,6 +32,7 @@ impl FromStr for Caption {
 }
 
 impl Caption {
+    /// Creates a new [Caption] instance or returns an error
     pub fn new(s: &str) -> crate::mongo::post::result::Result<Caption> {
         if s.len() > MAX_LENGTH_CAPTION {
             Err(PostError::InvalidCaption)

@@ -4,4 +4,4 @@
 target/
 # dev folders
 static/
-media/
+/media
