@@ -1,10 +1,10 @@
 <template>
-  <div class="card-elems">
-    <button @click="slideUp($event)" class="card-slide">
-      <button class="card-slide-reverse">
+  <div class="card-elems" :class="{'card-elems-open': isOpen}">
+    <button @click="isOpen = !isOpen" class="card-slide" :class="{'card-slide-open': isOpen}">
+      <button class="card-slide-reverse" :class="{'card-slide-reverse-open': isOpen}">
         <i class="fas fa-angle-double-up"></i>
       </button>
-      <CardInfo class="reverse"></CardInfo>
+      <CardInfo :author="card.author_id" :caption="card.caption" class="reverse" :class="{'reverse-open': isOpen}"></CardInfo>
     </button>
   </div>
 </template>
@@ -14,30 +14,12 @@ import CardInfo from "@/components/card-components/CardInfo";
 export default {
   name: "Slider",
   components: {CardInfo},
-  methods: {
-    slideUp(event) {
-      const slide = document.getElementsByClassName("card-slide")[0];
-      const arrow = document.getElementsByClassName("card-slide-reverse")[0];
-      const reverse = document.getElementsByClassName("reverse")[0];
-      if(event.target.classList.item(0) === "card-slide") {
-        slide.parentElement.style.height = "97%";
-        slide.style.borderRadius = "30px";
-        slide.style.cursor = "default";
-        slide.style.justifyContent = "flex-start";
-        slide.style.flexDirection = "column";
-        arrow.style.top = "50px"
-        arrow.style.transform = "rotate(180deg)";
-        reverse.style.display = "flex";
-      } else {
-        slide.parentElement.style.height = "20%";
-        slide.style.borderTopLeftRadius = "0";
-        slide.style.borderTopRightRadius = "0";
-        slide.style.alignItems = "center";
-        slide.style.justifyContent = "center";
-        slide.style.cursor = "pointer";
-        arrow.style.transform = "rotate(0deg)";
-        reverse.style.display = "none";
-      }
+  props: {
+    card: {}
+  },
+  data() {
+    return {
+      isOpen: false
     }
   }
 }
@@ -52,6 +34,16 @@ export default {
     height: 20%;
     width: 96%;
     transition: 400ms;
+  }
+
+  .card-elems-open {
+    position: absolute;
+    opacity: 1;
+    bottom: 0;
+    margin: 5px;
+    width: 96%;
+    transition: 400ms;
+    height: 97%;
   }
 
   .card-slide {
@@ -69,6 +61,22 @@ export default {
     transition: 400ms;
   }
 
+  .card-slide-open {
+    position: relative;
+    display: flex;
+    align-items: center;
+    opacity: 1;
+    background-color: whitesmoke;
+    width: 100%;
+    height: 100%;
+    border: none;
+    transition: 400ms;
+    border-radius: 30px;
+    cursor: default;
+    justify-content: flex-start;
+    flex-direction: column;
+  }
+
   .card-slide-reverse {
     color: #2c3e50;
     background-color: rgba(0,0,0,0);
@@ -78,8 +86,23 @@ export default {
     transition: 400ms;
   }
 
+  .card-slide-reverse-open {
+    color: #2c3e50;
+    background-color: rgba(0,0,0,0);
+    font-size: x-large;
+    cursor: pointer;
+    border: none;
+    transition: 400ms;
+    top: 50px;
+    transform: rotate(180deg);
+  }
+
   .reverse {
     display: none;
+  }
+
+  .reverse-open {
+    display: flex;
   }
 
 </style>

@@ -15,12 +15,16 @@
 <script>
 export default {
   name: "CardInfo",
-  data() {
-    return {
-      author: "@Author",
-      caption: "Daichi wo fumishimete kimi wa mezameteiku Tenshi no hohoemi de tsuredashite!"
+  props: {
+    author: {
+      type: String,
+      required: true
+    },
+    caption: {
+      type: String,
+      required: true
     }
-  }
+  },
 }
 </script>
 

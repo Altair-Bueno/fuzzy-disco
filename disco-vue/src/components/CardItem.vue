@@ -2,9 +2,9 @@
   <div class="card-wrap">
     <div class="card">
       <div :style="cssVars" class="card-bg"></div>
-      <h1 class="card-title">{{ title }}</h1>
+      <h1 class="card-title">{{ card.title }}</h1>
       <PlayComp></PlayComp>
-      <Slider class="slider-comp"></Slider>
+      <Slider :card="card" class="slider-comp"></Slider>
     </div>
   </div>
 </template>
@@ -16,17 +16,11 @@ import PlayComp from "@/components/card-components/PlayComp";
 export default {
   name: "CardItem",
   components: {PlayComp, Slider},
-  data() {
-    return {
-      title: "Killua and Gon",
-      color: "red",
-      image: require("../assets/sample-image.png"),
-    }
-  },
+  props: ['card'],
   computed: {
     cssVars() {
       return  {
-        '--card-background': "url(" + this.image + ")",
+        '--card-background': "url(" + this.card.photo_path + ")",
       }
     }
   }
