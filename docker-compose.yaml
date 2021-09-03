@@ -8,6 +8,8 @@ services:
     depends_on:
       - "redis-cache"
       - "mongodb"
+    environment:
+      MONGODB_URI: mongodb://root:example@127.0.0.1:27017/
   redis-cache:
     container_name: redis-cache
     build: redis/

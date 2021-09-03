@@ -15,12 +15,11 @@ mod api;
 mod auth;
 mod init;
 mod mongo;
-mod server;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
     // Setting up mongodb connection
-    let mongodb_client = match init::init_mongo_client() {
+    let mongodb_client = match init::init_mongo_client().await {
         Ok(client) => client,
         Err(err) => return Err(format!("{:?}", err)),
     };
@@ -34,6 +33,9 @@ async fn main() -> Result<(), String> {
     let rocket_result = rocket::build()
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
+        .mount("/api/posts",routes![
+            api::get::get_post_content
+        ])
         .mount("/", FileServer::from("static"))
         .launch()
         .await;

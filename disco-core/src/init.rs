@@ -1,16 +1,9 @@
 use mongodb::Client as MongoClient;
 use redis::Client as RedisClient;
 
-pub fn init_mongo_client() -> mongodb::error::Result<MongoClient> {
-    let password = std::env::var("MONGO_PASSWORD").ok();
-    let username = std::env::var("MONGO_USERNAME").ok();
-
-    let mut options = mongodb::options::ClientOptions::default();
-    let mut cretential = mongodb::options::Credential::default();
-    cretential.username = username;
-    cretential.password = password;
-    options.credential = Some(cretential);
-
+pub async fn init_mongo_client() -> mongodb::error::Result<MongoClient> {
+    let url = std::env::var("MONGODB_URI").unwrap_or("127.0.0.1".to_string());
+    let options = mongodb::options::ClientOptions::parse(url).await?;
     MongoClient::with_options(options)
 }
 
