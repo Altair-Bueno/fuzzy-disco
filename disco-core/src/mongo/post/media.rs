@@ -10,7 +10,9 @@ lazy_static!{
     static ref RE :Regex = Regex::new(r"^[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]$").unwrap();
 }
 
-/// A Media instance contains information about how to locate a resource
+// TODO better doc
+/// A Media instance contains information about how to locate a resource on the
+/// server as an absolute path.
 #[derive(Validate, Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Media {
