@@ -34,7 +34,8 @@ async fn main() -> Result<(), String> {
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
         .mount("/api/posts",routes![
-            api::get::get_post_content
+            api::get::get_post_content,
+            api::get::get_posts,
         ])
         .mount("/", FileServer::from("static"))
         .launch()
