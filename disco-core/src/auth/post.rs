@@ -1,6 +1,4 @@
-use mongodb::bson::oid::ObjectId;
 use mongodb::Collection;
-use mongodb::error::ErrorKind;
 use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
@@ -9,10 +7,8 @@ use rocket::State;
 
 use crate::api::result::ApiResult;
 use crate::auth::new_user::NewUser;
-use crate::auth::Token;
-use crate::mongo::post::Post;
 use crate::mongo::traits::IntoDocument;
-use crate::mongo::user::{User, UserError};
+use crate::mongo::user::User;
 
 
 /// # `POST /auth/signup`

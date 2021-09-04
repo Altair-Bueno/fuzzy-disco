@@ -57,7 +57,7 @@ impl Title {
             Ok(_) => Ok(Title {
                 title: s.to_string(),
             }),
-            Err(_) => Err(PostError::InvalidTitle),
+            Err(_) => Err(PostError::InvalidTitleFormat),
         }
     }
 }

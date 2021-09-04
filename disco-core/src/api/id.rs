@@ -14,8 +14,8 @@ impl FromParam<'_> for Id {
 
     fn from_param(param: &str) -> Result<Self, Self::Error> {
         ObjectId::from_str(param)
-            .map(|x| Id(x))
-            .or(Err(
+            .map(Id)
+            .or_else(|_| Err(
                 json!({
                     "Error": "Invalid ID"
                 }
