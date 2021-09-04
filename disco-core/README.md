@@ -10,7 +10,6 @@ MONGO_PASSWORD=""
 MONGO_USERNAME=""
 ```
 
-
 You can connect using Mongo compass. Use this URL `mongodb://127.0.0.1:27017`
 
 ## Creating a redis docker container

@@ -41,6 +41,7 @@ impl ToString for Title {
         self.title.to_string()
     }
 }
+
 impl FromStr for Title {
     type Err = crate::mongo::post::result::PostError;
 
@@ -86,6 +87,6 @@ mod test {
     #[test]
     pub fn long() {
         let string = "iksadfjlisfdajkhlsdfafsdhjkfdsjkhfdsajkhfsdahjkfdsahjkfdasfdsjkhadfsajkhldfasjkhdfsajkhsdfakhjldfsajkhfdsahjkdfsa";
-        assert!(matches!(string.parse::<Title>(),Err(_)))
+        assert!(matches!(string.parse::<Title>(), Err(_)))
     }
 }

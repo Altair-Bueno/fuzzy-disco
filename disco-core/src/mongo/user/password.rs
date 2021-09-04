@@ -1,27 +1,29 @@
+use std::str::FromStr;
+
 use bcrypt::DEFAULT_COST;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
-use std::str::FromStr;
 
 /// A Password instance represents a [bcrypt] encripted hash that is stored on
 /// the database. The hash is used to autheticate the user without storing the
 /// real password
 #[derive(Serialize, Deserialize, Debug, Validate, Ord, PartialOrd, PartialEq, Eq)]
 #[serde(transparent)]
-
 pub struct Password {
     // Check for non empty hashed string
     #[validate(length(min = 1))]
     password: String,
 }
+
 impl ToString for Password {
     fn to_string(&self) -> String {
         self.password.to_string()
     }
 }
+
 impl FromStr for Password {
     type Err = UserError;
 

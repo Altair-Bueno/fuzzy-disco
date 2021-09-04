@@ -1,5 +1,6 @@
-use serde::{Serialize,Deserialize};
-#[derive (Serialize,Deserialize,Eq, PartialEq,Ord, PartialOrd,Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum Format {
     #[serde(rename = "image/png")]
     PNG,
@@ -8,4 +9,3 @@ pub enum Format {
     #[serde(rename = "mp3")]
     MP3,
 }
-

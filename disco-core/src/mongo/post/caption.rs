@@ -58,6 +58,6 @@ mod test {
     #[test]
     pub fn not_allowed() {
         let caption = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        assert!(matches!(caption.parse::<Caption>(),Err(_)));
+        assert!(matches!(caption.parse::<Caption>(), Err(_)));
     }
 }

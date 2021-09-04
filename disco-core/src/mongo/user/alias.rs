@@ -21,11 +21,13 @@ pub struct Alias {
     #[validate(regex = "RE")]
     alias: String,
 }
+
 impl ToString for Alias {
     fn to_string(&self) -> String {
         self.alias.to_string()
     }
 }
+
 impl FromStr for Alias {
     type Err = crate::mongo::user::result::UserError;
 
@@ -60,6 +62,6 @@ mod test {
     #[test]
     fn invalid() {
         let username = "Hello world";
-        assert!(matches!(username.parse::<Alias>(),Err(_)))
+        assert!(matches!(username.parse::<Alias>(), Err(_)))
     }
 }

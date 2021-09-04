@@ -1,6 +1,6 @@
+pub use format::Format;
+pub use media::Media;
+
+mod format;
 #[allow(dead_code)]
 mod media;
-mod format;
-
-pub use media::Media;
-pub use format::Format;

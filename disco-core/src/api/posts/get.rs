@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::str::FromStr;
 
 use maplit::hashmap;
@@ -11,8 +10,8 @@ use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::State;
 
+use crate::api::result::{DictionaryResponse, JsonResult};
 use crate::mongo::post::Post;
-use crate::api::result::{JsonResult, DictionaryResponse};
 
 /// # `GET /api/posts/<id>`
 /// Returns information for a given post. It expects a well formated string
@@ -70,7 +69,7 @@ pub async fn get_post_content(
             return Err(status::Custom(
                 Status::BadRequest,
                 doc! {"message": "Invalid ID"}.to_string(),
-            ))
+            ));
         }
     };
 
@@ -81,13 +80,13 @@ pub async fn get_post_content(
             return Err(status::Custom(
                 Status::NotFound,
                 doc! {"message":"Not found"}.to_string(),
-            ))
+            ));
         }
         Err(_) => {
             return Err(status::Custom(
                 Status::InternalServerError,
                 doc! {"message": "Couldn't load posts from database"}.to_string(),
-            ))
+            ));
         }
     };
 
@@ -128,16 +127,14 @@ pub async fn get_post_content(
 ///]
 /// ```
 #[get("/", format = "json")]
-pub async fn get_posts(
-    mongo: &State<Collection<Post>>,
-) -> JsonResult<Vec<String>> {
+pub async fn get_posts(mongo: &State<Collection<Post>>) -> JsonResult<Vec<String>> {
     let mut cursor = match mongo.find(None, None).await {
         Ok(cursor) => cursor,
         Err(_) => {
             return Err(status::Custom(
                 Status::InternalServerError,
                 doc! {"message": "Couldn't connect to database"}.to_string(),
-            ))
+            ));
         }
     };
     let mut vec = Vec::new();

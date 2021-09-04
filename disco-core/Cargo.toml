@@ -18,7 +18,7 @@ rand = "0"
 
 [dependencies.mongodb]
 version = "2.0.0-beta.3"
-features= ["bson-chrono-0_4"]
+features = ["bson-chrono-0_4"]
 
 [dependencies.rocket]
 version = "0.5.0-rc.1"

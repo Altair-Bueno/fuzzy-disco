@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::mongo::user::alias::Alias;
-use crate::mongo::user::password::Password;
 use crate::mongo::user::email::Email;
+use crate::mongo::user::password::Password;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -29,7 +29,7 @@ pub struct User {
     alias: Alias,
 
     #[validate]
-    email:Email,
+    email: Email,
 
     #[validate]
     password: Password,
@@ -40,7 +40,7 @@ pub struct User {
 
 impl User {
     /// Creates a new user with the current time and empty list of posts
-    pub fn new(alias: Alias,email:Email, password: Password) -> Self {
+    pub fn new(alias: Alias, email: Email, password: Password) -> Self {
         User {
             id: None,
             alias,

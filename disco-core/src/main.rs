@@ -1,20 +1,19 @@
 #[macro_use]
 extern crate rocket;
 
-
-use rocket::fs::FileServer;
-use dashmap::DashMap;
-use std::future::Future;
 use std::option::Option::Some;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
+use dashmap::DashMap;
+use rocket::fairing::AdHoc;
+use rocket::fs::FileServer;
 
 mod api;
 mod auth;
 mod init;
 mod mongo;
 
-pub type CacheFiles = Arc<DashMap<String,String>>;
+pub type CacheFiles = Arc<DashMap<String, String>>;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
@@ -34,7 +33,7 @@ async fn main() -> Result<(), String> {
     // Create Hashmap for temporal files
     if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
         #[cfg(debug_assertions)]
-        println!("{}",x)
+        println!("{}", x)
     }
 
     let temporal_files: CacheFiles = Arc::new(dashmap::DashMap::new());
@@ -42,16 +41,15 @@ async fn main() -> Result<(), String> {
     let _ = rocket::tokio::spawn(async move {
         #[cfg(debug_assertions)]
         println!("[GC]: Waiting for expired files");
-        while let Some (expired) = reciver.recv().await {
+        while let Some(expired) = reciver.recv().await {
             #[cfg(debug_assertions)]
-            println!("[GC]: Removing {}",expired);
+            println!("[GC]: Removing {}", expired);
             let _ = rocket::tokio::fs::remove_file(expired).await;
         }
         #[cfg(debug_assertions)]
         println!("[GC]: Cleanup");
         let _ = rocket::tokio::fs::remove_dir_all("temp/").await;
     });
-
 
     // launch Rocket server
     let rocket_result = rocket::build()
@@ -70,14 +68,10 @@ async fn main() -> Result<(), String> {
             ],
         )
         //.mount("/api/users/", routes![])
-        .mount(
-            "/api/media",
-            routes![
-                api::media::put::upload,
-            ]
-        )
+        .mount("/api/media", routes![api::media::put::upload,])
         .mount("/api/media", FileServer::from("media"))
         .mount("/", FileServer::from("static").rank(11))
+        //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
         .launch()
         .await;
     match rocket_result {
