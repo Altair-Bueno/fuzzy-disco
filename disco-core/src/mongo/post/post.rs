@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::mongo::post::caption::Caption;
-use crate::mongo::post::media::Media;
 use crate::mongo::post::title::Title;
 
 /// Represents a stored document on a document based database such as MongoDB.
@@ -28,11 +27,11 @@ pub struct Post {
 
     #[validate]
     caption: Caption,
-    author_id: ObjectId,
-    #[validate]
-    audio_path: Media,
-    #[validate]
-    photo_path: Media,
+    author: ObjectId,
+
+    audio: ObjectId,
+
+    photo: ObjectId,
 }
 
 impl Post {
@@ -40,17 +39,17 @@ impl Post {
     pub fn new(
         title: Title,
         caption: Caption,
-        author_id: ObjectId,
-        audio_path: Media,
-        photo_path: Media,
+        author: ObjectId,
+        audio: ObjectId,
+        photo: ObjectId,
     ) -> Self {
         Post {
             id: None,
             title,
             caption,
-            author_id,
-            audio_path,
-            photo_path,
+            author,
+            audio,
+            photo,
         }
     }
 
@@ -64,13 +63,13 @@ impl Post {
         &self.caption
     }
     pub fn author_id(&self) -> ObjectId {
-        self.author_id
+        self.author
     }
-    pub fn audio_path(&self) -> &Media {
-        &self.audio_path
+    pub fn audio_path(&self) -> &ObjectId {
+        &self.audio
     }
-    pub fn photo_path(&self) -> &Media {
-        &self.photo_path
+    pub fn photo_path(&self) -> &ObjectId {
+        &self.photo
     }
     pub fn set_id(&mut self, id: Option<ObjectId>) {
         self.id = id;
@@ -82,38 +81,12 @@ impl Post {
         self.caption = caption;
     }
     pub fn set_author_id(&mut self, author_id: ObjectId) {
-        self.author_id = author_id;
+        self.author = author_id;
     }
-    pub fn set_audio_path(&mut self, audio_path: Media) {
-        self.audio_path = audio_path;
+    pub fn set_audio_path(&mut self, audio_path: ObjectId) {
+        self.audio = audio_path;
     }
-    pub fn set_photo_path(&mut self, photo_path: Media) {
-        self.photo_path = photo_path;
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::mongo::post::post::Post;
-
-    #[test]
-    pub fn serialize() {
-        let post = Post::new(
-            "My post".parse().unwrap(),
-            "Amazing post".parse().unwrap(),
-            mongodb::bson::oid::ObjectId::new(),
-            "/path".parse().unwrap(),
-            "/path".parse().unwrap(),
-        );
-        let ser = serde_json::to_string(&post).unwrap();
-        let des: Post = serde_json::from_str(ser.as_str()).unwrap();
-
-        assert_eq!(des, post)
-    }
-
-    #[test]
-    pub fn deserialize() {
-        let json = "{\"_id\":{\"$oid\":\"612fc6d4b57f3339cf097434\"},\"title\":\"Hello world\",\"caption\":\"Caption text\",\"author_id\":{\"$oid\":\"612fc6d4b57f3339cf097434\"},\"audio_path\":\"/path/to/file\",\"photo_path\":\"path/to/photo\"}";
-        let _: Post = serde_json::from_str(json).unwrap();
+    pub fn set_photo_path(&mut self, photo_path: ObjectId) {
+        self.photo = photo_path;
     }
 }

@@ -50,8 +50,8 @@ use crate::mongo::post::Post;
 ///
 /// ```json
 /// {
-///  "audio": "/media/6131f8946c2cc66344ef2a86/photo.png",
-///  "photo": "/route/photo",
+///  "audio": "6032137e6c2cc66244ef2a88",
+///  "photo": "5032137e6c2cc66244ef2a88",
 ///  "author": "6131f8946c2cc66344ef2a86",
 ///  "id": "6132137e6c2cc66344ef2a88",
 ///  "caption": "Hisoka wants gon booty",

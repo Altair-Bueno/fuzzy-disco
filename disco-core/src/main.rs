@@ -4,8 +4,6 @@ extern crate rocket;
 
 use rocket::fs::FileServer;
 
-use crate::mongo::post::Post;
-use crate::mongo::post::Title;
 
 mod api;
 mod auth;
@@ -22,6 +20,7 @@ async fn main() -> Result<(), String> {
     let mongo_database = mongodb_client.database("fuzzy-disco");
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
+    let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
 
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
@@ -30,6 +29,7 @@ async fn main() -> Result<(), String> {
     let rocket_result = rocket::build()
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
+        .manage(mongo_media_collection)
         .mount(
             "/api/posts",
             routes![
