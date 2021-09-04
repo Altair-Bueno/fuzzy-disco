@@ -1,6 +1,7 @@
-use serde::{Deserialize,Serialize};
+use serde::{Deserialize, Serialize};
+
+use crate::mongo::traits::{Document, IntoDocument};
 use crate::mongo::user::{Alias, Email, Password, User, UserError};
-use crate::mongo::traits::{IntoDocument, Document};
 
 #[derive(Debug,Serialize,Deserialize)]
 pub struct NewUser<'a> {

@@ -32,6 +32,7 @@ use crate::mongo::post::Post;
 /// ## Err
 /// ```json
 /// {
+///     "status": String,
 ///     "message": String
 /// }
 /// ```
@@ -69,16 +70,17 @@ pub async fn get_post_content(
 
     let post = match mongo.find_one(Some(filter), None).await {
         Ok(Some(x)) => x,
-        Ok(None) => return status::Custom(Status::NotFound, json! ({"message":"Not found"})),
+        Ok(None) => return status::Custom(Status::NotFound, json! ({"status":"Not Found","message":"Post doesn't exist"})),
         Err(_) => {
             return status::Custom(
                 Status::InternalServerError,
-                json! ({"message": "Couldn't load posts from database"}),
+                json! ({"status":"Internal Error","message": "Couldn't connect to database"}),
             );
         }
     };
 
     let response = json!({
+        // `unwrap` here is safe, represents _id from db
         "id": post.id().unwrap().to_string(),
         "title": post.title(),
         "caption": post.caption(),
@@ -120,7 +122,7 @@ pub async fn get_posts(mongo: &State<Collection<Post>>) -> Result<Json<Vec<Strin
         Err(_) => {
             return Err(status::Custom(
                 Status::InternalServerError,
-                json! ({"message": "Couldn't connect to database"}),
+                json! ({"status":"Internal Error","message": "Couldn't connect to database"}),
             ));
         }
     };

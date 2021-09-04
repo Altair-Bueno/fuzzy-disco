@@ -1,30 +1,95 @@
-use crate::mongo::user::{User, UserError};
-use crate::api::result::ApiResult;
-use crate::mongo::post::Post;
-use mongodb::Collection;
-use rocket::State;
-use rocket::response::status::Custom;
-use rocket::http::Status;
-use rocket::serde::json::serde_json::json;
-use crate::auth::Token;
 use mongodb::bson::oid::ObjectId;
+use mongodb::Collection;
+use mongodb::error::ErrorKind;
+use rocket::http::Status;
+use rocket::response::status::Custom;
 use rocket::serde::json::Json;
+use rocket::serde::json::serde_json::json;
+use rocket::State;
+
+use crate::api::result::ApiResult;
 use crate::auth::new_user::NewUser;
+use crate::auth::Token;
+use crate::mongo::post::Post;
 use crate::mongo::traits::IntoDocument;
+use crate::mongo::user::{User, UserError};
 
 
-// TODO use other user instead
+/// # `POST /auth/signup`
+/// Creates a new user with the recived information. The body for the request
+/// must be **JSON** formated with the following content:
+///
+/// ```json
+/// {
+///     "alias": String,
+///     "email": String,
+///     "password": String,
+/// }
+/// ```
+///
+/// Each field must follow the user requirements descrived on [User](crate::mongo::user::User)
+///
+///
+/// # Returns
+/// ## Ok (201)
+///
+/// ```json
+/// {
+///     "status": "Created",
+///     "message": "User created"
+/// }
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | `id` isn't correctly formated |
+/// | 409 | Another user already has the same alias |
+///
+/// # Example
+///
+/// `POST /auth/signup`
+///
+/// ## Body payload
+///
+/// ```json
+/// {
+///     "alias": "Altair-Bueno",
+///     "email": "hello@world.org",
+///     "password": "i-love-rvst"
+/// }
+/// ```
+///
+/// ## Response
+///
+/// ```json
+/// {
+///     "status": "Created",
+///     "message": "User created"
+/// }
+/// ```
+
 #[post("/signup",format = "json",data = "<user>")]
 pub async fn signup(user: Json<NewUser<'_>>, mongo: &State<Collection<User>>) -> ApiResult {
     let user = match user.0.validate() {
         Ok(x) => x,
-        Err(x) => return Custom(Status::BadRequest,json!({"message":x}))
+        Err(x) => return Custom(Status::BadRequest,json!({"status":"Bad Request","message":x}))
     };
     let mongo_response = mongo.insert_one(user,None).await;
     match mongo_response {
-        Ok(x) => {
-            Custom(Status::Ok , json!({"message": "User created"}))
+        Ok(_) => {
+            Custom(Status::Created , json!({"status":"Created","message": "User created"}))
         }
-        Err(x) =>  Custom(Status::InternalServerError,json!({"message": x.to_string()}))
+        Err(_) =>  {
+            // fixme check if it is colision or db connection error
+            Custom(Status::Conflict,json!({"status":"Conflict","message": "Alias taken"}))
+        }
     }
 }

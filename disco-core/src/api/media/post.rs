@@ -5,7 +5,7 @@ use rand::random;
 use rocket::fs::TempFile;
 use rocket::http::Status;
 use rocket::response::status;
-use rocket::serde::json::{ serde_json::json};
+use rocket::serde::json::serde_json::json;
 use rocket::State;
 use rocket::tokio::sync::mpsc::Sender;
 
@@ -17,6 +17,7 @@ const TTL: u64 = 10;
 #[cfg(not(debug_assertions))]
 const TTL: u64 = 60;
 
+// TODO variants for png,jpg and mp3
 // , format = "application/x-www-form-urlencoded"
 #[post("/upload", data = "<file>")]
 pub async fn upload(

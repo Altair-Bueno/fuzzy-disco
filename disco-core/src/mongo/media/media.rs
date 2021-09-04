@@ -5,7 +5,6 @@ use validator::Validate;
 use crate::mongo::media::format::Format;
 use crate::mongo::traits::Document;
 
-
 /// A Media instance contains information about how to locate a resource
 #[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Validate)]
 pub struct Media {

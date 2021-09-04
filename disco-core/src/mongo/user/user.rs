@@ -1,13 +1,13 @@
-use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
+use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+use crate::auth::new_user::NewUser;
+use crate::mongo::traits::Document;
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::email::Email;
 use crate::mongo::user::password::Password;
-use crate::auth::new_user::NewUser;
-use crate::mongo::traits::Document;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
