@@ -1,6 +1,4 @@
-use std::collections::HashMap;
+use rocket::response::status::Custom;
+use rocket::serde::json::Value;
 
-pub type JsonResult<T> =
-    Result<rocket::serde::json::Json<T>, rocket::response::status::Custom<String>>;
-
-pub type DictionaryResponse = HashMap<&'static str, String>;
+pub type ApiResult = Result<Value, Custom<Value>>;

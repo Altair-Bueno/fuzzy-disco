@@ -1,16 +1,15 @@
 use chrono::{DateTime, Utc};
 use dashmap::mapref::entry::Entry;
-use maplit::hashmap;
 use mongodb::bson::doc;
 use rand::random;
 use rocket::fs::TempFile;
 use rocket::http::Status;
 use rocket::response::status;
-use rocket::serde::json::Json;
-use rocket::tokio::sync::mpsc::Sender;
+use rocket::serde::json::{ serde_json::json};
 use rocket::State;
+use rocket::tokio::sync::mpsc::Sender;
 
-use crate::api::result::{DictionaryResponse, JsonResult};
+use crate::api::result::ApiResult;
 use crate::CacheFiles;
 
 #[cfg(debug_assertions)]
@@ -24,23 +23,23 @@ pub async fn upload(
     file: TempFile<'_>,
     cache_files: &State<CacheFiles>,
     gc: &State<Sender<String>>,
-) -> JsonResult<DictionaryResponse> {
+) -> ApiResult {
     let recived_at = Utc::now();
     let key = match temporal_store(recived_at, file, cache_files, gc).await {
         Ok(key) => key,
         Err(err) => {
             return Err(status::Custom(
                 Status::InternalServerError,
-                doc! {"message": err.to_string()}.to_string(),
+                json! ({"message": err.to_string()}),
             ))
         }
     };
-    let response = hashmap! {
-        "key" => key,
-        "TTL" => TTL.to_string(),
-    };
+    let response = json! ({
+        "key" : key,
+        "TTL" : TTL.to_string(),
+    });
 
-    Ok(Json(response))
+    Ok(response)
 }
 
 pub async fn temporal_store(
