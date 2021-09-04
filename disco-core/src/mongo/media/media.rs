@@ -2,9 +2,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 use mongodb::bson::oid::ObjectId;
 use crate::mongo::media::class::Class;
-use crate::mongo::media::status::Status;
-
-const EXPIRE_IN: i64 = 30;
 
 // TODO better doc
 /// A Media instance contains information about how to locate a resource on the
@@ -16,19 +13,14 @@ pub struct Media {
     id: Option<ObjectId>,
     url: String,
     class: Class,
-    status: Status
 }
 
 impl Media {
     pub fn new(url:&str,class:Class) -> Media {
-        let expires = chrono::Utc::now() + chrono::Duration::minutes(EXPIRE_IN);
         Media {
             id: None,
             url:url.to_string(),
-            class,
-            status: Status::TTL {
-                ttl: mongodb::bson::DateTime::from_chrono(expires),
-            }
+            class
         }
     }
 
