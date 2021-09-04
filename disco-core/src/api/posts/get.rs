@@ -12,6 +12,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::mongo::post::Post;
+use crate::api::result::{JsonResult, DictionaryResponse};
 
 /// # `GET /api/posts/<id>`
 /// Returns information for a given post. It expects a well formated string
@@ -62,7 +63,7 @@ use crate::mongo::post::Post;
 pub async fn get_post_content(
     oid: &str,
     mongo: &State<Collection<Post>>,
-) -> Result<Json<HashMap<&'static str, String>>, status::Custom<String>> {
+) -> JsonResult<DictionaryResponse> {
     let oid = match ObjectId::from_str(oid) {
         Ok(x) => x,
         Err(_) => {
@@ -129,7 +130,7 @@ pub async fn get_post_content(
 #[get("/", format = "json")]
 pub async fn get_posts(
     mongo: &State<Collection<Post>>,
-) -> Result<Json<Vec<String>>, status::Custom<String>> {
+) -> JsonResult<Vec<String>> {
     let mut cursor = match mongo.find(None, None).await {
         Ok(cursor) => cursor,
         Err(_) => {

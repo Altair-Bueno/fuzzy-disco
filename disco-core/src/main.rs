@@ -3,12 +3,16 @@ extern crate rocket;
 
 
 use rocket::fs::FileServer;
+use dashmap::DashMap;
+use std::future::Future;
 
 
 mod api;
 mod auth;
 mod init;
 mod mongo;
+
+pub type CacheFiles = DashMap<String,String>;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
@@ -25,11 +29,20 @@ async fn main() -> Result<(), String> {
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
 
+    // Create Hashmap for temporal files
+    if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
+        println!("{}",x)
+    }
+
+    let temporal_files: CacheFiles = dashmap::DashMap::new();
     // launch Rocket server
     let rocket_result = rocket::build()
+        // Shared state and db connections
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
+        .manage(temporal_files)
+        // Mounted routes
         .mount(
             "/api/posts",
             routes![
@@ -38,8 +51,14 @@ async fn main() -> Result<(), String> {
             ],
         )
         //.mount("/api/users/", routes![])
-        .mount("/api/media", FileServer::from("media").rank(9))
-        .mount("/", FileServer::from("static"))
+        .mount(
+            "/api/media",
+            routes![
+                api::media::put::upload,
+            ]
+        )
+        .mount("/api/media", FileServer::from("media"))
+        .mount("/", FileServer::from("static").rank(11))
         .launch()
         .await;
     match rocket_result {
