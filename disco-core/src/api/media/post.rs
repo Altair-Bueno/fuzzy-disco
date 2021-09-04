@@ -18,7 +18,7 @@ const TTL: u64 = 10;
 const TTL: u64 = 60;
 
 // , format = "application/x-www-form-urlencoded"
-#[put("/upload", data = "<file>")]
+#[post("/upload", data = "<file>")]
 pub async fn upload(
     file: TempFile<'_>,
     cache_files: &State<CacheFiles>,
@@ -36,7 +36,7 @@ pub async fn upload(
     };
     let response = json! ({
         "key" : key,
-        "TTL" : TTL.to_string(),
+        "TTL" : TTL,
     });
 
     Ok(response)

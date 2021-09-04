@@ -68,7 +68,7 @@ async fn main() -> Result<(), String> {
             ],
         )
         //.mount("/api/users/", routes![])
-        .mount("/api/media", routes![api::media::put::upload,])
+        .mount("/api/media", routes![api::media::post::upload,])
         .mount("/api/media", FileServer::from("media"))
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
