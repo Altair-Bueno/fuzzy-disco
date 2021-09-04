@@ -14,7 +14,7 @@ mod auth;
 mod init;
 mod mongo;
 
-pub type CacheFiles = DashMap<String,Arc<Mutex<Option<String>>>>;
+pub type CacheFiles = Arc<DashMap<String,String>>;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
@@ -37,7 +37,7 @@ async fn main() -> Result<(), String> {
         println!("{}",x)
     }
 
-    let temporal_files: CacheFiles = dashmap::DashMap::new();
+    let temporal_files: CacheFiles = Arc::new(dashmap::DashMap::new());
     let (sender, mut reciver) = rocket::tokio::sync::mpsc::channel::<String>(100);
     let _ = rocket::tokio::spawn(async move {
         #[cfg(debug_assertions)]
