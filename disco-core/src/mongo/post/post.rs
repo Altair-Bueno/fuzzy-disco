@@ -15,8 +15,8 @@ use crate::mongo::traits::Document;
 /// A Post document is considered to be **valid** when all of his childs are
 /// valid too. For more information check their childs
 /// - [mongodb::bson::oid::ObjectId]
-/// - [crate::mongo::post::title::Title]
-/// - [crate::mongo::post::caption::Caption]
+/// - [crate::mongo::post::Title]
+/// - [crate::mongo::post::Caption]
 #[derive(Serialize, Deserialize, Debug, Validate, Ord, PartialOrd, PartialEq, Eq)]
 pub struct Post {
     #[serde(rename = "_id")]

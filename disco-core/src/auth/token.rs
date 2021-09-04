@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// JWT Time To Live
 const TTL_AUTH: i64 = 2;
 
-/// Represents a JWT's payload. Visit https://jwt.io to learn more about JWT
+/// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
 #[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord)]
 pub struct Token {
     user_id: ObjectId,

@@ -18,8 +18,8 @@ use crate::mongo::user::password::Password;
 /// A User document is considered to be **valid** when all of his childs are
 /// valid too. For more information check their childs
 /// - [mongodb::bson::oid::ObjectId]
-/// - [crate::mongo::user::alias::Alias]
-/// - [crate::mongo::user::password::Password]
+/// - [crate::mongo::user::Alias]
+/// - [crate::mongo::user::Password]
 /// - [mongodb::bson::DateTime]
 #[derive(Debug, Serialize, Deserialize, Validate, Ord, PartialOrd, PartialEq, Eq)]
 pub struct User {

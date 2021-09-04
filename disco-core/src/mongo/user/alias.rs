@@ -14,7 +14,7 @@ lazy_static! {
 }
 
 /// An alias represents the User's custom username for his account. For an alias
-/// to be valid, it must mach the [RE] regex
+/// to be valid, it must mach the [static@RE] regex
 #[derive(Serialize, Deserialize, Debug, Validate, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(transparent)]
 pub struct Alias {

@@ -17,7 +17,7 @@ lazy_static! {
 const MAX_TITLE_LENGTH: usize = 24;
 
 /// A title represents a non empty string of text that is trimmed and matches the
-/// [RE] regex with legth <= [MAX_TITLE_LENGTH]
+/// [static@RE] regex with legth <= [MAX_TITLE_LENGTH]
 #[derive(Validate, Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Title {
