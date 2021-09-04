@@ -28,9 +28,10 @@ pub struct Post {
 
     #[validate]
     caption: Caption,
-    // TODO audio and photo path must be valid!!!!
     author_id: ObjectId,
+    #[validate]
     audio_path: Media,
+    #[validate]
     photo_path: Media,
 }
 
