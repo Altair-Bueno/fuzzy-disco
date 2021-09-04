@@ -16,8 +16,8 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Creating required docker services
         run: |
-          docker -dp 6379:6379 redis
-          docker -dp 27017:27017 mongo
+          docker run -dp 6379:6379 redis
+          docker run -dp 27017:27017 mongo
       - run: cargo test
         working-directory: ./disco-core
   # disco-vue
