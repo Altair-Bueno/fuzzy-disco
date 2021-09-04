@@ -7,6 +7,7 @@ use std::sync::Arc;
 use dashmap::DashMap;
 use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
+use mongodb::bson::doc;
 
 mod api;
 mod auth;
@@ -23,6 +24,26 @@ async fn main() -> Result<(), String> {
         Err(err) => return Err(format!("{:?}", err)),
     };
     let mongo_database = mongodb_client.database("fuzzy-disco");
+    // FIXME rust driver version 2.0 should allow index creation more easily
+    let index_response = mongo_database.run_command(doc! {
+        "createIndexes": "Users",
+        "indexes": [
+            {
+                "key": { "alias": 1 },
+                "name": "alias",
+                "unique": true
+            },
+            {
+                "key": { "email": 1 },
+                "name": "email",
+                "unique": false
+            }
+        ]
+    },None).await;
+
+    #[cfg(debug_assertions)]
+    println!("[MONGO] {:?}", index_response);
+
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
     let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
