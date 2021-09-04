@@ -4,6 +4,7 @@ use validator::Validate;
 
 use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
+use crate::mongo::traits::Document;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -33,6 +34,7 @@ pub struct Post {
 
     photo: ObjectId,
 }
+impl Document for Post {}
 
 impl Post {
     /// Creates a new post instance with the recived arguments

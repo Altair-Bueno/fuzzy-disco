@@ -31,6 +31,7 @@ async fn main() -> Result<(), String> {
     // todo https://docs.rs/redis/0.21.1/redis/
 
     // Create Hashmap for temporal files
+    // TODO use redis instead
     if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
         #[cfg(debug_assertions)]
         println!("{}", x)
@@ -67,9 +68,9 @@ async fn main() -> Result<(), String> {
                 api::posts::get::get_posts,
             ],
         )
-        //.mount("/api/users/", routes![])
         .mount("/api/media", routes![api::media::post::upload,])
-        .mount("/api/media", FileServer::from("media"))
+        .mount("/auth",routes![auth::post::signup])
+        .mount("/api/media", FileServer::from("media")) // TODO Auth media
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
         .launch()

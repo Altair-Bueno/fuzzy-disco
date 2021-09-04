@@ -6,6 +6,8 @@ use validator::Validate;
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::email::Email;
 use crate::mongo::user::password::Password;
+use crate::auth::new_user::NewUser;
+use crate::mongo::traits::Document;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -37,6 +39,8 @@ pub struct User {
     posts_id: Vec<ObjectId>,
     creation_date: DateTime,
 }
+
+impl Document for User {}
 
 impl User {
     /// Creates a new user with the current time and empty list of posts

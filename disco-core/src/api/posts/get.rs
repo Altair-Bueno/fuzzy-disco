@@ -63,22 +63,22 @@ pub async fn get_post_content(
 ) -> ApiResult {
     let oid = match id {
         Ok(x) => x.extract(),
-        Err(x) => return Err(status::Custom(Status::BadRequest,x))
+        Err(x) => return status::Custom(Status::BadRequest,x)
     };
     let filter = doc! { "_id": oid };
 
     let post = match mongo.find_one(Some(filter), None).await {
         Ok(Some(x)) => x,
-        Ok(None) => return Err(status::Custom(Status::NotFound, json! ({"message":"Not found"}))),
+        Ok(None) => return status::Custom(Status::NotFound, json! ({"message":"Not found"})),
         Err(_) => {
-            return Err(status::Custom(
+            return status::Custom(
                 Status::InternalServerError,
                 json! ({"message": "Couldn't load posts from database"}),
-            ));
+            );
         }
     };
 
-    let resonse = json!({
+    let response = json!({
         "id": post.id().unwrap().to_string(),
         "title": post.title(),
         "caption": post.caption(),
@@ -86,8 +86,7 @@ pub async fn get_post_content(
         "audio": post.audio_path().to_string(),
         "photo": post.photo_path().to_string(),
     });
-
-    Ok(resonse)
+    status::Custom(Status::Ok,response)
 }
 
 /// #!DEBUG

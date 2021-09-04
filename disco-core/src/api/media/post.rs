@@ -28,10 +28,10 @@ pub async fn upload(
     let key = match temporal_store(recived_at, file, cache_files, gc).await {
         Ok(key) => key,
         Err(err) => {
-            return Err(status::Custom(
+            return status::Custom(
                 Status::InternalServerError,
                 json! ({"message": err.to_string()}),
-            ))
+            )
         }
     };
     let response = json! ({
@@ -39,7 +39,7 @@ pub async fn upload(
         "TTL" : TTL,
     });
 
-    Ok(response)
+    status::Custom(Status::Ok,response)
 }
 
 pub async fn temporal_store(
