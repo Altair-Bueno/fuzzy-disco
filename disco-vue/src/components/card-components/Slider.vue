@@ -1,10 +1,10 @@
 <template>
-  <div class="card-elems" :class="{'card-elems-open': isOpen}">
-    <button @click="isOpen = !isOpen" class="card-slide" :class="{'card-slide-open': isOpen}">
-      <button class="card-slide-reverse" :class="{'card-slide-reverse-open': isOpen}">
+  <div :class="{'card-elems-open': isOpen, 'card-elems': !isOpen}">
+    <button @click="isOpen = !isOpen" :class="{'card-slide-open': isOpen, 'card-slide': !isOpen}">
+      <button :class="{'card-slide-reverse-open': isOpen, 'card-slide-reverse': !isOpen}">
         <i class="fas fa-angle-double-up"></i>
       </button>
-      <CardInfo :author="card.author_id" :caption="card.caption" class="reverse" :class="{'reverse-open': isOpen}"></CardInfo>
+      <CardInfo :author="card.author_id" :caption="card.caption" :class="{'reverse-open': isOpen, 'reverse': !isOpen}"></CardInfo>
     </button>
   </div>
 </template>

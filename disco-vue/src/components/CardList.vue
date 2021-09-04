@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div class="card-list" :key="card.id" v-for="card in cardlist">
-      <CardItem v-bind:card="card"></CardItem>
+    <div class="card-list">
+      <CardItem v-bind:card="card" :key="card.id" v-for="card in cardlist"></CardItem>
     </div>
   </div>
 </template>
@@ -17,10 +17,10 @@ export default {
 
 <style scoped>
   .card-list {
-    position: relative;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: baseline;
+    justify-content: space-around;
   }
 </style>

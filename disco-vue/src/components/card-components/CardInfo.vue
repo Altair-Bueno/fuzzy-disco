@@ -3,8 +3,8 @@
     <p class="caption">
       {{ caption }}
     </p>
-    <a href="https://example.org/">
-      <h3 class="author">
+    <a href="https://example.org/" class="author">
+      <h3>
         {{ author }}
       </h3>
     </a>
@@ -35,6 +35,7 @@ export default {
     align-items: center;
     justify-content: space-between;
     height: 100%;
+    --author-color: #2c3e50;
   }
 
   .caption {
@@ -46,5 +47,14 @@ export default {
     font-size: 24px;
     font-family: "Open Sans", sans-serif;
     font-weight: bolder;
+  }
+
+  .author:link {
+    text-decoration: none;
+  }
+
+  .author:visited {
+    text-decoration: none;
+    color: var(--author-color);
   }
 </style>
