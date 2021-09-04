@@ -8,29 +8,44 @@ use rocket::http::Status;
 use mongodb::bson::doc;
 use maplit::hashmap;
 use rocket::serde::json::Json;
+use std::sync::{Arc, Mutex};
 
-const TTL : i64 = 200;
+const TTL : u64 = 5;
 
 // , format = "application/x-www-form-urlencoded"
 #[put("/upload", data = "<file>")]
-pub async fn upload(mut file: TempFile<'_>,files: &State<CacheFiles>) -> JsonResult<DictionaryResponse> {
-    // TODO ttl
-    let ttl = chrono::Utc::now() + chrono::Duration::seconds(TTL);
+pub async fn upload(mut file: TempFile<'_>,files: &State<CacheFiles>, gc : &State<rocket::tokio::sync::mpsc::Sender<String>>) -> JsonResult<DictionaryResponse> {
+    let ttl = chrono::Utc::now();
     let key =  format!("{}-{}",ttl,rand::random::<usize>());
-    let filename = format!("temp/{}",key);
-    if let Err(x) = file.copy_to(filename.as_str()).await {
+    let location = format!("temp/{}", key);
+
+    if let Err(x) = file.copy_to(location.as_str()).await {
         return Err(status::Custom(Status::InternalServerError,doc! {"message": "Couldn't store file","err":x.to_string()}.to_string()))
     }
 
-    if let Some(_) = files.insert(key.clone(),filename) {
+    let guard = Arc::new(Mutex::new(Some(location)));
+    if let Some(_) = files.insert(key.clone(),guard.clone()) {
         files.remove(key.as_str());
         return Err(status::Custom(Status::InternalServerError,doc!{"message": "Key collision"}.to_string()));
     }
 
     let response = hashmap! {
-        "media_key" => key,
-        "ttl" =>   ttl.to_string()
+        "media_key" => key.clone(),
+        "ttl" => TTL.to_string()
     };
+
+    let gc_clone = (*gc).clone();
+    rocket::tokio::spawn(async move {
+        rocket::tokio::time::sleep(rocket::tokio::time::Duration::new(TTL,0)).await;
+        let expired = if let Ok(mut lock) = guard.lock() {
+            lock.take()
+        } else {
+            None
+        };
+        if let Some(x) = expired {
+            let _ = gc_clone.send(x).await;
+        }
+    });
 
     Ok(Json(response))
 }

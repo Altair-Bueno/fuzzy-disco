@@ -5,6 +5,8 @@ extern crate rocket;
 use rocket::fs::FileServer;
 use dashmap::DashMap;
 use std::future::Future;
+use std::option::Option::Some;
+use std::sync::{Arc, Mutex};
 
 
 mod api;
@@ -12,7 +14,7 @@ mod auth;
 mod init;
 mod mongo;
 
-pub type CacheFiles = DashMap<String,String>;
+pub type CacheFiles = DashMap<String,Arc<Mutex<Option<String>>>>;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
@@ -31,10 +33,26 @@ async fn main() -> Result<(), String> {
 
     // Create Hashmap for temporal files
     if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
+        #[cfg(debug_assertions)]
         println!("{}",x)
     }
 
     let temporal_files: CacheFiles = dashmap::DashMap::new();
+    let (sender, mut reciver) = rocket::tokio::sync::mpsc::channel::<String>(100);
+    let _ = rocket::tokio::spawn(async move {
+        #[cfg(debug_assertions)]
+        println!("[GC]: Waiting for expired files");
+        while let Some (expired) = reciver.recv().await {
+            #[cfg(debug_assertions)]
+            println!("[GC]: Removing {}",expired);
+            let _ = rocket::tokio::fs::remove_file(expired).await;
+        }
+        #[cfg(debug_assertions)]
+        println!("[GC]: Cleanup");
+        let _ = rocket::tokio::fs::remove_dir_all("temp/").await;
+    });
+
+
     // launch Rocket server
     let rocket_result = rocket::build()
         // Shared state and db connections
@@ -42,6 +60,7 @@ async fn main() -> Result<(), String> {
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
         .manage(temporal_files)
+        .manage(sender)
         // Mounted routes
         .mount(
             "/api/posts",
