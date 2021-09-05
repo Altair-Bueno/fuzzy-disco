@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::api::users::auth::result::{AuthError, AuthResult};
 
 /// JWT Time To Live
-const TTL_AUTH: i64 = 2;
+const TTL_AUTH: i64 = 5;
 const SECRET: &str = "hello world";
 
 lazy_static! {
@@ -21,6 +21,7 @@ lazy_static! {
 }
 
 pub type EncryptedToken = String;
+pub type ExpireDate = DateTime<Utc>;
 
 /// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
 #[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord)]
@@ -57,15 +58,16 @@ impl<'r> FromRequest<'r> for Token {
 
 impl Token {
     /// Creates a new JWT that is linked to the user ID on the database
-    pub fn new_encrypted(user_id: ObjectId) -> AuthResult<EncryptedToken> {
+    pub fn new_encrypted(user_id: ObjectId) -> AuthResult<(ExpireDate, EncryptedToken)> {
         let created = Utc::now();
-        let expires = created + Duration::days(TTL_AUTH);
+        let expires = created + Duration::minutes(TTL_AUTH);
         let token = Token {
             user_id,
             created,
             expires,
         };
         jsonwebtoken::encode(&Header::default(), &token, &ENCODING_KEY)
+            .map(|x| (expires,x))
             .or(Err(AuthError::EncodeError))
     }
     pub fn is_valid(&self) -> bool {

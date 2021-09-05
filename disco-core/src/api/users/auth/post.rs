@@ -128,6 +128,7 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 /// {
 ///     "status": "Ok",
 ///     "token": String,
+///     "expires": Date,
 /// }
 /// ```
 ///
@@ -163,7 +164,8 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 /// ```json
 /// {
 ///     "status": "Ok",
-///     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjp7IiRvaWQiOiI2MTM0YmZlMTU5MTZmNTJiMTc5OGRhZjIifSwiY3JlYXRlZCI6IjIwMjEtMDktMDVUMTM6MDM6MjUuMzI4OTMzWiIsImV4cGlyZXMiOiIyMDIxLTA5LTA3VDEzOjAzOjI1LjMyODkzM1oifQ.-jhlBzKkJKQ_ukzojXiKotPy0KAhDU6WhgZ8v8Gc30A"
+///     "expires": "2021-09-05T13:27:50.936160Z",
+///     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjp7IiRvaWQiOiI2MTM0YmZlMTU5MTZmNTJiMTc5OGRhZjIifSwiY3JlYXRlZCI6IjIwMjEtMDktMDVUMTM6MjI6NTAuOTM2MTYwWiIsImV4cGlyZXMiOiIyMDIxLTA5LTA1VDEzOjI3OjUwLjkzNjE2MFoifQ.15pv2ED-NxStcpFDfqHIgizRqWBoN0g0jtFb89Jjw5c"
 /// }
 /// ```
 #[post("/login?using=email", format = "json", data = "<info>")]
@@ -206,7 +208,7 @@ fn create_token(result: mongodb::error::Result<Option<User>>, password: &str) ->
     match result {
         Ok(Some(x)) => match bcrypt::verify(password, x.password().password()) {
             Ok(true) => match Token::new_encrypted(x.id().unwrap()) {
-                Ok(payload) => Custom(Status::Ok, json!({"status":"Ok","token": payload})),
+                Ok((expires,payload)) => Custom(Status::Ok, json!({"status":"Ok","expires": expires, "token": payload})),
                 Err(_) => Custom(
                     Status::InternalServerError,
                     json!({"status": "InternalServerError", "message": "Couldn't generate token"}),
