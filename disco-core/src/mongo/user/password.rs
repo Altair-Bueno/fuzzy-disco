@@ -1,10 +1,12 @@
 use std::str::FromStr;
 
-use bcrypt::DEFAULT_COST;
+use bcrypt::{DEFAULT_COST, Version};
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
+
+const SALT : &[u8]= b"SALTSAFDF2SALTSA";
 
 /// A Password instance represents a [bcrypt] encripted hash that is stored on
 /// the database. The hash is used to autheticate the user without storing the
@@ -36,11 +38,16 @@ impl Password {
         if s.len() < 8 {
             Err(UserError::PasswordTooShort)
         } else {
-            let hashed_password = bcrypt::hash(s, DEFAULT_COST);
+            let hashed_password = bcrypt::hash_with_salt(s,DEFAULT_COST,SALT)
+                .map(|x| x.format_for_version(Version::TwoB));
             match hashed_password {
                 Ok(password) => Ok(Password { password }),
                 Err(_) => Err(UserError::HashError),
             }
         }
+    }
+
+    pub fn password(&self) -> &str {
+        &self.password
     }
 }

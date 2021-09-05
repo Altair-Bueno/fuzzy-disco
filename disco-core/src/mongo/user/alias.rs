@@ -44,6 +44,10 @@ impl Alias {
             Err(UserError::InvalidUsername)
         }
     }
+
+    pub fn alias(&self) -> &str {
+        &self.alias
+    }
 }
 
 #[cfg(test)]

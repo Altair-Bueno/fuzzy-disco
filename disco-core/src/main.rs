@@ -95,7 +95,11 @@ async fn main() -> Result<(), String> {
             ],
         )
         .mount("/api/media", routes![api::media::post::upload,])
-        .mount("/auth", routes![auth::post::signup])
+        .mount("/auth", routes![
+            auth::post::signup,
+            auth::post::login_alias,
+            auth::post::login_email
+        ])
         .mount("/api/media", FileServer::from("media")) // TODO Auth media
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))

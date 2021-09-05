@@ -4,17 +4,17 @@ use crate::mongo::IntoDocument;
 use crate::mongo::user::{User, UserError};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct NewUser<'a> {
+pub struct UserSingUp<'a> {
     alias: &'a str,
     email: &'a str,
     password: &'a str,
 }
 
-impl IntoDocument<User> for NewUser<'_> {
+impl IntoDocument<User> for UserSingUp<'_> {
     type Err = UserError;
 
     fn validate(self) -> Result<User, Self::Err> {
-        let NewUser {
+        let UserSingUp {
             alias,
             email,
             password,
@@ -24,4 +24,15 @@ impl IntoDocument<User> for NewUser<'_> {
         let password = password.parse()?;
         Ok(User::new(alias, email, password))
     }
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserLogInEmail<'a> {
+    pub email: &'a str,
+    pub password: &'a str,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserLogInAlias<'a> {
+    pub alias:&'a str,
+    pub password: &'a str,
 }

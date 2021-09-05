@@ -29,6 +29,10 @@ impl Email {
             Err(UserError::InvalidEmail)
         }
     }
+
+    pub fn email(&self) -> &str {
+        &self.email
+    }
 }
 
 #[cfg(test)]
