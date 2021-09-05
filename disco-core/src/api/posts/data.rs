@@ -6,6 +6,8 @@ use rocket::serde::json::serde_json::json;
 use serde::Deserialize;
 use serde::Serialize;
 
+/// Wrapper for [`ObjectId`](mongodb::bson::oid::ObjectId). Implements the
+/// [`FromParam`](rocket::request::FromParam) trait.
 #[derive(Serialize, Deserialize, Debug, PartialOrd, PartialEq)]
 pub struct Id(ObjectId);
 

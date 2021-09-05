@@ -7,7 +7,7 @@ use rocket::serde::json::Value;
 use rocket::serde::json::{serde_json::json, Json};
 use rocket::State;
 
-use crate::api::id::Id;
+use crate::api::posts::data::Id;
 use crate::api::result::ApiResult;
 use crate::mongo::post::Post;
 

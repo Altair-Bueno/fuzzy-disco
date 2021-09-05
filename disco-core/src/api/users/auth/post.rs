@@ -7,8 +7,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::result::ApiResult;
-use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp};
-use crate::api::users::auth::Token;
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp,Token};
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 
