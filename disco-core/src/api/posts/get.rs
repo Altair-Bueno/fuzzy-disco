@@ -3,8 +3,8 @@ use mongodb::Collection;
 use rocket::futures::StreamExt;
 use rocket::http::Status;
 use rocket::response::status;
-use rocket::serde::json::{Json, serde_json::json};
 use rocket::serde::json::Value;
+use rocket::serde::json::{serde_json::json, Json};
 use rocket::State;
 
 use crate::api::id::Id;
@@ -58,23 +58,25 @@ use crate::mongo::post::Post;
 ///}
 /// ```
 #[get("/<id>", format = "json")]
-pub async fn get_post_content(
-    id: Result<Id,Value>,
-    mongo: &State<Collection<Post>>,
-) -> ApiResult {
+pub async fn get_post_content(id: Result<Id, Value>, mongo: &State<Collection<Post>>) -> ApiResult {
     let oid = match id {
         Ok(x) => x.extract(),
-        Err(x) => return status::Custom(Status::BadRequest,x)
+        Err(x) => return status::Custom(Status::BadRequest, x),
     };
     let filter = doc! { "_id": oid };
 
     let post = match mongo.find_one(Some(filter), None).await {
         Ok(Some(x)) => x,
-        Ok(None) => return status::Custom(Status::NotFound, json! ({"status":"Not Found","message":"Post doesn't exist"})),
+        Ok(None) => {
+            return status::Custom(
+                Status::NotFound,
+                json!({"status":"Not Found","message":"Post doesn't exist"}),
+            )
+        }
         Err(_) => {
             return status::Custom(
                 Status::InternalServerError,
-                json! ({"status":"Internal Error","message": "Couldn't connect to database"}),
+                json!({"status":"Internal Error","message": "Couldn't connect to database"}),
             );
         }
     };
@@ -88,7 +90,7 @@ pub async fn get_post_content(
         "audio": post.audio_path().to_string(),
         "photo": post.photo_path().to_string(),
     });
-    status::Custom(Status::Ok,response)
+    status::Custom(Status::Ok, response)
 }
 
 /// #!DEBUG
@@ -116,13 +118,15 @@ pub async fn get_post_content(
 ///]
 /// ```
 #[get("/", format = "json")]
-pub async fn get_posts(mongo: &State<Collection<Post>>) -> Result<Json<Vec<String>>,status::Custom<Value>> {
+pub async fn get_posts(
+    mongo: &State<Collection<Post>>,
+) -> Result<Json<Vec<String>>, status::Custom<Value>> {
     let mut cursor = match mongo.find(None, None).await {
         Ok(cursor) => cursor,
         Err(_) => {
             return Err(status::Custom(
                 Status::InternalServerError,
-                json! ({"status":"Internal Error","message": "Couldn't connect to database"}),
+                json!({"status":"InternalError","message": "Couldn't connect to database"}),
             ));
         }
     };

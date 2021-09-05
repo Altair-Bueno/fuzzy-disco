@@ -34,6 +34,7 @@ pub struct Post {
 
     photo: ObjectId,
 }
+
 impl Document for Post {}
 
 impl Post {

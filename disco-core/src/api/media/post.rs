@@ -6,8 +6,8 @@ use rocket::fs::TempFile;
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::serde::json::serde_json::json;
-use rocket::State;
 use rocket::tokio::sync::mpsc::Sender;
+use rocket::State;
 
 use crate::api::result::ApiResult;
 use crate::CacheFiles;
@@ -31,16 +31,16 @@ pub async fn upload(
         Err(err) => {
             return status::Custom(
                 Status::InternalServerError,
-                json! ({"message": err.to_string()}),
-            )
+                json!({"message": err.to_string()}),
+            );
         }
     };
-    let response = json! ({
+    let response = json!({
         "key" : key,
         "TTL" : TTL,
     });
 
-    status::Custom(Status::Ok,response)
+    status::Custom(Status::Ok, response)
 }
 
 pub async fn temporal_store(

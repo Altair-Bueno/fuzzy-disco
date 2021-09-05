@@ -14,6 +14,7 @@ pub struct Media {
     url: String,
     format: Format,
 }
+
 impl Document for Media {}
 
 impl Media {
