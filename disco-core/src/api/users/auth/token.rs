@@ -9,7 +9,7 @@ use rocket::serde::json::Value;
 use rocket::Request;
 use serde::{Deserialize, Serialize};
 
-use crate::auth::result::{AuthError, AuthResult};
+use crate::api::users::auth::result::{AuthError, AuthResult};
 
 /// JWT Time To Live
 const TTL_AUTH: i64 = 2;

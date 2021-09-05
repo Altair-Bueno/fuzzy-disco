@@ -10,7 +10,6 @@ use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
 
 mod api;
-mod auth;
 mod init;
 mod mongo;
 
@@ -96,11 +95,11 @@ async fn main() -> Result<(), String> {
         )
         .mount("/api/media", routes![api::media::post::upload,])
         .mount(
-            "/auth",
+            "/api/users/auth",
             routes![
-                auth::post::signup,
-                auth::post::login_alias,
-                auth::post::login_email
+                api::users::auth::post::signup,
+                api::users::auth::post::login_alias,
+                api::users::auth::post::login_email
             ],
         )
         .mount("/api/media", FileServer::from("media")) // TODO Auth media

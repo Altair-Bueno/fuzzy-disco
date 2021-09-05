@@ -7,12 +7,12 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::result::ApiResult;
-use crate::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp};
-use crate::auth::Token;
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp};
+use crate::api::users::auth::Token;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 
-/// # `POST /auth/signup`
+/// # `POST api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
 /// must be **JSON** formated with the following content:
 ///
@@ -100,7 +100,7 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
     }
 }
 
-/// # `POST /auth/login?using=<method>`
+/// # `POST api/users/auth/login?using=<method>`
 /// Returns a JWT for user authentication. The token must be included on the
 /// `Authorization` HTTP header for authenticated requests. You can authenticate
 /// by either the user alias (method `alias`) or by user email (method `email`).
@@ -163,7 +163,7 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 /// ```json
 /// {
 ///     "status": "Ok",
-///     "token": "sadfj.,q928ur23512x-u8124cux1zpU89(/>Z(SFD89A23XCQ"
+///     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjp7IiRvaWQiOiI2MTM0YmZlMTU5MTZmNTJiMTc5OGRhZjIifSwiY3JlYXRlZCI6IjIwMjEtMDktMDVUMTM6MDM6MjUuMzI4OTMzWiIsImV4cGlyZXMiOiIyMDIxLTA5LTA3VDEzOjAzOjI1LjMyODkzM1oifQ.-jhlBzKkJKQ_ukzojXiKotPy0KAhDU6WhgZ8v8Gc30A"
 /// }
 /// ```
 #[post("/login?using=email", format = "json", data = "<info>")]
