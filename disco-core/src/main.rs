@@ -104,6 +104,7 @@ async fn main() -> Result<(), String> {
         )
         .mount("/api/users", routes![
             api::users::get::get_user_info,
+            api::users::delete::delete_user,
         ])
         .mount("/api/media", FileServer::from("media")) // TODO Auth media
         .mount("/", FileServer::from("static").rank(11))

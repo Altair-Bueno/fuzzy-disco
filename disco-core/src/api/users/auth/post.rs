@@ -7,7 +7,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::result::ApiResult;
-use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp,Token};
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp, Claims};
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 
@@ -206,7 +206,7 @@ pub async fn login_alias(
 fn create_token(result: mongodb::error::Result<Option<User>>, password: &str) -> ApiResult {
     match result {
         Ok(Some(x)) => match bcrypt::verify(password, x.password().password()) {
-            Ok(true) => match Token::new_encrypted((*x.alias()).clone()) {
+            Ok(true) => match Claims::new_encrypted((*x.alias()).clone()) {
                 Ok((expires,payload)) => Custom(Status::Ok, json!({"status":"Ok","expires": expires, "token": payload})),
                 Err(_) => Custom(
                     Status::InternalServerError,
