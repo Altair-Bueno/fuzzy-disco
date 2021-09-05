@@ -4,7 +4,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use serde::Serialize;
-use validator::{ValidationError};
 
 use crate::mongo::post::result;
 use crate::mongo::post::result::PostError;

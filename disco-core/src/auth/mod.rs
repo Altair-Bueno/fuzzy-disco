@@ -1,6 +1,7 @@
 pub use token::Token;
 
-pub mod new_user;
+pub mod data;
 pub mod post;
 #[allow(dead_code)]
-mod token;
+pub mod token;
+pub mod result;

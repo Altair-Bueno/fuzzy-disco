@@ -13,12 +13,9 @@ impl FromParam<'_> for Id {
     type Error = rocket::serde::json::Value;
 
     fn from_param(param: &str) -> Result<Self, Self::Error> {
-        ObjectId::from_str(param).map(Id).or_else(|_| {
-            Err(json!({
-                        "Error": "Invalid ID"
-                    }
-            ))
-        })
+        ObjectId::from_str(param)
+            .map(Id)
+            .map_err(|_| json!({"Error": "Invalid ID"}))
     }
 }
 

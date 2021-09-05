@@ -6,7 +6,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::result::ApiResult;
-use crate::auth::new_user::NewUser;
+use crate::auth::data::NewUser;
 use crate::mongo::IntoDocument;
 use crate::mongo::user::User;
 
