@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::mongo::IntoDocument;
 use crate::mongo::user::{User, UserError};
+use crate::mongo::IntoDocument;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
@@ -25,6 +25,7 @@ impl IntoDocument<User> for UserSingUp<'_> {
         Ok(User::new(alias, email, password))
     }
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserLogInEmail<'a> {
     pub email: &'a str,
@@ -33,6 +34,6 @@ pub struct UserLogInEmail<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserLogInAlias<'a> {
-    pub alias:&'a str,
+    pub alias: &'a str,
     pub password: &'a str,
 }

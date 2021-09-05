@@ -40,7 +40,9 @@ impl Title {
     /// Creates a new title, if possible
     pub fn new(s: &str) -> result::Result<Title> {
         if RE.is_match(s) && s.len() <= MAX_TITLE_LENGTH {
-            Ok(Title{ title: s.to_string() })
+            Ok(Title {
+                title: s.to_string(),
+            })
         } else {
             Err(PostError::InvalidTitleFormat)
         }

@@ -71,7 +71,7 @@ pub async fn get_post_content(id: Result<Id, Value>, mongo: &State<Collection<Po
             return status::Custom(
                 Status::NotFound,
                 json!({"status":"Not Found","message":"Post doesn't exist"}),
-            )
+            );
         }
         Err(_) => {
             return status::Custom(

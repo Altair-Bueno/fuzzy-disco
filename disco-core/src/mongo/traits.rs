@@ -1,4 +1,3 @@
-
 /// The Document trait marks structs as "mongo approved", which means they are
 /// designed for consistency on a mongodb database
 pub trait Document {}

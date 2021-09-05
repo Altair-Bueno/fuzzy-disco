@@ -1,22 +1,23 @@
 use chrono::{DateTime, Duration, Utc};
-use jsonwebtoken::{DecodingKey, Validation,EncodingKey,Header};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use lazy_static::lazy_static;
 use mongodb::bson::oid::ObjectId;
+use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
+use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::Request;
 use serde::{Deserialize, Serialize};
+
 use crate::auth::result::{AuthError, AuthResult};
 
 /// JWT Time To Live
 const TTL_AUTH: i64 = 2;
-const SECRET : &str = "hello world";
+const SECRET: &str = "hello world";
 
 lazy_static! {
-    static ref DECODING_KEY: DecodingKey<'static> =
-        DecodingKey::from_secret(SECRET.as_ref());
-    static ref ENCODING_KEY: EncodingKey =
-        EncodingKey::from_secret(SECRET.as_ref());
+    static ref DECODING_KEY: DecodingKey<'static> = DecodingKey::from_secret(SECRET.as_ref());
+    static ref ENCODING_KEY: EncodingKey = EncodingKey::from_secret(SECRET.as_ref());
 }
 
 pub type EncryptedToken = String;
@@ -41,6 +42,14 @@ impl<'r> FromRequest<'r> for Token {
             .map(|x| jsonwebtoken::decode::<Token>(x, &DECODING_KEY, &Validation::default()));
         match token {
             Some(Ok(x)) if x.claims.is_valid() => Outcome::Success(x.claims),
+            Some(Ok(_)) => Outcome::Failure((
+                Status::new(440),
+                json!({"status": "LoginTimeout", "message": "Sesion has expired"}),
+            )),
+            Some(Err(_)) => Outcome::Failure((
+                Status::BadRequest,
+                json!({"status": "BadRequest","message": "Invalid token"}),
+            )),
             _ => Outcome::Forward(()),
         }
     }
@@ -56,7 +65,7 @@ impl Token {
             created,
             expires,
         };
-        jsonwebtoken::encode(&Header::default(), &token,&ENCODING_KEY)
+        jsonwebtoken::encode(&Header::default(), &token, &ENCODING_KEY)
             .or(Err(AuthError::EncodeError))
     }
     pub fn is_valid(&self) -> bool {
