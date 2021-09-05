@@ -10,6 +10,7 @@ use rocket::Request;
 use serde::{Deserialize, Serialize};
 
 use crate::api::users::auth::result::{AuthError, AuthResult};
+use crate::mongo::user::Alias;
 
 /// JWT Time To Live
 const TTL_AUTH: i64 = 5;
@@ -26,7 +27,7 @@ pub type ExpireDate = DateTime<Utc>;
 /// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
 #[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord)]
 pub struct Token {
-    user_id: ObjectId,
+    alias: Alias,
     created: DateTime<Utc>,
     expires: DateTime<Utc>,
 }
@@ -58,11 +59,11 @@ impl<'r> FromRequest<'r> for Token {
 
 impl Token {
     /// Creates a new JWT that is linked to the user ID on the database
-    pub fn new_encrypted(user_id: ObjectId) -> AuthResult<(ExpireDate, EncryptedToken)> {
+    pub fn new_encrypted(alias: Alias) -> AuthResult<(ExpireDate, EncryptedToken)> {
         let created = Utc::now();
         let expires = created + Duration::minutes(TTL_AUTH);
         let token = Token {
-            user_id,
+            alias,
             created,
             expires,
         };
@@ -76,13 +77,14 @@ impl Token {
         expires > now
     }
 
-    pub fn user_id(&self) -> ObjectId {
-        self.user_id
-    }
+
     pub fn created(&self) -> DateTime<Utc> {
         self.created
     }
     pub fn expires(&self) -> DateTime<Utc> {
         self.expires
+    }
+    pub fn alias(&self) -> &Alias {
+        &self.alias
     }
 }

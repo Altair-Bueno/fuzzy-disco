@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Debug,Copy, Clone)]
 pub enum Format {
     #[serde(rename = "image/png")]
     PNG,

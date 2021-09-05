@@ -13,7 +13,7 @@ lazy_static! {
 
 /// An alias represents the User's custom username for his account. For an alias
 /// to be valid, it must mach r"^[a-zA-Z_\-0-9]{4,30}$"
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd, Clone)]
 #[serde(transparent)]
 pub struct Alias {
     alias: String,

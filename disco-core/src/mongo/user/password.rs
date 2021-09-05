@@ -9,7 +9,7 @@ use crate::mongo::user::result::UserError;
 /// A Password instance represents a [bcrypt] encripted hash that is stored on
 /// the database. The hash is used to autheticate the user without storing the
 /// real password
-#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq, Clone)]
 #[serde(transparent)]
 pub struct Password {
     password: String,

@@ -207,7 +207,7 @@ pub async fn login_alias(
 fn create_token(result: mongodb::error::Result<Option<User>>, password: &str) -> ApiResult {
     match result {
         Ok(Some(x)) => match bcrypt::verify(password, x.password().password()) {
-            Ok(true) => match Token::new_encrypted(x.id().unwrap()) {
+            Ok(true) => match Token::new_encrypted((*x.alias()).clone()) {
                 Ok((expires,payload)) => Custom(Status::Ok, json!({"status":"Ok","expires": expires, "token": payload})),
                 Err(_) => Custom(
                     Status::InternalServerError,

@@ -19,7 +19,7 @@ use crate::mongo::user::password::Password;
 /// - [crate::mongo::user::Alias]
 /// - [crate::mongo::user::Password]
 /// - [mongodb::bson::DateTime]
-#[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone)]
 pub struct User {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -27,7 +27,7 @@ pub struct User {
     alias: Alias,
     email: Email,
     password: Password,
-    posts_id: Vec<ObjectId>,
+    posts: Vec<ObjectId>,
     creation_date: DateTime,
 }
 
@@ -41,7 +41,7 @@ impl User {
             alias,
             email,
             password,
-            posts_id: vec![],
+            posts: vec![],
             creation_date: mongodb::bson::DateTime::now(),
         }
     }
@@ -55,8 +55,8 @@ impl User {
     pub fn password(&self) -> &Password {
         &self.password
     }
-    pub fn posts_id(&self) -> &Vec<ObjectId> {
-        &self.posts_id
+    pub fn posts(&self) -> &Vec<ObjectId> {
+        &self.posts
     }
     pub fn creation_date(&self) -> DateTime {
         self.creation_date
@@ -73,7 +73,7 @@ mod test {
 
     #[test]
     pub fn deserialization() {
-        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"posts_id\":[],\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
+        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"posts\":[],\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
         let _: User = serde_json::from_str(json).unwrap();
     }
 

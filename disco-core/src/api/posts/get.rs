@@ -51,7 +51,7 @@ use crate::mongo::post::Post;
 /// {
 ///  "audio": "6032137e6c2cc66244ef2a88",
 ///  "photo": "5032137e6c2cc66244ef2a88",
-///  "author": "6131f8946c2cc66344ef2a86",
+///  "author": "Altair-Bueno",
 ///  "id": "6132137e6c2cc66344ef2a88",
 ///  "caption": "Hisoka wants gon booty",
 ///  "title": "Hunter x Hunter"
@@ -86,7 +86,7 @@ pub async fn get_post_content(id: Result<Id, Value>, mongo: &State<Collection<Po
         "id": post.id().unwrap().to_string(),
         "title": post.title(),
         "caption": post.caption(),
-        "author": post.author_id().to_string(),
+        "author": post.author().to_string(), // TODO Author
         "audio": post.audio_path().to_string(),
         "photo": post.photo_path().to_string(),
     });

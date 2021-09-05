@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
 use crate::mongo::traits::Document;
+use crate::mongo::user::Alias;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -16,14 +17,14 @@ use crate::mongo::traits::Document;
 /// - [mongodb::bson::oid::ObjectId]
 /// - [crate::mongo::post::Title]
 /// - [crate::mongo::post::Caption]
-#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq,Clone)]
 pub struct Post {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
     title: Title,
     caption: Caption,
-    author: ObjectId,
+    author: Alias,
     audio: ObjectId,
     photo: ObjectId,
 }
@@ -35,7 +36,7 @@ impl Post {
     pub fn new(
         title: Title,
         caption: Caption,
-        author: ObjectId,
+        author: Alias,
         audio: ObjectId,
         photo: ObjectId,
     ) -> Self {
@@ -58,8 +59,8 @@ impl Post {
     pub fn caption(&self) -> &Caption {
         &self.caption
     }
-    pub fn author_id(&self) -> ObjectId {
-        self.author
+    pub fn author(&self) -> &Alias {
+        &self.author
     }
     pub fn audio_path(&self) -> &ObjectId {
         &self.audio
@@ -76,7 +77,7 @@ impl Post {
     pub fn set_caption(&mut self, caption: Caption) {
         self.caption = caption;
     }
-    pub fn set_author_id(&mut self, author_id: ObjectId) {
+    pub fn set_author_id(&mut self, author_id: Alias) {
         self.author = author_id;
     }
     pub fn set_audio_path(&mut self, audio_path: ObjectId) {

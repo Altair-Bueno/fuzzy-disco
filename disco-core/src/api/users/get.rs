@@ -17,9 +17,8 @@ pub async fn get_user_info(alias:&str, mongo: &State<Collection<User>>) -> ApiRe
     match result {
         Ok(Some(x)) => {
             Custom(Status::Ok, json!({
-                "id": x.id().unwrap().to_string(),
                 "alias": x.alias(),
-                "posts_id": x.posts_id(),
+                "posts": x.posts(),
             }))
         }
         Ok(None) => Custom(Status::NotFound,json!({"status":Status::NotFound.reason(),"message": "User doesn't exist"})),

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::mongo::user::result::UserError;
 
 /// Represents a valid email address
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd, Clone)]
 #[serde(transparent)]
 pub struct Email {
     email: String,
