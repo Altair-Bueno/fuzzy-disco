@@ -14,9 +14,9 @@ const SECRET : &str = "hello world";
 
 lazy_static! {
     static ref DECODING_KEY: DecodingKey<'static> =
-        DecodingKey::from_base64_secret(SECRET).unwrap();
+        DecodingKey::from_secret(SECRET.as_ref());
     static ref ENCODING_KEY: EncodingKey =
-        EncodingKey::from_base64_secret(SECRET).unwrap();
+        EncodingKey::from_secret(SECRET.as_ref());
 }
 
 pub type EncryptedToken = String;
@@ -34,12 +34,11 @@ impl<'r> FromRequest<'r> for Token {
     type Error = Value;
 
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let validation = Validation::new(Default::default());
         let token = request
             .headers()
             .get("Authorization")
             .next()
-            .map(|x| jsonwebtoken::decode::<Token>(x, &DECODING_KEY, &validation));
+            .map(|x| jsonwebtoken::decode::<Token>(x, &DECODING_KEY, &Validation::default()));
         match token {
             Some(Ok(x)) if x.claims.is_valid() => Outcome::Success(x.claims),
             _ => Outcome::Forward(()),

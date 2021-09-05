@@ -11,6 +11,8 @@ use crate::auth::data::{UserSingUp, UserLogInEmail, UserLogInAlias};
 use crate::mongo::IntoDocument;
 use crate::mongo::user::{User, Email, Password, UserError, Alias};
 use crate::auth::Token;
+use bcrypt::BcryptResult;
+use crate::auth::result::AuthResult;
 
 /// # `POST /auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -168,30 +170,38 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 /// ```
 #[post("/login?using=email", format = "json", data = "<info>")]
 pub async fn login_email(info:Json<UserLogInEmail<'_>>, mongo: &State<Collection<User>>) -> ApiResult {
-    let email = info.email.parse::<Email>();
-    let password = info.password.parse::<Password>();
-    let search = match (email,password) {
-        (Ok(e), Ok(p)) => mongo.find_one(Some(doc! {"email": e.email(), "password": p.password()}),None).await,
-        (Err(x),_) => return Custom(Status::BadRequest, json!({"status": "BadRequest", "message": x})),
-        (_,Err(x)) => return Custom(Status::BadRequest,json!({"status":"BadRequest","message":x})),
+    let search = match info.email.parse::<Email>() {
+        Ok(e) => mongo.find_one(Some(doc! {"email": e.email()}),None).await,
+        Err(x) => return Custom(Status::BadRequest, json!({"status": "BadRequest", "message": x})),
     };
-    create_token(search)
+
+    create_token(search,info.password)
 }
 #[post("/login?using=alias", format = "json", data = "<info>", rank = 2)]
 pub async fn login_alias(info:Json<UserLogInAlias<'_>>, mongo: &State<Collection<User>>) -> ApiResult {
-    let alias = info.alias.parse::<Alias>();
-    let password = info.password.parse::<Password>();
-    let search = match (alias,password) {
-        (Ok(a), Ok(p)) => mongo.find_one(Some(doc! {"alias": a.alias(), "password": p.password()}),None).await,
-        (Err(x),_) => return Custom(Status::BadRequest, json!({"status": "BadRequest", "message": x})),
-        (_,Err(x)) => return Custom(Status::BadRequest,json!({"status":"BadRequest","message":x})),
+    let search = match info.alias.parse::<Alias>() {
+        Ok(e) => mongo.find_one(Some(doc! {"alias": e.alias()}),None).await,
+        Err(x) => return Custom(Status::BadRequest, json!({"status": "BadRequest", "message": x})),
     };
-    create_token(search)
+
+    create_token(search,info.password)
 }
 
-fn create_token(result: mongodb::error::Result<Option<User>>) -> ApiResult {
+fn create_token(result: mongodb::error::Result<Option<User>>,password:&str) -> ApiResult {
     match result {
-        Ok(Some(x)) => Custom(Status::Ok, json!({"status":"Ok","token": Token::new_encrypted(x.id().unwrap())})),
+        Ok(Some(x)) => {
+            match bcrypt::verify(password,x.password().password()) {
+                Ok(true) => {
+                    match Token::new_encrypted(x.id().unwrap()) {
+                        Ok(payload) => Custom(Status::Ok, json!({"status":"Ok","token": payload})),
+                        Err(e) => Custom(Status::InternalServerError, json!({"status": "InternalServerError", "message": "Couldn't generate token"}))
+                    }
+                },
+                Ok(false) => Custom(Status::Unauthorized,json!({"status": "Unauthorized", "message": "Invalid password"})),
+                Err(_) =>  Custom(Status::InternalServerError, json!({"status":"InternalServerError", "message": "Couldn't verfiy password"})),
+            }
+
+        },
         Ok(None) => Custom(Status::Unauthorized, json!({"status":"Unauthorized", "message": "User doesn't exist"})),
         _ => Custom(Status::InternalServerError,json!({"status":"InternalServerError","message": "Database error"}))
     }

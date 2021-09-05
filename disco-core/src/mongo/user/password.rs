@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use bcrypt::{DEFAULT_COST, Version};
+use bcrypt::{DEFAULT_COST,hash,verify};
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::result;
@@ -38,8 +38,7 @@ impl Password {
         if s.len() < 8 {
             Err(UserError::PasswordTooShort)
         } else {
-            let hashed_password = bcrypt::hash_with_salt(s,DEFAULT_COST,SALT)
-                .map(|x| x.format_for_version(Version::TwoB));
+            let hashed_password = bcrypt::hash(s,DEFAULT_COST);
             match hashed_password {
                 Ok(password) => Ok(Password { password }),
                 Err(_) => Err(UserError::HashError),
