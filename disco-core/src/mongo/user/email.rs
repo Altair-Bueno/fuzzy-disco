@@ -1,14 +1,13 @@
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use crate::mongo::user::result::UserError;
 
-#[derive(Serialize, Deserialize, Debug, Validate, Eq, PartialEq, Ord, PartialOrd)]
+/// Represents a valid email address
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(transparent)]
 pub struct Email {
-    #[validate(email)]
     email: String,
 }
 

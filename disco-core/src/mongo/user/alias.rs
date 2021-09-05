@@ -3,22 +3,19 @@ use std::str::FromStr;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
 
 lazy_static! {
-    /// valid Alias: r"^[a-zA-Z_\-0-9]{4,30}$"
     static ref RE: Regex = Regex::new(r"^[a-zA-Z_\-0-9]{4,30}$").unwrap();
 }
 
 /// An alias represents the User's custom username for his account. For an alias
-/// to be valid, it must mach the [static@RE] regex
-#[derive(Serialize, Deserialize, Debug, Validate, Eq, PartialEq, Ord, PartialOrd)]
+/// to be valid, it must mach r"^[a-zA-Z_\-0-9]{4,30}$"
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(transparent)]
 pub struct Alias {
-    #[validate(regex = "RE")]
     alias: String,
 }
 

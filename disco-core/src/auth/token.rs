@@ -1,10 +1,8 @@
-use chrono::serde::ts_seconds;
 use chrono::{DateTime, Duration, Utc};
-use jsonwebtoken::{Algorithm, DecodingKey, Validation};
+use jsonwebtoken::{DecodingKey, Validation};
 use lazy_static::lazy_static;
 use mongodb::bson::oid::ObjectId;
 use rocket::http::Status;
-use rocket::outcome::Outcome::{Failure, Forward};
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;

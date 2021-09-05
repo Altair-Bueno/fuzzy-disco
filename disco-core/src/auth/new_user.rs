@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::mongo::traits::IntoDocument;
+use crate::mongo::IntoDocument;
 use crate::mongo::user::{User, UserError};
 
 #[derive(Debug, Serialize, Deserialize)]

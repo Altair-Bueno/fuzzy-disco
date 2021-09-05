@@ -1,7 +1,6 @@
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use crate::mongo::traits::Document;
 use crate::mongo::user::alias::Alias;
@@ -20,21 +19,14 @@ use crate::mongo::user::password::Password;
 /// - [crate::mongo::user::Alias]
 /// - [crate::mongo::user::Password]
 /// - [mongodb::bson::DateTime]
-#[derive(Debug, Serialize, Deserialize, Validate, Ord, PartialOrd, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq)]
 pub struct User {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
-
-    #[validate]
     alias: Alias,
-
-    #[validate]
     email: Email,
-
-    #[validate]
     password: Password,
-
     posts_id: Vec<ObjectId>,
     creation_date: DateTime,
 }

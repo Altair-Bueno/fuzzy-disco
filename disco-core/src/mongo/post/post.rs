@@ -1,6 +1,5 @@
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
@@ -17,21 +16,15 @@ use crate::mongo::traits::Document;
 /// - [mongodb::bson::oid::ObjectId]
 /// - [crate::mongo::post::Title]
 /// - [crate::mongo::post::Caption]
-#[derive(Serialize, Deserialize, Debug, Validate, Ord, PartialOrd, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq)]
 pub struct Post {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
-
-    #[validate]
     title: Title,
-
-    #[validate]
     caption: Caption,
     author: ObjectId,
-
     audio: ObjectId,
-
     photo: ObjectId,
 }
 

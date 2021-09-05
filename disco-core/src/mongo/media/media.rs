@@ -1,12 +1,12 @@
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use crate::mongo::media::format::Format;
 use crate::mongo::traits::Document;
 
-/// A Media instance contains information about how to locate a resource
-#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Validate)]
+/// A Media instance represents a Document on Mongodb with usefull information
+/// related to multimedia files
+#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Media {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]

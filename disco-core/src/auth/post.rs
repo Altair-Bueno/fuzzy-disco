@@ -7,7 +7,7 @@ use rocket::State;
 
 use crate::api::result::ApiResult;
 use crate::auth::new_user::NewUser;
-use crate::mongo::traits::IntoDocument;
+use crate::mongo::IntoDocument;
 use crate::mongo::user::User;
 
 /// # `POST /auth/signup`
