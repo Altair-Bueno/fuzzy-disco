@@ -47,4 +47,8 @@ impl Password {
     pub fn password(&self) -> &str {
         &self.password
     }
+
+    pub fn validate(&self, against:&str) -> bcrypt::BcryptResult<bool> {
+        bcrypt::verify(against,&self.password)
+    }
 }

@@ -131,7 +131,7 @@ pub async fn get_full_user_info(mongo: &State<Collection<User>>,token: TokenClai
     )
 }
 
-async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User,Custom<Value>> {
+pub async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User,Custom<Value>> {
     let result = mongo
         .find_one(doc! {"alias": alias.to_string() }, None)
         .await;

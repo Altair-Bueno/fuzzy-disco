@@ -10,14 +10,11 @@ use crate::api::result::ApiResult;
 use crate::api::users::auth::data::{
     JoinedRefreshToken, UserLogInAlias, UserLogInEmail, UserLogInRefreshToken, UserSingUp,
 };
-use crate::api::users::auth::result::AuthResult;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::auth::token::response::TokenResponse;
 use crate::mongo::sesion::Sesion;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
-use bcrypt::BcryptResult;
-use rocket::futures::StreamExt;
 use rocket::serde::json::Value;
 use std::io::Cursor;
 use std::str::FromStr;
@@ -231,10 +228,10 @@ pub async fn login_alias(
 }
 
 async fn create_sesion(
-    mut user: User,
+    user: User,
     session_collection: &State<Collection<Sesion>>,
 ) -> Result<TokenResponse, Custom<Value>> {
-    let sesion = Sesion::new(user.id().unwrap());
+    let sesion = Sesion::new(user.alias().clone());
     match session_collection.insert_one(&sesion, None).await {
         Ok(x) => {
             let sesion: mongodb::bson::oid::ObjectId =
@@ -262,10 +259,10 @@ async fn create_sesion(
     }
 }
 async fn verify_password(
-    mut user: &User,
+    user: &User,
     password: &str,
 ) -> Result<(), Custom<Value>> {
-    match bcrypt::verify(password, user.password().password()) {
+    match user.password().validate(password) {
         Ok(true) => Ok(()),
         Ok(false) => Err(Custom(
             Status::Unauthorized,
@@ -322,8 +319,8 @@ async fn run_session_querry(
         "$filter": {
             "input": "$lookup":{
                 "from": "Users",
-                "localField": "sub",
-                "foreignField": "_id",
+                "localField": "user_alias",
+                "foreignField": "alias",
                 "as": "users"
             },
             "as": "joined",
