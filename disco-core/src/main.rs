@@ -124,6 +124,7 @@ async fn main() -> Result<(), String> {
         .mount(
             "/api/users",
             routes![
+                api::users::get::get_full_user_info,
                 api::users::get::get_user_info,
                 api::users::delete::delete_user,
             ],
