@@ -20,6 +20,7 @@ impl FromStr for Email {
 }
 
 impl Email {
+    /// Checks if the email adress is valid and wraps the value
     pub fn new(s: &str) -> crate::mongo::user::result::Result<Email> {
         if validator::validate_email(s) {
             Ok(Email {

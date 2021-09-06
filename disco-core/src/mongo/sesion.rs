@@ -4,10 +4,10 @@ use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 use crate::mongo::user::Alias;
 
-/// Contains information about a user login sesion. Each time rocket recives a
-/// valid `POST /api/user/login`, a new Sesion will be created on the server.
-/// This allows the user to refresh its JWT auth token without use of username
-/// and password. It also allows the user to log out remotly
+/// Contains information about a user login sesion (aka refresh token). Each
+/// time the server recives a valid `POST /api/user/login`, a new Sesion will
+/// be created on the server. This allows the user to refresh its JWT auth token
+/// without use of username and password
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone)]
 pub struct Sesion {
     // sesion token
@@ -21,6 +21,7 @@ pub struct Sesion {
 }
 
 impl Sesion {
+    /// Generates a new sesion token that is linked to the user's alias
     pub fn new(user_alias: Alias) -> Sesion {
         Sesion {
             id: None,
