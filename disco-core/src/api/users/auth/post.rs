@@ -7,12 +7,14 @@ use rocket::serde::json::Json;
 use rocket::{Response, State};
 
 use crate::api::result::ApiResult;
-use crate::api::users::auth::data::{Claims, UserLogInAlias, UserLogInEmail, UserSingUp, Token};
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp};
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 use bcrypt::BcryptResult;
 use rocket::serde::json::Value;
 use std::io::Cursor;
+use crate::api::users::auth::token::response::TokenResponse;
+use crate::api::users::auth::token::claims::TokenClaims;
 
 /// # `POST api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -174,7 +176,7 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 pub async fn login_email<'a>(
     info: Json<UserLogInEmail<'a>>,
     mongo: &State<Collection<User>>,
-) -> Result<Token, Custom<Value>> {
+) -> Result<TokenResponse, Custom<Value>> {
     let search = match info.email.parse::<Email>() {
         Ok(e) => mongo.find_one(Some(doc! {"email": e.email()}), None).await,
         Err(x) => {
@@ -192,7 +194,7 @@ pub async fn login_email<'a>(
 pub async fn login_alias(
     info: Json<UserLogInAlias<'_>>,
     mongo: &State<Collection<User>>,
-) -> Result<Token, Custom<Value>> {
+) -> Result<TokenResponse, Custom<Value>> {
     let search = match info.alias.parse::<Alias>() {
         Ok(e) => mongo.find_one(Some(doc! {"alias": e.alias()}), None).await,
         Err(x) => {
@@ -210,7 +212,7 @@ async fn verify_password(
     mut user: User,
     password: &str,
     mongo: &State<Collection<User>>,
-) -> Result<Token, Custom<Value>> {
+) -> Result<TokenResponse, Custom<Value>> {
     match bcrypt::verify(password, user.password().password()) {
         Ok(true) => {
             let session = user.add_session();
@@ -218,8 +220,8 @@ async fn verify_password(
             let update = doc! {"$push": { "sessions" : mongodb::bson::to_document(&session).unwrap() }};
             match mongo.update_one(query, update, None).await {
                 Ok(x) if x.modified_count == 1 => {
-                    let (expires,payload) = Claims::new_encrypted(user.alias().clone()).unwrap();
-                    Ok(Token::new(expires, session.id().to_string(), payload))
+                    let (expires,payload) = TokenClaims::new_encrypted(user.alias().clone()).unwrap();
+                    Ok(TokenResponse::new(expires, session.id().to_string(), payload))
                 }
                 _ => Err(Custom(
                     Status::InternalServerError,
@@ -243,7 +245,7 @@ async fn check_user(
     result: mongodb::error::Result<Option<User>>,
     password: &str,
     mongo: &State<Collection<User>>,
-) -> Result<Token, Custom<Value>> {
+) -> Result<TokenResponse, Custom<Value>> {
     match result {
         Ok(Some(x)) => verify_password(x, password, mongo).await,
         Ok(None) => Err(Custom(

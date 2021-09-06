@@ -4,3 +4,5 @@ pub mod data;
 pub mod post;
 /// Errors that can be produced on the API
 pub mod result;
+
+pub mod token;
