@@ -10,7 +10,7 @@ const MAX_LENGTH_CAPTION: usize = 150;
 
 /// A caption is a string of text that contains between 0 and [MAX_LENGTH_CAPTION]
 /// characters
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd,Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd, Clone)]
 #[serde(transparent)]
 pub struct Caption {
     caption: String,

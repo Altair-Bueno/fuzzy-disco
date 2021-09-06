@@ -16,7 +16,7 @@ const MAX_TITLE_LENGTH: usize = 24;
 
 /// A title represents a non empty string of text that is trimmed and matches the
 /// r"^(\S+.*\S)$" regex with legth <= [MAX_TITLE_LENGTH]
-#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize,Clone)]
+#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 #[serde(transparent)]
 pub struct Title {
     title: String,

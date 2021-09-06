@@ -17,7 +17,7 @@ use crate::mongo::user::Alias;
 /// - [mongodb::bson::oid::ObjectId]
 /// - [crate::mongo::post::Title]
 /// - [crate::mongo::post::Caption]
-#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq,Clone)]
+#[derive(Serialize, Deserialize, Debug, Ord, PartialOrd, PartialEq, Eq, Clone)]
 pub struct Post {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -1,15 +1,18 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
-use rocket::http::Status;
+use rocket::http::{ContentType, Header, Status};
 use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
-use rocket::State;
+use rocket::{Response, State};
 
 use crate::api::result::ApiResult;
-use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp, Claims};
+use crate::api::users::auth::data::{Claims, UserLogInAlias, UserLogInEmail, UserSingUp, Token};
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
+use bcrypt::BcryptResult;
+use rocket::serde::json::Value;
+use std::io::Cursor;
 
 /// # `POST api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -168,67 +171,89 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 /// }
 /// ```
 #[post("/login?using=email", format = "json", data = "<info>")]
-pub async fn login_email(
-    info: Json<UserLogInEmail<'_>>,
+pub async fn login_email<'a>(
+    info: Json<UserLogInEmail<'a>>,
     mongo: &State<Collection<User>>,
-) -> ApiResult {
+) -> Result<Token, Custom<Value>> {
     let search = match info.email.parse::<Email>() {
         Ok(e) => mongo.find_one(Some(doc! {"email": e.email()}), None).await,
         Err(x) => {
-            return Custom(
+            return Err(Custom(
                 Status::BadRequest,
                 json!({"status": "BadRequest", "message": x}),
-            )
+            ))
         }
     };
 
-    create_token(search, info.password)
+    check_user(search, info.password, mongo).await
 }
 
 #[post("/login?using=alias", format = "json", data = "<info>", rank = 2)]
 pub async fn login_alias(
     info: Json<UserLogInAlias<'_>>,
     mongo: &State<Collection<User>>,
-) -> ApiResult {
+) -> Result<Token, Custom<Value>> {
     let search = match info.alias.parse::<Alias>() {
         Ok(e) => mongo.find_one(Some(doc! {"alias": e.alias()}), None).await,
         Err(x) => {
-            return Custom(
+            return Err(Custom(
                 Status::BadRequest,
                 json!({"status": "BadRequest", "message": x}),
-            )
+            ))
         }
     };
 
-    create_token(search, info.password)
+    check_user(search, info.password, mongo).await
 }
 
-fn create_token(result: mongodb::error::Result<Option<User>>, password: &str) -> ApiResult {
-    match result {
-        Ok(Some(x)) => match bcrypt::verify(password, x.password().password()) {
-            Ok(true) => match Claims::new_encrypted((*x.alias()).clone()) {
-                Ok((expires,payload)) => Custom(Status::Ok, json!({"status":"Ok","expires": expires, "token": payload})),
-                Err(_) => Custom(
+async fn verify_password(
+    mut user: User,
+    password: &str,
+    mongo: &State<Collection<User>>,
+) -> Result<Token, Custom<Value>> {
+    match bcrypt::verify(password, user.password().password()) {
+        Ok(true) => {
+            let session = user.add_session();
+            let query = doc! {"_id": user.id()};
+            let update = doc! {"$push": { "sessions" : mongodb::bson::to_document(&session).unwrap() }};
+            match mongo.update_one(query, update, None).await {
+                Ok(x) if x.modified_count == 1 => {
+                    let (expires,payload) = Claims::new_encrypted(user.alias().clone()).unwrap();
+                    Ok(Token::new(expires, session.id().to_string(), payload))
+                }
+                _ => Err(Custom(
                     Status::InternalServerError,
-                    json!({"status": "InternalServerError", "message": "Couldn't generate token"}),
-                ),
-            },
-            Ok(false) => Custom(
-                Status::Unauthorized,
-                json!({"status": "Unauthorized", "message": "Invalid password"}),
-            ),
-            Err(_) => Custom(
-                Status::InternalServerError,
-                json!({"status":"InternalServerError", "message": "Couldn't verfiy password"}),
-            ),
-        },
-        Ok(None) => Custom(
+                    json!({"status": Status::InternalServerError.reason(),
+                "message": "Couldn't generate session token"}),
+                )),
+            }
+        }
+        Ok(false) => Err(Custom(
+            Status::Unauthorized,
+            json!({"status": "Unauthorized", "message": "Invalid password"}),
+        )),
+        Err(_) => Err(Custom(
+            Status::InternalServerError,
+            json!({"status":"InternalServerError", "message": "Couldn't verfiy password"}),
+        )),
+    }
+}
+
+async fn check_user(
+    result: mongodb::error::Result<Option<User>>,
+    password: &str,
+    mongo: &State<Collection<User>>,
+) -> Result<Token, Custom<Value>> {
+    match result {
+        Ok(Some(x)) => verify_password(x, password, mongo).await,
+        Ok(None) => Err(Custom(
             Status::Unauthorized,
             json!({"status":"Unauthorized", "message": "User doesn't exist"}),
-        ),
-        _ => Custom(
+        )),
+        _ => Err(Custom(
             Status::InternalServerError,
             json!({"status":"InternalServerError","message": "Database error"}),
-        ),
+        )),
     }
+
 }

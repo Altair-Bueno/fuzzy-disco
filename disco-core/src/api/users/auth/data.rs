@@ -3,29 +3,32 @@ use serde::{Deserialize, Serialize};
 use crate::mongo::user::{User, UserError};
 use crate::mongo::IntoDocument;
 
-
 use chrono::{DateTime, Duration, Utc};
 use lazy_static::lazy_static;
 use mongodb::bson::oid::ObjectId;
-use rocket::http::Status;
+use rocket::http::{Status};
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
-use rocket::Request;
 
 use crate::api::users::auth::result::{AuthError, AuthResult};
 use crate::mongo::user::Alias;
-use jsonwebtoken::{DecodingKey, Validation, Header, EncodingKey};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
+
+use std::io::Cursor;
+
+use rocket::request::Request;
+use rocket::response::{self, Response, Responder};
+use rocket::http::ContentType;
 
 /// JWT Time To Live
 const TTL_AUTH: i64 = 5;
-
 
 pub type EncryptedToken = String;
 pub type ExpireDate = i64;
 
 /// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
-#[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord,Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord, Clone)]
 pub struct Claims {
     sub: Alias,
     exp: i64,
@@ -41,20 +44,19 @@ impl<'r> FromRequest<'r> for Claims {
             let authen_str = authen_header.to_string();
             if authen_str.starts_with("Bearer") {
                 let token = authen_str[6..authen_str.len()].trim();
-                if let Ok(token_data) =
-                    jsonwebtoken::decode::<Claims>(
-                        &token,
-                        &DecodingKey::from_secret(include_bytes!("../../../../secret.key")),
-                        &Validation::default()
-                    ) {
-                        return Outcome::Success(token_data.claims)
-                    }
+                if let Ok(token_data) = jsonwebtoken::decode::<Claims>(
+                    &token,
+                    &DecodingKey::from_secret(include_bytes!("../../../../secret.key")),
+                    &Validation::default(),
+                ) {
+                    return Outcome::Success(token_data.claims);
                 }
             }
+        }
 
         Outcome::Failure((
             Status::BadRequest,
-            json!({"status": Status::BadRequest.reason(), "message": "Invalid token"})
+            json!({"status": Status::BadRequest.reason(), "message": "Invalid token"}),
         ))
     }
 }
@@ -68,11 +70,16 @@ impl Claims {
         let claims = Claims {
             sub: alias,
             exp: expires.timestamp(),
-            iat: created.timestamp()
+            iat: created.timestamp(),
         };
-        let token = jsonwebtoken::encode(&Header::default(), &claims, &EncodingKey::from_secret(include_bytes!("../../../../secret.key"))).unwrap();
+        let token = jsonwebtoken::encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(include_bytes!("../../../../secret.key")),
+        )
+        .unwrap();
 
-        Ok((expires.timestamp(),token))
+        Ok((Duration::minutes(TTL_AUTH).num_seconds(), token))
     }
 
     pub fn created(&self) -> i64 {
@@ -85,7 +92,6 @@ impl Claims {
         &self.sub
     }
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
@@ -122,21 +128,42 @@ pub struct UserLogInAlias<'a> {
     pub password: &'a str,
 }
 
-#[cfg(test)]
-mod tes {
-    use crate::api::users::auth::data::Claims;
-    use jsonwebtoken::{DecodingKey,Validation};
 
-    #[test]
-    pub fn test() {
-        let (_,token) = Claims::new_encrypted("Temp".parse().unwrap()).unwrap();
-        println!("{:?}",token);
-        let decript =  jsonwebtoken::decode::<Claims>(
-            &token,
-            &DecodingKey::from_secret(include_bytes!("../../../../secret.key")),
-            &Validation{validate_exp: false, ..Validation::default()}
-        ).unwrap();
-        println!("{:?}",decript)
+#[derive(Debug,Serialize,Deserialize)]
+pub struct Token {
+    access_token: String,
+    expires_in: i64,
+    refresh_token: String,
+}
 
+impl Token {
+    pub fn new(expires_in:i64,refresh_token:String,access_token:String) -> Token {
+        Token{
+            access_token,
+            expires_in,
+            refresh_token,
+        }
+    }
+}
+
+impl <'r,'o>Responder<'r,'static> for Token {
+    fn respond_to(self, request: &'r Request<'_>) -> rocket::response::Result<'static> {
+        let value = json!(
+            {
+                "access_token": self.access_token,
+                "token_type": "Bearer",
+                "expires_in": self.expires_in,
+                "refresh_token": self.refresh_token,
+                "scope": "User login"
+            }
+        );
+        let body = rocket::serde::json::serde_json::to_string(&value).unwrap();
+        Response::build()
+            .status(Status::Ok)
+            .header(ContentType::JSON)
+            .raw_header("Cache-Control", "no-store")
+            .raw_header("Pragma", "no-cache")
+            .sized_body(body.len(), Cursor::new(body))
+            .ok()
     }
 }
