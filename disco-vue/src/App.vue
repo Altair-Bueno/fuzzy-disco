@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <LoginPage class="login-page"></LoginPage>
+    <RegisterPage></RegisterPage>
     <!--
     <Navbar></Navbar>
     <CardList v-bind:cardlist="cards"></CardList>
@@ -9,12 +9,12 @@
 </template>
 
 <script>
-import LoginPage from "@/components/LoginPage";
+import RegisterPage from "@/components/RegisterPage";
 
 export default {
   name: 'App',
   components: {
-    LoginPage,
+    RegisterPage,
   },
   data() {
     return {

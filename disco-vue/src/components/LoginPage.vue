@@ -3,8 +3,8 @@
     <div class="form-cont">
       <form class="login-form">
         <h1>Login</h1>
-        <label for="username">Username or Email</label><br>
-        <input class="input-text" type="email" id="username"><br><br>
+        <label for="alias">Username or Email</label><br>
+        <input class="input-text" type="email" id="alias"><br><br>
         <label for="pwd">Password</label><br>
         <input class="input-text" type="password" id="pwd"><br><br>
         <input class="submit-btn" type="submit" value="Login">
