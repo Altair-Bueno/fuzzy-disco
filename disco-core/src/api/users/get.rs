@@ -1,5 +1,5 @@
 use crate::api::result::ApiResult;
-use crate::mongo::user::{Alias, User, UserError};
+use crate::mongo::user::{Alias, User};
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::http::Status;

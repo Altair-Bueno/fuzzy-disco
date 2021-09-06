@@ -44,14 +44,17 @@ async fn main() -> Result<(), String> {
             None,
         )
         .await;
+    #[cfg(debug_assertions)]
+    println!("[MONGO] {:?}", index_response);
     let index_response = mongo_database
         .run_command(
             doc! {
-                "createIndexes": "Sesion",
+                "createIndexes": "Sesions",
                 "indexes": [
                     {
                         "key": { "sub": 1 },
                         "name": "sub",
+                        "unique": false
                     },
                 ]
             },

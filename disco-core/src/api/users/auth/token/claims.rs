@@ -1,11 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::mongo::user::{User, UserError};
-use crate::mongo::IntoDocument;
-
-use chrono::{DateTime, Duration, Utc};
-use lazy_static::lazy_static;
-use mongodb::bson::oid::ObjectId;
+use chrono::Utc;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
@@ -15,11 +10,7 @@ use crate::api::users::auth::result::{AuthError, AuthResult};
 use crate::mongo::user::Alias;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 
-use std::io::Cursor;
-
-use rocket::http::ContentType;
 use rocket::request::Request;
-use rocket::response::{self, Responder, Response};
 
 /// JWT Time To Live
 const TTL_AUTH: i64 = 60;

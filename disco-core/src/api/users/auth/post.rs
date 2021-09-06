@@ -136,12 +136,13 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 ///
 /// ```json
 /// {
-///     "status": "Ok",
-///     "token": String,
-///     "expires": Date,
+///     "access_token": String,
+///     "expires_in": i64,
+///     "refresh_token": String,
+///     "token_type": "Bearer",
+///     "scope": "User Login"
 /// }
 /// ```
-///
 /// ## Err
 /// ```json
 /// {
@@ -170,12 +171,13 @@ pub async fn signup(user: Json<UserSingUp<'_>>, mongo: &State<Collection<User>>)
 /// ```
 ///
 /// ## Response
-///
 /// ```json
 /// {
-///     "status": "Ok",
-///     "expires": "2021-09-05T13:27:50.936160Z",
-///     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjp7IiRvaWQiOiI2MTM0YmZlMTU5MTZmNTJiMTc5OGRhZjIifSwiY3JlYXRlZCI6IjIwMjEtMDktMDVUMTM6MjI6NTAuOTM2MTYwWiIsImV4cGlyZXMiOiIyMDIxLTA5LTA1VDEzOjI3OjUwLjkzNjE2MFoifQ.15pv2ED-NxStcpFDfqHIgizRqWBoN0g0jtFb89Jjw5c"
+/// "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoZWxsb3dvcmxkIiwiZXhwIjoxNjMwOTQ0ODg0LCJpYXQiOjE2MzA5NDQ4MjR9.Ux2XbdhHPYvnmnkC8hfUPBsQPpZDtrgm2zbBmMYj1Vo",
+/// "expires_in": 60,
+/// "refresh_token": "61363e38a8285591b0b79cb2",
+/// "token_type": "Bearer",
+/// "scope": "User login"
 /// }
 /// ```
 #[post("/login?using=email", format = "json", data = "<info>", rank = 3)]
@@ -184,7 +186,7 @@ pub async fn login_email(
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Sesion>>,
 ) -> Result<TokenResponse, Custom<Value>> {
-    let search = match info.email.parse::<Email>() {
+    let user_result = match info.email.parse::<Email>() {
         Ok(e) => {
             user_collection
                 .find_one(Some(doc! {"email": e.email()}), None)
@@ -198,7 +200,9 @@ pub async fn login_email(
         }
     };
 
-    check_user(search, info.password, user_collection, session_collection).await
+    let x = check_user(user_result).await?;
+    verify_password(&x, info.password).await?;
+    create_sesion(x,session_collection).await
 }
 
 #[post("/login?using=alias", format = "json", data = "<info>", rank = 2)]
@@ -207,7 +211,7 @@ pub async fn login_alias(
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Sesion>>,
 ) -> Result<TokenResponse, Custom<Value>> {
-    let search = match info.alias.parse::<Alias>() {
+    let user_result = match info.alias.parse::<Alias>() {
         Ok(e) => {
             user_collection
                 .find_one(Some(doc! {"alias": e.alias()}), None)
@@ -221,44 +225,48 @@ pub async fn login_alias(
         }
     };
 
-    check_user(search, info.password, user_collection, session_collection).await
+    let x = check_user(user_result).await?;
+    verify_password(&x, info.password).await?;
+    create_sesion(x,session_collection).await
 }
 
-async fn verify_password(
+async fn create_sesion(
     mut user: User,
-    password: &str,
-    mongo: &State<Collection<User>>,
     session_collection: &State<Collection<Sesion>>,
 ) -> Result<TokenResponse, Custom<Value>> {
-    match bcrypt::verify(password, user.password().password()) {
-        Ok(true) => {
-            let sesion = Sesion::new(user.id().unwrap());
-            match session_collection.insert_one(&sesion, None).await {
-                Ok(x) => {
-                    let sesion: mongodb::bson::oid::ObjectId =
-                        mongodb::bson::from_bson(x.inserted_id).unwrap();
-                    let (expires, payload) = match TokenClaims::new_encrypted(user.alias().clone())
-                    {
-                        Ok(elem) => elem,
-                        Err(_) => {
-                            return Err(Custom(
-                                Status::InternalServerError,
-                                json!({
+    let sesion = Sesion::new(user.id().unwrap());
+    match session_collection.insert_one(&sesion, None).await {
+        Ok(x) => {
+            let sesion: mongodb::bson::oid::ObjectId =
+                mongodb::bson::from_bson(x.inserted_id).unwrap();
+            let (expires, payload) = match TokenClaims::new_encrypted(user.alias().clone())
+            {
+                Ok(elem) => elem,
+                Err(_) => {
+                    return Err(Custom(
+                        Status::InternalServerError,
+                        json!({
                                     "status": Status::InternalServerError.reason(),
                                     "message": "Couldn't generate user token"
                                 }),
-                            ))
-                        }
-                    };
-                    Ok(TokenResponse::new(expires, sesion.to_string(), payload))
+                    ))
                 }
-                _ => Err(Custom(
-                    Status::InternalServerError,
-                    json!({"status": Status::InternalServerError.reason(),
-                "message": "Couldn't generate session token"}),
-                )),
-            }
+            };
+            Ok(TokenResponse::new(expires, sesion.to_string(), payload))
         }
+        _ => Err(Custom(
+            Status::InternalServerError,
+            json!({"status": Status::InternalServerError.reason(),
+                "message": "Couldn't generate session token"}),
+        )),
+    }
+}
+async fn verify_password(
+    mut user: &User,
+    password: &str,
+) -> Result<(), Custom<Value>> {
+    match bcrypt::verify(password, user.password().password()) {
+        Ok(true) => Ok(()),
         Ok(false) => Err(Custom(
             Status::Unauthorized,
             json!({"status": "Unauthorized", "message": "Invalid password"}),
@@ -272,12 +280,9 @@ async fn verify_password(
 
 async fn check_user(
     result: mongodb::error::Result<Option<User>>,
-    password: &str,
-    mongo: &State<Collection<User>>,
-    session_collection: &State<Collection<Sesion>>,
-) -> Result<TokenResponse, Custom<Value>> {
+) -> Result<User, Custom<Value>> {
     match result {
-        Ok(Some(x)) => verify_password(x, password, mongo, session_collection).await,
+        Ok(Some(x)) => Ok(x),
         Ok(None) => Err(Custom(
             Status::Unauthorized,
             json!({"status":"Unauthorized", "message": "User doesn't exist"}),
@@ -291,6 +296,7 @@ async fn check_user(
 /*
 /////////////////////////////////
 /////////////////////////////////
+///////////// DANGER
 /////////////////////////////////
 /////////////////////////////////
 #[post("/login?using=refresh_token", format = "json", data = "<info>")]
@@ -357,4 +363,5 @@ async fn parse_token(x: mongodb::bson::Document) -> Result<TokenResponse, Custom
             json!({"status": "BadRequest", "message": x}),
         ))
     }
-}*/
+}
+*/

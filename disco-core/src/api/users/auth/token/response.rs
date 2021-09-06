@@ -1,25 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use crate::mongo::user::{User, UserError};
-use crate::mongo::IntoDocument;
-
-use chrono::{DateTime, Duration, Utc};
-use lazy_static::lazy_static;
-use mongodb::bson::oid::ObjectId;
 use rocket::http::Status;
-use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
-use rocket::serde::json::Value;
-
-use crate::api::users::auth::result::{AuthError, AuthResult};
-use crate::mongo::user::Alias;
-use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 
 use std::io::Cursor;
 
 use rocket::http::ContentType;
 use rocket::request::Request;
-use rocket::response::{self, Responder, Response};
+use rocket::response::{Responder, Response};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenResponse {
     access_token: String,
@@ -38,7 +26,7 @@ impl TokenResponse {
 }
 
 impl<'r, 'o> Responder<'r, 'static> for TokenResponse {
-    fn respond_to(self, request: &'r Request<'_>) -> rocket::response::Result<'static> {
+    fn respond_to(self, _: &'r Request<'_>) -> rocket::response::Result<'static> {
         let value = json!(
             {
                 "access_token": self.access_token,

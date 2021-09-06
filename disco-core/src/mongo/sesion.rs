@@ -1,9 +1,12 @@
+use crate::mongo::traits::Document;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
+/// Contains information about a user login sesion. Each time rocket recives a
+/// valid `POST /api/user/login`, a new Sesion will be created on the server.
+/// This allows the user to refresh its JWT auth token without use of username
+/// and password. It also allows the user to log out remotly
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone, Hash)]
 pub struct Sesion {
     // sesion token
@@ -35,3 +38,5 @@ impl Sesion {
         self.date
     }
 }
+
+impl Document for Sesion {}
