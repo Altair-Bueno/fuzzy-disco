@@ -1,5 +1,5 @@
 use crate::api::result::ApiResult;
-use crate::mongo::user::{Alias, User, Password, UserError};
+use crate::mongo::user::{Alias, User, Password, UserError, Sesion};
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::http::Status;
@@ -11,23 +11,40 @@ use crate::api::users::auth::token::claims::TokenClaims;
 use std::collections::HashMap;
 use crate::api::users::data::UpdatePassword;
 use std::future::Future;
+use rocket::http::ext::IntoCollection;
 
 #[put("/update/password", format = "json", data="<updated>")]
-pub async fn update_user_info(updated: Json<UpdatePassword<'_>>, mongo: &State<Collection<User>>, token: TokenClaims) -> Result<rocket::response::status::NoContent,Custom<Value>> {
-    let validated_document = match create_update_document(&updated).await {
-        Ok(elem) => elem,
-        Err(x) => return Err(Custom(Status::BadRequest, json!({
+pub async fn update_user_password(
+    updated: Json<UpdatePassword<'_>>,
+    user_collection: &State<Collection<User>>,
+    sesion_collection: &State<Collection<Sesion>>,
+    token: TokenClaims
+) -> Result<rocket::response::status::NoContent,Custom<Value>> {
+    let validated_document = match updated.new_password.parse::<Password>() {
+        Ok(x) => x,
+        Err(x)=> return Err(Custom(Status::BadRequest, json!({
                     "status": Status::BadRequest.reason(),
                     "message": x
                 })))
     };
-    let user = crate::api::users::get::locate_user(token.alias(), mongo).await?;
+    let user = crate::api::users::get::locate_user(token.alias(), user_collection).await?;
     match user.password().validate(updated.password) {
         Ok(true) =>{
             let filter = doc! { "alias": user.alias().to_string() };
-            let update_op = doc! {"$set": validated_document};
-            match mongo.update_one(filter, update_op, None).await {
-                Ok(_) => Ok(rocket::response::status::NoContent),
+            let update_op = doc! {"$set": { "password": validated_document.password() }};
+            match user_collection.update_one(filter, update_op, None).await {
+                Ok(_) => {
+                    let filter = doc! { "user_alias": user.alias().alias() };
+                    let result = sesion_collection.delete_many(filter,None).await;
+                    match result {
+                        Ok(_)=> Ok(rocket::response::status::NoContent),
+                        Err(_) =>Err(Custom(Status::InternalServerError,
+                                            json!({
+                                        "status": Status::InternalServerError.reason(),
+                                        "message": "Couldn't connect to database"
+                                    })))
+                    }
+                },
                 Err(_) => {
                     Err(Custom(Status::InternalServerError,
                                    json!({
@@ -46,13 +63,4 @@ pub async fn update_user_info(updated: Json<UpdatePassword<'_>>, mongo: &State<C
                     "message": "Couldn't verify password"
                 })))
     }
-}
-
-async fn create_update_document(updated:&Json<UpdatePassword<'_>>) -> Result<mongodb::bson::Document, UserError> {
-    let mut document = HashMap::new();
-    if let Some(password) = updated.new_password.map(|x|x.parse::<Password>()) {
-        let password = password?;
-        document.insert("password", password.to_string());
-    }
-    Ok(mongodb::bson::to_document(&document).unwrap())
 }
