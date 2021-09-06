@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
+use rocket::request::FromParam;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(r"^[a-zA-Z_\-0-9]{4,30}$").unwrap();
@@ -17,6 +18,13 @@ lazy_static! {
 #[serde(transparent)]
 pub struct Alias {
     alias: String,
+}
+impl<'a> FromParam<'a> for Alias {
+    type Error = UserError;
+
+    fn from_param(param: &'a str) -> Result<Self, Self::Error> {
+        FromStr::from_str(param)
+    }
 }
 
 impl ToString for Alias {

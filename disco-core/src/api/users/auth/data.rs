@@ -22,14 +22,14 @@ const TTL_AUTH: i64 = 5;
 
 
 pub type EncryptedToken = String;
-pub type ExpireDate = DateTime<Utc>;
+pub type ExpireDate = i64;
 
 /// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
 #[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord,Clone)]
 pub struct Claims {
-    alias: Alias,
-    created: DateTime<Utc>,
-    expires: DateTime<Utc>,
+    sub: Alias,
+    exp: i64,
+    iat: i64,
 }
 
 #[rocket::async_trait]
@@ -45,66 +45,17 @@ impl<'r> FromRequest<'r> for Claims {
                     jsonwebtoken::decode::<Claims>(
                         &token,
                         &DecodingKey::from_secret(include_bytes!("../../../../secret.key")),
-                        &Validation{validate_exp: false, ..Default::default()}
+                        &Validation::default()
                     ) {
-                    return if token_data.claims.is_valid() {
-                        Outcome::Success(token_data.claims)
-                    } else {
-                        Outcome::Failure((
-                            Status::new(440),
-                            // TODO 440 catcher
-                            json!({"status": "LoginTimeout", "message": "Sesion has expired"}),
-                        ))
+                        return Outcome::Success(token_data.claims)
                     }
                 }
             }
-        }
 
         Outcome::Failure((
             Status::BadRequest,
             json!({"status": Status::BadRequest.reason(), "message": "Invalid token"})
         ))
-        /*let token: Option<Claims> = request
-            .headers()
-            .get("Authorization")
-            .next()
-            .map(|x| {
-                let token = JWT::<Claims, biscuit::Empty>::new_encoded(x);
-                let token = token.into_decoded(&signing_secret, SignatureAlgorithm::HS256).unwrap();
-                (*token.payload().unwrap()).clone().private
-            });
-        match token {
-            Some(x) if x.is_valid() => Outcome::Success(x),
-            Some(_)=>Outcome::Failure((
-                Status::new(440),
-                json!({"status": "LoginTimeout", "message": "Sesion has expired"}),
-            )),
-            _ => Outcome::Forward(())
-        }*/
-        /*match token {
-            Some(Ok(token)) if token.is_valid()=> Outcome::Success(token),
-            Some(Ok(_)) => Outcome::Failure((
-                Status::new(440),
-                json!({"status": "LoginTimeout", "message": "Sesion has expired"}),
-            )),
-            Some(Err(_)) => Outcome::Failure((
-                Status::BadRequest,
-                json!({"status": "BadRequest","message": "Invalid token"}),
-            )),
-            None => Outcome::Forward(())
-        }*/
-        /*match token {
-            Ok((header,token)) => Outcome::Success(token),
-            Some(Ok(_)) => Outcome::Failure((
-                Status::new(440),
-                json!({"status": "LoginTimeout", "message": "Sesion has expired"}),
-            )),
-            Some(Err(_)) => Outcome::Failure((
-                Status::BadRequest,
-                json!({"status": "BadRequest","message": "Invalid token"}),
-            )),
-            _ => Outcome::Forward(()),
-        }*/
     }
 }
 
@@ -115,29 +66,23 @@ impl Claims {
         let expires = created + Duration::minutes(TTL_AUTH);
 
         let claims = Claims {
-            alias,
-            created,
-            expires
+            sub: alias,
+            exp: expires.timestamp(),
+            iat: created.timestamp()
         };
         let token = jsonwebtoken::encode(&Header::default(), &claims, &EncodingKey::from_secret(include_bytes!("../../../../secret.key"))).unwrap();
 
-        Ok((expires,token))
-    }
-    pub fn is_valid(&self) -> bool {
-        let expires = self.expires;
-        let now = Utc::now();
-        expires > now
+        Ok((expires.timestamp(),token))
     }
 
-
-    pub fn created(&self) -> DateTime<Utc> {
-        self.created
+    pub fn created(&self) -> i64 {
+        self.iat
     }
-    pub fn expires(&self) -> DateTime<Utc> {
-        self.expires
+    pub fn expires(&self) -> i64 {
+        self.exp
     }
     pub fn alias(&self) -> &Alias {
-        &self.alias
+        &self.sub
     }
 }
 
