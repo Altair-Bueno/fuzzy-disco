@@ -6,7 +6,7 @@ use crate::mongo::IntoDocument;
 use chrono::{DateTime, Duration, Utc};
 use lazy_static::lazy_static;
 use mongodb::bson::oid::ObjectId;
-use rocket::http::{Status};
+use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
@@ -17,9 +17,9 @@ use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 
 use std::io::Cursor;
 
-use rocket::request::Request;
-use rocket::response::{self, Response, Responder};
 use rocket::http::ContentType;
+use rocket::request::Request;
+use rocket::response::{self, Responder, Response};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
@@ -56,3 +56,17 @@ pub struct UserLogInAlias<'a> {
     pub password: &'a str,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserLogInRefreshToken<'a> {
+    pub refresh_token: &'a str,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JoinedRefreshToken {
+    // sesion token
+    pub id: ObjectId,
+    // date
+    pub date: mongodb::bson::DateTime,
+    // joined field
+    pub users: Vec<User>,
+}

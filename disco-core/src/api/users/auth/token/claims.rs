@@ -6,7 +6,7 @@ use crate::mongo::IntoDocument;
 use chrono::{DateTime, Duration, Utc};
 use lazy_static::lazy_static;
 use mongodb::bson::oid::ObjectId;
-use rocket::http::{Status};
+use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
@@ -17,13 +17,12 @@ use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 
 use std::io::Cursor;
 
-use rocket::request::Request;
-use rocket::response::{self, Response, Responder};
 use rocket::http::ContentType;
-
+use rocket::request::Request;
+use rocket::response::{self, Responder, Response};
 
 /// JWT Time To Live
-const TTL_AUTH: i64 = 5;
+const TTL_AUTH: i64 = 60;
 
 pub type EncryptedToken = String;
 pub type ExpireDate = i64;
@@ -65,22 +64,22 @@ impl<'r> FromRequest<'r> for TokenClaims {
 impl TokenClaims {
     /// Creates a new JWT that is linked to the user ID on the database
     pub fn new_encrypted(alias: Alias) -> AuthResult<(ExpireDate, EncryptedToken)> {
-        let created = Utc::now();
-        let expires = created + Duration::minutes(TTL_AUTH);
+        let created = Utc::now().timestamp();
+        let expires = created + TTL_AUTH;
 
         let claims = TokenClaims {
             sub: alias,
-            exp: expires.timestamp(),
-            iat: created.timestamp(),
+            exp: expires,
+            iat: created,
         };
-        let token = jsonwebtoken::encode(
+
+        jsonwebtoken::encode(
             &Header::default(),
             &claims,
             &EncodingKey::from_secret(include_bytes!("secret.key")),
         )
-            .unwrap();
-
-        Ok((Duration::minutes(TTL_AUTH).num_seconds(), token))
+        .map_err(|_| AuthError::EncodeError)
+        .map(|x| (TTL_AUTH, x))
     }
 
     pub fn created(&self) -> i64 {

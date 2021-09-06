@@ -1,4 +1,5 @@
 use crate::api::result::ApiResult;
+use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
 use mongodb::bson::doc;
 use mongodb::Collection;
@@ -6,7 +7,6 @@ use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::State;
-use crate::api::users::auth::token::claims::TokenClaims;
 
 #[delete("/<alias>")]
 pub async fn delete_user(

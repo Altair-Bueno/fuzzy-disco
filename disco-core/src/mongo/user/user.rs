@@ -2,12 +2,12 @@ use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
+use crate::mongo::sesion::Sesion;
 use crate::mongo::traits::Document;
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::email::Email;
 use crate::mongo::user::password::Password;
-use crate::mongo::user::sesion::Sesion;
-use std::collections::{HashSet, BTreeSet};
+use std::collections::{BTreeSet, HashSet};
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -31,7 +31,6 @@ pub struct User {
     password: Password,
     posts: Vec<ObjectId>,
     creation_date: DateTime,
-    sessions: BTreeSet<Sesion>,
 }
 
 impl Document for User {}
@@ -46,7 +45,6 @@ impl User {
             password,
             posts: vec![],
             creation_date: mongodb::bson::DateTime::now(),
-            sessions: BTreeSet::new(),
         }
     }
 
@@ -68,14 +66,6 @@ impl User {
 
     pub fn email(&self) -> &Email {
         &self.email
-    }
-    pub fn sessions(&self) -> &BTreeSet<Sesion> {
-        &self.sessions
-    }
-    pub fn add_session(&mut self) -> Sesion {
-        let sesion = Sesion::new();
-        self.sessions.insert(sesion.clone());
-        sesion
     }
 }
 

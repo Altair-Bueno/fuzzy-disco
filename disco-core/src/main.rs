@@ -44,6 +44,20 @@ async fn main() -> Result<(), String> {
             None,
         )
         .await;
+    let index_response = mongo_database
+        .run_command(
+            doc! {
+                "createIndexes": "Sesion",
+                "indexes": [
+                    {
+                        "key": { "sub": 1 },
+                        "name": "sub",
+                    },
+                ]
+            },
+            None,
+        )
+        .await;
 
     #[cfg(debug_assertions)]
     println!("[MONGO] {:?}", index_response);
@@ -51,6 +65,7 @@ async fn main() -> Result<(), String> {
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
     let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
+    let mongo_sesion_collection = mongo_database.collection::<mongo::sesion::Sesion>("Sesions");
 
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
@@ -83,6 +98,7 @@ async fn main() -> Result<(), String> {
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
+        .manage(mongo_sesion_collection)
         .manage(temporal_files)
         .manage(sender)
         // Mounted routes
