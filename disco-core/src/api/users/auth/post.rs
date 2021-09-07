@@ -1,22 +1,17 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
-use rocket::http::{ContentType, Header, Status};
-use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
-use rocket::{Response, State};
+use rocket::State;
 
-use crate::api::result::{ApiError, ApiResult};
-use crate::api::users::auth::data::{
-    JoinedRefreshToken, UserLogInAlias, UserLogInEmail, UserLogInRefreshToken, UserSingUp,
-};
+use crate::api::result::ApiError;
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::auth::token::response::TokenResponse;
 use crate::mongo::sesion::Sesion;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 use rocket::serde::json::Value;
-use std::io::Cursor;
 
 /// # `POST api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request

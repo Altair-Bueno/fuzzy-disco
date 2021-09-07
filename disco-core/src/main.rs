@@ -5,7 +5,6 @@ use std::option::Option::Some;
 use std::sync::Arc;
 
 use dashmap::DashMap;
-use mongodb::bson::doc;
 use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
 
@@ -18,52 +17,13 @@ pub type CacheFiles = Arc<DashMap<String, String>>;
 #[rocket::main]
 async fn main() -> Result<(), String> {
     // Setting up mongodb connection
-    let mongodb_client = match init::init_mongo_client().await {
+    println!("Connecting to database...");
+    let mongo_database = match init::init_mongo_db().await {
         Ok(client) => client,
         Err(err) => return Err(format!("{:?}", err)),
     };
-    let mongo_database = mongodb_client.database("fuzzy-disco");
-    // FIXME rust driver version 2.0 should allow index creation more easily
-    let index_response = mongo_database
-        .run_command(
-            doc! {
-                "createIndexes": "Users",
-                "indexes": [
-                    {
-                        "key": { "alias": 1 },
-                        "name": "alias",
-                        "unique": true
-                    },
-                    {
-                        "key": { "email": 1 },
-                        "name": "email",
-                        "unique": false
-                    }
-                ]
-            },
-            None,
-        )
-        .await;
-    #[cfg(debug_assertions)]
-    println!("[MONGO] {:?}", index_response);
-    let index_response = mongo_database
-        .run_command(
-            doc! {
-                "createIndexes": "Sesions",
-                "indexes": [
-                    {
-                        "key": { "sub": 1 },
-                        "name": "sub",
-                        "unique": false
-                    },
-                ]
-            },
-            None,
-        )
-        .await;
-
-    #[cfg(debug_assertions)]
-    println!("[MONGO] {:?}", index_response);
+    println!("Database connection sucessfull");
+    println!("Starting up disco-core...");
 
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
