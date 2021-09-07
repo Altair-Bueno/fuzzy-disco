@@ -9,6 +9,47 @@ use rocket::serde::json::Json;
 use rocket::State;
 use std::collections::HashMap;
 
+/// # AUTH! `PUT /api/users/update/password`
+/// Changes the user password to another one
+///
+/// ```json
+/// {
+///     "password": String,
+///     "new_password": String
+/// }
+/// ```
+///
+/// # Returns
+/// ## Ok (204)
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | Bad request |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database |
+///
+/// # Example
+///
+/// `PUT /api/users/update/password`
+///
+/// ## Body payload
+///
+/// ```
+/// {
+///     "password": "theoldpassword",
+///     "new_password": "thenewpassword"
+/// }
+/// ```
+///
+/// ## Response (204)
 #[put("/update/password", format = "json", data = "<updated>")]
 pub async fn update_user_password(
     updated: Json<UpdatePassword<'_>>,
@@ -33,6 +74,46 @@ pub async fn update_user_password(
     }
 }
 
+/// # AUTH! `PUT /api/users/update/`
+///
+/// Updates the user data with the recived data
+///
+/// ```json
+/// {
+///     "email": String
+/// }
+/// ```
+///
+/// # Returns
+/// ## Ok (204)
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | Bad request |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database |
+///
+/// # Example
+///
+/// `PUT /api/users/update`
+///
+/// ## Body payload
+///
+/// ```json
+/// {
+///     "email": "thenew@email.com"
+/// }
+/// ```
+///
+/// ## Response (204)
 
 #[put("/update", format = "json", data = "<updated>")]
 pub async fn update_user_info(
