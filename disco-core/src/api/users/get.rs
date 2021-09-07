@@ -123,4 +123,3 @@ pub async fn get_full_user_info(
         }),
     ))
 }
-
