@@ -1,13 +1,13 @@
-use crate::api::result::ApiResult;
+use crate::api::result::ApiError;
+use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
-use rocket::State;
 use rocket::serde::json::Value;
-use crate::api::users::auth::token::claims::TokenClaims;
+use rocket::State;
 
 /// # `GET /api/users/<alias>`
 /// Returns the public information avaliable for the given user
@@ -49,26 +49,19 @@ use crate::api::users::auth::token::claims::TokenClaims;
 ///}
 /// ```
 #[get("/<alias>")]
-pub async fn get_user_info(alias: &str, mongo: &State<Collection<User>>) -> ApiResult {
-    let alias = match alias.parse::<Alias>() {
-        Ok(x) => x,
-        Err(_) => {
-            return Custom(
-                Status::BadRequest,
-                json!({"status":Status::BadRequest.reason(),"message": "Invalid alias"}),
-            )
-        }
-    };
-    let user = match locate_user(&alias, mongo).await {
-        Ok(a) => a,
-        Err(b) => return b
-    };
-    Custom(
+pub async fn get_user_info(
+    alias: &str,
+    mongo: &State<Collection<User>>,
+) -> Result<Custom<Value>, ApiError> {
+    let alias = alias.parse::<Alias>()?;
+    let user = locate_user(&alias, mongo).await?;
+    Ok(Custom(
         Status::Ok,
         json!({
-            "alias": user.alias(),
-            "posts": user.posts(),
-        }
+                "alias": user.alias(),
+                "posts": user.posts(),
+            }
+        ),
     ))
 }
 /// # AUTH! `GET /api/users`
@@ -115,35 +108,28 @@ pub async fn get_user_info(alias: &str, mongo: &State<Collection<User>>) -> ApiR
 /// ```
 
 #[get("/")]
-pub async fn get_full_user_info(mongo: &State<Collection<User>>,token: TokenClaims) -> ApiResult {
-    let user = match locate_user(token.alias(), mongo).await {
-        Ok(user) => user,
-        Err(err) => return err
-    };
-    Custom(
+pub async fn get_full_user_info(
+    mongo: &State<Collection<User>>,
+    token: TokenClaims,
+) -> Result<Custom<Value>, ApiError> {
+    let user = locate_user(token.alias(), mongo).await?;
+    Ok(Custom(
         Status::Ok,
         json!({
             "alias": user.alias(),
             "posts": user.posts(),
             "email": user.email(),
             "creation_date": user.creation_date().to_string()
-        })
-    )
+        }),
+    ))
 }
 
-pub async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User,Custom<Value>> {
+pub async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User, ApiError> {
     let result = mongo
         .find_one(doc! {"alias": alias.to_string() }, None)
-        .await;
+        .await?;
     match result {
-        Ok(Some(x)) => Ok(x),
-        Ok(None) => Err(Custom(
-            Status::NotFound,
-            json!({"status":Status::NotFound.reason(),"message": "User doesn't exist"}),
-        )),
-        Err(_) => Err(Custom(
-            Status::InternalServerError,
-            json!({"status": Status::InternalServerError.reason(),"message": "Couldn't connect to database"}),
-        )),
+        None => Err(ApiError::NotFound("User")),
+        Some(x) => Ok(x),
     }
 }

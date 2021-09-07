@@ -5,7 +5,6 @@ use crate::mongo::IntoDocument;
 
 use mongodb::bson::oid::ObjectId;
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
     pub alias: &'a str,

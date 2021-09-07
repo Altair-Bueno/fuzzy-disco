@@ -6,7 +6,7 @@ use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
 use rocket::{Response, State};
 
-use crate::api::result::{ApiResult, ApiError};
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::data::{
     JoinedRefreshToken, UserLogInAlias, UserLogInEmail, UserLogInRefreshToken, UserSingUp,
 };
@@ -17,7 +17,6 @@ use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 use rocket::serde::json::Value;
 use std::io::Cursor;
-use std::str::FromStr;
 
 /// # `POST api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -83,16 +82,17 @@ use std::str::FromStr;
 #[post("/signup", format = "json", data = "<user>")]
 pub async fn signup(
     user: Json<UserSingUp<'_>>,
-    mongo: &State<Collection<User>>
-) -> Result<rocket::response::status::Created<Value>,ApiError> {
+    mongo: &State<Collection<User>>,
+) -> Result<rocket::response::status::Created<Value>, ApiError> {
     let valid_user = user.0.validate()?;
     mongo
         .insert_one(valid_user, None)
         .await
-        .map(|_| rocket::response::status::Created::new(format!("/api/user/{}", user.0.alias))
-            .body(json!({"status":"Created","message": "User created"}))
-        )
-        .map_err(|_|ApiError::Conflict("User Alias"))
+        .map(|_| {
+            rocket::response::status::Created::new(format!("/api/user/{}", user.0.alias))
+                .body(json!({"status":"Created","message": "User created"}))
+        })
+        .map_err(|_| ApiError::Conflict("User Alias"))
     // fixme check if it is colision or db connection error
 }
 
@@ -173,15 +173,15 @@ pub async fn login_email(
     session_collection: &State<Collection<Sesion>>,
 ) -> Result<TokenResponse, ApiError> {
     let email = info.email.parse::<Email>()?;
-    let user = user_collection.
-        find_one(Some(doc! {"email": email.email()}), None)
+    let user = user_collection
+        .find_one(Some(doc! {"email": email.email()}), None)
         .await?;
     let x = match user {
         Some(x) => x,
-        None => return Err(ApiError::NotFound("User"))
+        None => return Err(ApiError::NotFound("User")),
     };
     verify_password(&x, info.password).await?;
-    create_sesion(x,session_collection).await
+    create_sesion(x, session_collection).await
 }
 
 #[post("/login?using=alias", format = "json", data = "<info>", rank = 2)]
@@ -196,10 +196,10 @@ pub async fn login_alias(
         .await?;
     let x = match user {
         Some(x) => x,
-        None => return Err(ApiError::NotFound("User"))
+        None => return Err(ApiError::NotFound("User")),
     };
     verify_password(&x, info.password).await?;
-    create_sesion(x,session_collection).await
+    create_sesion(x, session_collection).await
 }
 
 async fn create_sesion(
@@ -207,92 +207,15 @@ async fn create_sesion(
     session_collection: &State<Collection<Sesion>>,
 ) -> Result<TokenResponse, ApiError> {
     let sesion = Sesion::new(user.alias().clone());
-    let x= session_collection.insert_one(&sesion, None).await?;
-    let sesion: mongodb::bson::oid::ObjectId =
-        mongodb::bson::from_bson(x.inserted_id).unwrap();
+    let x = session_collection.insert_one(&sesion, None).await?;
+    let sesion: mongodb::bson::oid::ObjectId = mongodb::bson::from_bson(x.inserted_id).unwrap();
     let (expires, payload) = TokenClaims::new_encrypted(user.alias().clone());
     Ok(TokenResponse::new(expires, sesion.to_string(), payload))
 }
-async fn verify_password(
-    user: &User,
-    password: &str,
-) -> Result<(),ApiError> {
+async fn verify_password(user: &User, password: &str) -> Result<(), ApiError> {
     match user.password().validate(password) {
         Ok(true) => Ok(()),
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),
         Err(_) => Err(ApiError::InternalServerError("Couldn't hash password")),
     }
 }
-
-/*
-/////////////////////////////////
-/////////////////////////////////
-///////////// DANGER
-/////////////////////////////////
-/////////////////////////////////
-#[post("/login?using=refresh_token", format = "json", data = "<info>")]
-pub async fn login_refresh_token(
-    info: Json<UserLogInRefreshToken<'_>>,
-    mongo: &State<Collection<Sesion>>,
-) -> Result<TokenResponse, Custom<Value>> {
-    let oid = match mongodb::bson::oid::ObjectId::from_str(info.refresh_token) {
-        Ok(x) => x,
-        Err(_) => return Err(Custom(Status::BadRequest,json!({
-            "status":Status::BadRequest.reason(),
-            "message": "Invalid refresh token"
-        })))
-    };
-    run_session_querry(oid,mongo).await
-}
-
-async fn run_session_querry(
-    oid: mongodb::bson::oid::ObjectId,
-    mongo: &State<Collection<Sesion>>
-) -> Result<TokenResponse, Custom<Value>> {
-    let pipelineop = doc! {
-        "$filter": {
-            "input": "$lookup":{
-                "from": "Users",
-                "localField": "user_alias",
-                "foreignField": "alias",
-                "as": "users"
-            },
-            "as": "joined",
-            "cond": {
-                "$eq": [oid, "$$joined.users._id"]
-            }
-        }
-    };
-    let database_error = Err(Custom(Status::InternalServerError,json!({
-            "status":Status::InternalServerError.reason(),
-            "message": "Database error"
-        })));
-    let mut joined_result = match mongo.aggregate(pipelineop, None).await {
-        Ok(x) => x,
-        // TODO
-        Err(_) =>return database_error
-    };
-    match joined_result.next().await {
-        Some(Ok(x)) => parse_token(x).await,
-        Some(_) => database_error,
-        None => Err(Custom(Status::Unauthorized, json!({
-            "status": Status::Unauthorized.reason(),
-            "message": "Invalid refresh token"
-        })))
-    }
-}
-async fn parse_token(x: mongodb::bson::Document) -> Result<TokenResponse, Custom<Value>>{
-    // Join is safe
-    let joined: JoinedRefreshToken = mongodb::bson::from_document(x).unwrap();
-    if let Some(user) = joined.users.first() {
-        let (expires,token) = TokenClaims::new_encrypted(user.alias().clone()).unwrap();
-        Ok(TokenResponse::new(expires, info.refresh_token.to_string(), token))
-    } else {
-        let _ = mongo.find_one_and_delete(doc! {"_id": info.refresh_token},None).await;
-        Err(Custom(
-            Status::BadRequest,
-            json!({"status": "BadRequest", "message": x}),
-        ))
-    }
-}
-*/

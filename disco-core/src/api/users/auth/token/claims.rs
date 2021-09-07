@@ -53,7 +53,7 @@ impl<'r> FromRequest<'r> for TokenClaims {
 
 impl TokenClaims {
     /// Creates a new JWT that is linked to the user ID on the database
-    pub fn new_encrypted(alias: Alias) -> (ExpiresIn, EncryptedToken){
+    pub fn new_encrypted(alias: Alias) -> (ExpiresIn, EncryptedToken) {
         let created = Utc::now().timestamp();
         let expires = created + TTL_AUTH;
 
@@ -68,8 +68,8 @@ impl TokenClaims {
             &claims,
             &EncodingKey::from_secret(include_bytes!("secret.key")),
         )
-            .map(|x| (TTL_AUTH, x))
-            .expect("Token generation failed")
+        .map(|x| (TTL_AUTH, x))
+        .expect("Token generation failed")
     }
 
     pub fn created(&self) -> i64 {

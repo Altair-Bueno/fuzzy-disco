@@ -1,8 +1,8 @@
 use crate::mongo::traits::Document;
+use crate::mongo::user::Alias;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
-use crate::mongo::user::Alias;
 
 /// Contains information about a user login sesion (aka refresh token). Each
 /// time the server recives a valid `POST /api/user/login`, a new Sesion will

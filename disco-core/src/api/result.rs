@@ -1,16 +1,13 @@
+use rocket::http::{ContentType, Status};
 use rocket::response::status::Custom;
-use rocket::serde::json::Value;
-use thiserror::Error;
 use rocket::response::Responder;
-use rocket::{Request, response, Response};
-use rocket::response::status;
-use rocket::http::{Status, Header};
 use rocket::serde::json::serde_json::json;
+use rocket::serde::json::Value;
+use rocket::{response, Request, Response};
 use std::io::Cursor;
+use thiserror::Error;
 
 pub type ApiResult = Custom<Value>;
-
-
 
 #[derive(Error, Debug)]
 pub enum ApiError {
@@ -27,25 +24,28 @@ pub enum ApiError {
     #[error("{0}")]
     InternalServerError(&'static str),
     #[error("{0} not found")]
-    NotFound(&'static str)
+    NotFound(&'static str),
 }
 impl<'r> Responder<'r, 'static> for ApiError {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
         let status = match self {
-            ApiError::DatabaseError(_) | ApiError::InternalServerError(_) => Status::InternalServerError,
+            ApiError::DatabaseError(_) | ApiError::InternalServerError(_) => {
+                Status::InternalServerError
+            }
             ApiError::InvalidUser(_) | ApiError::InvalidPost(_) => Status::BadRequest,
             ApiError::Conflict(_) => Status::Conflict,
-            ApiError::Unauthorized(_)=> Status::Unauthorized,
-            ApiError::NotFound(_) => Status::NotFound
+            ApiError::Unauthorized(_) => Status::Unauthorized,
+            ApiError::NotFound(_) => Status::NotFound,
         };
         let body = json!({
             "status": status.reason(),
             "message": format!("{}",self)
-        }).to_string();
+        })
+        .to_string();
         Response::build()
             .status(status)
-            .raw_header("Content-Type","application/json")
-            .sized_body(body.len(),Cursor::new(body))
+            .header(ContentType::JSON)
+            .sized_body(body.len(), Cursor::new(body))
             .ok()
     }
 }

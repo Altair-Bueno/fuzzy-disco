@@ -1,12 +1,11 @@
 use serde::Deserialize;
 use serde::Serialize;
-use std::fmt::{Display, Formatter};
 use thiserror::Error;
 
 pub type Result<E> = std::result::Result<E, UserError>;
 
 /// Different errors related to user fields
-#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize,Error)]
+#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Error)]
 pub enum UserError {
     /// Passwords must have at least 8 characters long
     #[error("Password must be {0} characters long")]

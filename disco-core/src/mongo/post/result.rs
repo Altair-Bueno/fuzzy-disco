@@ -5,7 +5,7 @@ use thiserror::Error;
 pub type Result<E> = std::result::Result<E, PostError>;
 
 /// Errors produced while creating a Post document
-#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize,Error)]
+#[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Error)]
 pub enum PostError {
     /// The given title does not match the expected requirements
     #[error("Invalid title format")]
