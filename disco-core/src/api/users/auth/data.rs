@@ -8,15 +8,15 @@ use mongodb::bson::oid::ObjectId;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
-    alias: &'a str,
-    email: &'a str,
-    password: &'a str,
+    pub alias: &'a str,
+    pub email: &'a str,
+    pub password: &'a str,
 }
 
 impl IntoDocument<User> for UserSingUp<'_> {
     type Err = UserError;
 
-    fn validate(self) -> Result<User, Self::Err> {
+    fn validate(&self) -> Result<User, Self::Err> {
         let UserSingUp {
             alias,
             email,

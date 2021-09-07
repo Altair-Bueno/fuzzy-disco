@@ -34,7 +34,7 @@ impl Caption {
     /// Creates a new [Caption] instance or returns an error
     pub fn new(s: &str) -> crate::mongo::post::result::Result<Caption> {
         if s.len() > MAX_LENGTH_CAPTION {
-            Err(PostError::CaptionTooLong)
+            Err(PostError::CaptionTooLong(MAX_LENGTH_CAPTION))
         } else {
             Ok(Caption {
                 caption: s.to_string(),

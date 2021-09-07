@@ -34,7 +34,7 @@ impl Password {
     /// passwords should be at least 8 characters long
     pub fn new(s: &str) -> result::Result<Password> {
         if s.len() < 8 {
-            Err(UserError::PasswordTooShort)
+            Err(UserError::PasswordTooShort(8))
         } else {
             let hashed_password = bcrypt::hash(s, DEFAULT_COST);
             match hashed_password {

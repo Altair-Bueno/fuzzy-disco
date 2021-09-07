@@ -2,7 +2,5 @@
 pub mod data;
 /// POST /api/users/auth
 pub mod post;
-/// Errors that can be produced on the API
-pub mod result;
-
+/// Data structures used for token generation
 pub mod token;

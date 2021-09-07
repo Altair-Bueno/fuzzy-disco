@@ -16,5 +16,5 @@ where
 {
     type Err;
 
-    fn validate(self) -> Result<D, Self::Err>;
+    fn validate(&self) -> Result<D, Self::Err>;
 }

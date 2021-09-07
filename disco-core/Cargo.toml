@@ -13,6 +13,7 @@ bcrypt = "0.10"
 jsonwebtoken = "7.2.0"
 dashmap = "4.0.2"
 rand = "0"
+thiserror = "1.0"
 #image = "0.23.14"
 
 [dependencies.mongodb]

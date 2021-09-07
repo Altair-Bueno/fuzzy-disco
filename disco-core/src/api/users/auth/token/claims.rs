@@ -6,7 +6,6 @@ use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 
-use crate::api::users::auth::result::{AuthError, AuthResult};
 use crate::mongo::user::Alias;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 
@@ -16,7 +15,7 @@ use rocket::request::Request;
 const TTL_AUTH: i64 = 60;
 
 pub type EncryptedToken = String;
-pub type ExpireDate = i64;
+pub type ExpiresIn = i64;
 
 /// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
 #[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord, Clone)]
@@ -54,7 +53,7 @@ impl<'r> FromRequest<'r> for TokenClaims {
 
 impl TokenClaims {
     /// Creates a new JWT that is linked to the user ID on the database
-    pub fn new_encrypted(alias: Alias) -> AuthResult<(ExpireDate, EncryptedToken)> {
+    pub fn new_encrypted(alias: Alias) -> (ExpiresIn, EncryptedToken){
         let created = Utc::now().timestamp();
         let expires = created + TTL_AUTH;
 
@@ -69,8 +68,8 @@ impl TokenClaims {
             &claims,
             &EncodingKey::from_secret(include_bytes!("secret.key")),
         )
-        .map_err(|_| AuthError::EncodeError)
-        .map(|x| (TTL_AUTH, x))
+            .map(|x| (TTL_AUTH, x))
+            .expect("Token generation failed")
     }
 
     pub fn created(&self) -> i64 {
