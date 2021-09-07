@@ -5,3 +5,5 @@ target/
 # dev folders
 static/
 /media
+/temp/
+__pycache__/

@@ -1,5 +1,8 @@
-pub mod posts_payload;
-pub mod user_payload;
+/// /api/media
 pub mod media;
+/// /api/posts
 pub mod posts;
-mod users;
+/// Errors that can be produced on the API
+pub mod result;
+/// /api/users
+pub mod users;

@@ -1,56 +1,139 @@
-use crate::api::posts_payload::PostPayload;
-use mongodb::bson::oid::ObjectId;
-use std::str::FromStr;
-use rocket::State;
-use mongodb::Collection;
-use crate::mongo::post::Post;
 use mongodb::bson::doc;
-use rocket::serde::json::Json;
-use rocket::response::status;
-use rocket::http::Status;
+use mongodb::Collection;
 use rocket::futures::StreamExt;
+use rocket::http::Status;
+use rocket::response::status;
+use rocket::serde::json::Value;
+use rocket::serde::json::{serde_json::json, Json};
+use rocket::State;
 
-#[get("/<oid>", format = "json")]
-pub async fn get_post_content(oid:&str, mongo:&State<Collection<Post>>) -> Result<Json<PostPayload>, status::Custom<String>>{
-    let not_found = doc! {"message":"Not found"}.to_string();
-    let oid = match ObjectId::from_str(oid) {
-        Ok(x) => x,
-        Err(_) => return Err(status::Custom(Status::NotFound, not_found)),
+use crate::api::posts::data::Id;
+use crate::api::result::ApiResult;
+use crate::mongo::post::Post;
+
+/// # `GET /api/posts/<id>`
+/// Returns information for a given post. It expects a well formated string
+/// that identifies a post
+///
+/// # Returns
+/// ## Ok (200)
+///
+/// ```json
+/// {
+///     "id": String,
+///     "title": String,
+///     "caption": String,
+///     "author": String.
+///     "audio": String,
+///     "photo": String,
+/// }
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | `id` isn't correctly formated |
+/// | 404 | Post doesn't exist |
+/// | 500 | Couldn't connect to database |
+///
+/// # Example
+///
+/// `GET /api/posts/6132137e6c2cc66344ef2a88`
+///
+/// ```json
+/// {
+///  "audio": "6032137e6c2cc66244ef2a88",
+///  "photo": "5032137e6c2cc66244ef2a88",
+///  "author": "Altair-Bueno",
+///  "id": "6132137e6c2cc66344ef2a88",
+///  "caption": "Hisoka wants gon booty",
+///  "title": "Hunter x Hunter"
+///}
+/// ```
+#[get("/<id>", format = "json")]
+pub async fn get_post_content(id: Result<Id, Value>, mongo: &State<Collection<Post>>) -> ApiResult {
+    let oid = match id {
+        Ok(x) => x.extract(),
+        Err(x) => return status::Custom(Status::BadRequest, x),
     };
     let filter = doc! { "_id": oid };
-    let post = match mongo.find_one(Some(filter),None).await {
+
+    let post = match mongo.find_one(Some(filter), None).await {
         Ok(Some(x)) => x,
-        Ok(None) => return Err(status::Custom(Status::NotFound, not_found)),
-        Err(_) => return Err(status::Custom(Status::InternalServerError,doc! {"message": "Couldn't load post from database"}.to_string()))
+        Ok(None) => {
+            return status::Custom(
+                Status::NotFound,
+                json!({"status":"Not Found","message":"Post doesn't exist"}),
+            );
+        }
+        Err(_) => {
+            return status::Custom(
+                Status::InternalServerError,
+                json!({"status":"Internal Error","message": "Couldn't connect to database"}),
+            );
+        }
     };
 
-    let mut post_response = PostPayload::new();
-    post_response.set_audio_path(Some(post.audio_path().to_string()));
-    post_response.set_author_id(Some(post.author_id().to_string()));
-    post_response.set_caption(Some(post.caption().to_string()));
-    post_response.set_id(Some(post.id().unwrap().to_string()));
-    post_response.set_photo_path(Some(post.photo_path().to_string()));
-    post_response.set_title(Some(post.title().to_string()));
-
-    Ok(Json(post_response))
+    let response = json!({
+        // `unwrap` here is safe, represents _id from db
+        "id": post.id().unwrap().to_string(),
+        "title": post.title(),
+        "caption": post.caption(),
+        "author": post.author().to_string(), // TODO Author
+        "audio": post.audio_path().to_string(),
+        "photo": post.photo_path().to_string(),
+    });
+    status::Custom(Status::Ok, response)
 }
 
+/// #!DEBUG
+/// # `GET /api/posts`
+///
+/// Returns all postID on the database as a single vector of strings
+///
+/// ```json
+/// [
+///     String,
+///     ...
+/// ]
+/// ```
+///
+/// # Example
+///
+/// `GET /api/posts`
+///
+/// ```json
+/// [
+///  "6131f8946c2cc66344ef2a86",
+///  "6132137e6c2cc66344ef2a88",
+///  "613213e26c2cc66344ef2a89",
+///  "613214076c2cc66344ef2a8a"
+///]
+/// ```
 #[get("/", format = "json")]
-pub async fn get_posts(mongo:&State<Collection<Post>>) -> Result<Json<Vec<PostPayload>>, status::Custom<String>>{
+pub async fn get_posts(
+    mongo: &State<Collection<Post>>,
+) -> Result<Json<Vec<String>>, status::Custom<Value>> {
     let mut cursor = match mongo.find(None, None).await {
         Ok(cursor) => cursor,
-        Err(_) => return Err(status::Custom(Status::InternalServerError, doc! {"message": "Couldn't connect to database"}.to_string()))
+        Err(_) => {
+            return Err(status::Custom(
+                Status::InternalServerError,
+                json!({"status":"InternalError","message": "Couldn't connect to database"}),
+            ));
+        }
     };
     let mut vec = Vec::new();
-    while let Some(post) = cursor.next().await {
-        let mut payload = PostPayload::new();
-        match post {
-            Ok(post) => {
-                payload.set_id(post.id().map(|x| x.to_string()));
-                vec.push(payload);
-            }
-            Err(_) => break,
-        }
+    while let Some(Ok(post)) = cursor.next().await {
+        let id = post.id().unwrap().to_string();
+        vec.push(id);
     }
     Ok(Json(vec))
 }

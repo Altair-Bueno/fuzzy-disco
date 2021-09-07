@@ -1,6 +1,6 @@
 name: Build Docker container
 env:
-  port: 8000
+  at: 127.0.0.1:8000
 on:
   push:
     branches:
@@ -15,6 +15,11 @@ jobs:
         name: Building service
       - name: Waiting server to startup
         run: sleep 50
-      - run: "curl http://127.0.0.1:${{ env.port }}"
+      - run: "curl http://${{ env.at }}"
         name: Checking if webpage is up
+      - name: api client testing
+        run: |
+          python -m pip install requests
+          python test.py
+        working-directory: disco-core/tests/
       #- run: "curl http://127.0.0.1:${{ env.port }}/api/posts"
