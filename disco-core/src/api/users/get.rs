@@ -54,7 +54,7 @@ pub async fn get_user_info(
     mongo: &State<Collection<User>>,
 ) -> Result<Custom<Value>, ApiError> {
     let alias = alias.parse::<Alias>()?;
-    let user = locate_user(&alias, mongo).await?;
+    let user = crate::api::users::locate_user(&alias, mongo).await?;
     Ok(Custom(
         Status::Ok,
         json!({
@@ -112,7 +112,7 @@ pub async fn get_full_user_info(
     mongo: &State<Collection<User>>,
     token: TokenClaims,
 ) -> Result<Custom<Value>, ApiError> {
-    let user = locate_user(token.alias(), mongo).await?;
+    let user = crate::api::users::locate_user(token.alias(), mongo).await?;
     Ok(Custom(
         Status::Ok,
         json!({
@@ -124,12 +124,3 @@ pub async fn get_full_user_info(
     ))
 }
 
-pub async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User, ApiError> {
-    let result = mongo
-        .find_one(doc! {"alias": alias.to_string() }, None)
-        .await?;
-    match result {
-        None => Err(ApiError::NotFound("User")),
-        Some(x) => Ok(x),
-    }
-}

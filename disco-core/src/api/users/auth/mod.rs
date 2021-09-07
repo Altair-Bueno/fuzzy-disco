@@ -1,5 +1,5 @@
 /// Datastructures for serializing and deserializing data
-pub mod data;
+mod data;
 /// POST /api/users/auth
 pub mod post;
 /// Data structures used for token generation

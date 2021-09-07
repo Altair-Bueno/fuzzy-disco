@@ -9,8 +9,33 @@ use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
-
-#[delete("/delete")]
+/// # AUTH! `DELETE /api/users`
+/// Deletes the current authenticated user from the database
+///
+/// # Returns
+/// ## Ok (200)
+///
+/// ```json
+/// {
+///     "status": "Ok",
+///     "message": "User deleted"
+/// }
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database |
+/// ```
+#[delete("/")]
 pub async fn delete_user(
     token: TokenClaims,
     mongo: &State<Collection<User>>,

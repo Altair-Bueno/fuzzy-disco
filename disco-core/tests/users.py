@@ -77,5 +77,5 @@ def test_api_users(_URL: str):
 
     # delete user
     print('delete the test user')
-    r = requests.delete(_URL + '/api/users/delete', headers=auth_header)
+    r = requests.delete(_URL + '/api/users/', headers=auth_header)
     print(r.json())

@@ -16,7 +16,7 @@ pub async fn update_user_password(
     token: TokenClaims,
 ) -> Result<rocket::response::status::NoContent, ApiError> {
     let validated_document = updated.new_password.parse::<Password>()?;
-    let user = crate::api::users::get::locate_user(token.alias(), user_collection).await?;
+    let user = crate::api::users::locate_user(token.alias(), user_collection).await?;
 
     match user.password().validate(updated.password) {
         Ok(true) => {

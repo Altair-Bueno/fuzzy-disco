@@ -219,3 +219,5 @@ async fn verify_password(user: &User, password: &str) -> Result<(), ApiError> {
         Err(_) => Err(ApiError::InternalServerError("Couldn't hash password")),
     }
 }
+// TODO LOGIN USING REFRESH TOKEN
+// POST /api/users/auth/login?using=refresh_token
