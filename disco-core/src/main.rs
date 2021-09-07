@@ -87,6 +87,7 @@ async fn main() -> Result<(), String> {
                 api::users::get::get_full_user_info,
                 api::users::get::get_user_info,
                 api::users::put::update_user_password,
+                api::users::put::update_user_info,
                 api::users::delete::delete_user,
             ],
         )

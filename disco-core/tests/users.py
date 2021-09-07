@@ -1,12 +1,42 @@
 import requests
 
+_basic_header = {
+    "Content-Type": "application/json; charset=utf-8"
+}
+_URL = 'http://127.0.0.1:8000/api/users/'
 
-def test_api_users(_URL: str):
-    basic_header = {
-        "Content-Type": "application/json; charset=utf-8"
-    }
 
-    # Create test user
+def create_user(body: str):
+    return requests.post(_URL + 'auth/signup', body, headers=_basic_header)
+
+
+def get_basic_user_data(username: str):
+    return requests.get(_URL + username)
+
+
+def get_full_user_data(auth_header: dict[str, str]):
+    return requests.get(_URL, headers=auth_header)
+
+
+def email_log_in(body: str):
+    return requests.post(_URL + 'auth/login?using=email', body,
+                         headers=_basic_header)
+
+
+def alias_log_in(body: str):
+    return requests.post(_URL + 'auth/login?using=alias', body,
+                         headers=_basic_header)
+
+
+def change_password(body: str, auth_header: dict[str, str]):
+    return requests.put(_URL + 'update/password', body, headers=auth_header)
+
+
+def change_user_info(body: str, auth_header: dict[str, str]):
+    return requests.put(_URL + 'update', body, headers=auth_header)
+
+
+def test_api_users():
     print('create test user')
     body = """
     {
@@ -15,15 +45,13 @@ def test_api_users(_URL: str):
         "email": "some@cool.email"
     }
     """
-    r = requests.post(_URL + '/api/users/auth/signup',body,headers=basic_header)
-    print(r.json())
-    user_url = _URL + '/api/users/somecoolalias'
-    # check if user exist
-    print('Check if the user has been created')
-    r = requests.get(user_url)
+    r = create_user(body)
     print(r.json())
 
-    # email log in
+    print('Check if the user has been created')
+    r = get_basic_user_data("somecoolalias")
+    print(r.json())
+
     print('using email for log in')
     body = """
     {
@@ -31,7 +59,7 @@ def test_api_users(_URL: str):
         "email": "some@cool.email"
     }
     """
-    r = requests.post(_URL + '/api/users/auth/login?using=email',body,headers=basic_header)
+    r = email_log_in(body)
     print(r.json())
 
     # alias log in
@@ -42,9 +70,9 @@ def test_api_users(_URL: str):
         "password": "somecoolpassword"
     }
     """
-    r = requests.post(_URL + '/api/users/auth/login?using=alias',old_user_login,headers=basic_header)
+    r = alias_log_in(old_user_login)
     print(r.json())
-    # Auth queries
+
     print('starting auth queries')
     bearer_token = r.json()['access_token']
     auth_header = {
@@ -55,11 +83,12 @@ def test_api_users(_URL: str):
 
     # get full user info
     print('get the full user info')
-    r = requests.get(_URL + '/api/users/',headers=auth_header)
+    r = get_full_user_data(auth_header)
     print(r.json())
 
     # update password
-    # NOTE: althought the session has been closed, we can 
+    # NOTE: althought the session has been closed, we can still log in using
+    # the token
     print("change user's password")
     body = """
     {
@@ -67,15 +96,26 @@ def test_api_users(_URL: str):
         "new_password": "newpassworddd"
     }
     """
-    r = requests.put(_URL + '/api/users/update/password',body, headers=auth_header)
+    r = change_password(body, auth_header)
     print(r.status_code)
 
     # old login should fail
     print('old login info should fail with 4xx code')
-    r = requests.post(_URL + '/api/users/auth/login?using=alias',old_user_login)
-    print(r.status_code)
+    r = alias_log_in(old_user_login)
+    print(f'4xx: {r.status_code}')
+
+    print('change user email')
+    body = """
+    {
+        "email": "the@email.com"
+    }
+    """
+    r = change_user_info(body, auth_header)
+    print(r)
+    r = get_full_user_data(auth_header)
+    print(r.json())
 
     # delete user
     print('delete the test user')
-    r = requests.delete(_URL + '/api/users/', headers=auth_header)
+    r = requests.delete(_URL, headers=auth_header)
     print(r.json())

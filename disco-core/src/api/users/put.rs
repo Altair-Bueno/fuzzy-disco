@@ -1,12 +1,13 @@
 use crate::api::result::ApiError;
 use crate::api::result::ApiError::InternalServerError;
 use crate::api::users::auth::token::claims::TokenClaims;
-use crate::api::users::data::UpdatePassword;
-use crate::mongo::user::{Password, Sesion, User};
+use crate::api::users::data::{UpdatePassword, UpdateUser};
+use crate::mongo::user::{Password, Sesion, User, Email};
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::Json;
 use rocket::State;
+use std::collections::HashMap;
 
 #[put("/update/password", format = "json", data = "<updated>")]
 pub async fn update_user_password(
@@ -30,4 +31,26 @@ pub async fn update_user_password(
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),
         Err(_) => Err(InternalServerError("Couldn't hash password")),
     }
+}
+
+
+#[put("/update", format = "json", data = "<updated>")]
+pub async fn update_user_info(
+    updated: Json<UpdateUser<'_>>,
+    user_collection: &State<Collection<User>>,
+    token: TokenClaims,
+) -> Result<rocket::response::status::NoContent, ApiError> {
+    let mut dic = HashMap::new();
+    if let Some (s) = updated.email {
+        let email = s.parse::<Email>()?;
+        dic.insert("email",s);
+    }
+    // more fields if needed
+    // Unwrap is safe. Valid string slices
+    let update_doc = doc! {
+        "$set": mongodb::bson::to_document(&dic).unwrap()
+    };
+    let filter = doc! { "alias": token.alias().alias().to_string() };
+    user_collection.update_one(filter,update_doc,None).await?;
+    Ok(rocket::response::status::NoContent)
 }

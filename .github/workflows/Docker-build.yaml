@@ -14,7 +14,7 @@ jobs:
       - run: docker-compose up -d
         name: Building service
       - name: Waiting server to startup
-        run: sleep 50
+        run: sleep 300
       - run: "curl http://${{ env.at }}"
         name: Checking if webpage is up
       - name: api client testing
