@@ -1,12 +1,13 @@
 #[macro_use]
 extern crate rocket;
 
-use std::option::Option::Some;
 use std::sync::Arc;
 
 use dashmap::DashMap;
 use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
+
+use init::*;
 
 mod api;
 mod init;
@@ -18,7 +19,7 @@ pub type CacheFiles = Arc<DashMap<String, String>>;
 async fn main() -> Result<(), String> {
     // Setting up mongodb connection
     println!("Connecting to database...");
-    let mongo_database = match init::init_mongo_db().await {
+    let mongo_database = match init_mongo_db().await {
         Ok(client) => client,
         Err(err) => return Err(format!("{:?}", err)),
     };
@@ -28,7 +29,7 @@ async fn main() -> Result<(), String> {
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
     let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
-    let mongo_session_collection = mongo_database.collection::<mongo::session::session>("sessions");
+    let mongo_session_collection = mongo_database.collection::<mongo::session::Session>("sessions");
 
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
@@ -40,28 +41,17 @@ async fn main() -> Result<(), String> {
         println!("{}", x)
     }
 
+    let sender = init_temporal_files_gc().await;
     let temporal_files: CacheFiles = Arc::new(dashmap::DashMap::new());
-    let (sender, mut reciver) = rocket::tokio::sync::mpsc::channel::<String>(100);
-    let _ = rocket::tokio::spawn(async move {
-        #[cfg(debug_assertions)]
-        println!("[GC]: Waiting for expired files");
-        while let Some(expired) = reciver.recv().await {
-            #[cfg(debug_assertions)]
-            println!("[GC]: Removing {}", expired);
-            let _ = rocket::tokio::fs::remove_file(expired).await;
-        }
-        #[cfg(debug_assertions)]
-        println!("[GC]: Cleanup");
-        let _ = rocket::tokio::fs::remove_dir_all("temp/").await;
-    });
 
     // launch Rocket server
-    let rocket_result = rocket::build()
-        // Shared state and db connections
+    rocket::build()
+        // DB Collections
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
         .manage(mongo_session_collection)
+        // Temporal files
         .manage(temporal_files)
         .manage(sender)
         // Mounted routes
@@ -100,12 +90,10 @@ async fn main() -> Result<(), String> {
             ],
         )
         .mount("/api/media", FileServer::from("media")) // TODO Auth media
+        // Static website server
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
         .launch()
-        .await;
-    match rocket_result {
-        Err(e) => Err(format!("{:?}", e)),
-        _ => Ok(()),
-    }
+        .await
+        .map_err(|e| format!("{:?}", e))
 }

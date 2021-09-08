@@ -5,7 +5,7 @@ pub use result::Result;
 pub use result::UserError;
 pub use user::User;
 
-pub use crate::mongo::session::session;
+pub use crate::mongo::session::Session;
 
 mod alias;
 mod email;

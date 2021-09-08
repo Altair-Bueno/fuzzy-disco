@@ -66,7 +66,7 @@ pub struct UserLogInRefreshToken<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JoinedRefreshToken {
-    // session token
+    // Session token
     pub id: ObjectId,
     // date
     pub date: mongodb::bson::DateTime,

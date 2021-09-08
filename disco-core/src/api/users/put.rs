@@ -10,7 +10,7 @@ use crate::api::result::ApiError::InternalServerError;
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::data::{UpdatePassword, UpdateUser};
-use crate::mongo::user::{session, Email, Password, User};
+use crate::mongo::user::{Email, Password, Session, User};
 
 /// # AUTH! `PUT /api/users/update/password`
 /// Changes the user password to another one
@@ -57,7 +57,7 @@ use crate::mongo::user::{session, Email, Password, User};
 pub async fn update_user_password(
     updated: Json<UpdatePassword<'_>>,
     user_collection: &State<Collection<User>>,
-    session_collection: &State<Collection<session>>,
+    session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> Result<rocket::response::status::NoContent, ApiError> {
     let validated_document = updated.new_password.parse::<Password>()?;
@@ -124,7 +124,7 @@ pub async fn update_user_info(
 ) -> Result<rocket::response::status::NoContent, ApiError> {
     let mut dic = HashMap::new();
     if let Some(s) = updated.email {
-        let email = s.parse::<Email>()?;
+        let _ = s.parse::<Email>()?;
         dic.insert("email", s);
     }
     // more fields if needed

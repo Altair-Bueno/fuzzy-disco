@@ -12,8 +12,8 @@ use crate::mongo::user::Alias;
 /// be created on the server. This allows the user to refresh its JWT auth token
 /// without use of username and password
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone)]
-pub struct session {
-    // session token
+pub struct Session {
+    // Session token
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
@@ -25,10 +25,10 @@ pub struct session {
     date: DateTime,
 }
 
-impl session {
+impl Session {
     /// Generates a new session token that is linked to the user's alias
-    pub fn new(user_alias: Alias, ip: Option<IpAddr>) -> session {
-        session {
+    pub fn new(user_alias: Alias, ip: Option<IpAddr>) -> Session {
+        Session {
             id: None,
             user_alias,
             ip,
@@ -54,4 +54,4 @@ impl session {
     }
 }
 
-impl Document for session {}
+impl Document for Session {}

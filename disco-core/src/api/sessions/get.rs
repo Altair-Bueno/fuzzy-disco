@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::futures::StreamExt;
@@ -9,7 +7,7 @@ use rocket::State;
 use crate::api::result::ApiError;
 use crate::api::sessions::data::PublicsessionData;
 use crate::api::users::auth::token::claims::TokenClaims;
-use crate::mongo::user::session;
+use crate::mongo::user::Session;
 
 /// # AUTH! `GET /api/sessions`
 /// Returns all current sessions from the user
@@ -48,7 +46,7 @@ use crate::mongo::user::session;
 /// ```
 #[get("/", format = "json")]
 pub async fn get_user_sessions(
-    session_collection: &State<Collection<session>>,
+    session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> Result<Json<Vec<PublicsessionData>>, ApiError> {
     let filter = doc! { "user_alias" : token.alias().to_string() };

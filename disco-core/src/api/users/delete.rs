@@ -9,7 +9,7 @@ use rocket::State;
 use crate::api::result::ApiError;
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
-use crate::mongo::session::session;
+use crate::mongo::session::Session;
 use crate::mongo::user::User;
 
 /// # AUTH! `DELETE /api/users`
@@ -42,7 +42,7 @@ use crate::mongo::user::User;
 pub async fn delete_user(
     token: TokenClaims,
     mongo: &State<Collection<User>>,
-    session_collection: &State<Collection<session>>,
+    session_collection: &State<Collection<Session>>,
 ) -> Result<Custom<Value>, ApiError> {
     let bearer_token_alias = token.alias();
     let query = doc! {"alias": bearer_token_alias.to_string() };
