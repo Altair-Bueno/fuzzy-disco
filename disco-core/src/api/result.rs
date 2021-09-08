@@ -12,12 +12,16 @@ pub type ApiResult = Custom<Value>;
 
 #[derive(Error, Debug)]
 pub enum ApiError {
-    #[error("Couldn't retrive data from database")]
+    #[error("Couldn't retrieve data from database")]
     DatabaseError(#[from] mongodb::error::Error),
+    #[error("Couldn't store file")]
+    FileTransferError(#[from] std::io::Error),
     #[error(transparent)]
     InvalidUser(#[from] crate::mongo::user::UserError),
     #[error(transparent)]
     InvalidPost(#[from] crate::mongo::post::PostError),
+    #[error("{0}")]
+    InvalidFormat(#[from] crate::mongo::media::MediaError),
     #[error("{0} taken")]
     Conflict(&'static str),
     #[error("{0}")]
@@ -28,17 +32,18 @@ pub enum ApiError {
     NotFound(&'static str),
     #[error("{0}")]
     BadRequest(&'static str),
+
 }
 
 impl<'r> Responder<'r, 'static> for ApiError {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
         let status = match self {
-            ApiError::DatabaseError(_) | ApiError::InternalServerError(_) => {
-                Status::InternalServerError
-            }
-            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) | ApiError::BadRequest(_) => {
+            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) | ApiError::BadRequest(_) | ApiError::InvalidFormat(_)=> {
                 Status::BadRequest
-            }
+            },
+            ApiError::DatabaseError(_) | ApiError::InternalServerError(_) | ApiError::FileTransferError(_) => {
+                Status::InternalServerError
+            },
             ApiError::Conflict(_) => Status::Conflict,
             ApiError::Unauthorized(_) => Status::Unauthorized,
             ApiError::NotFound(_) => Status::NotFound,

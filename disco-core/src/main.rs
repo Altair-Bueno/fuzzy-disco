@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-use std::sync::Arc;
-
-use dashmap::DashMap;
 use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
 
@@ -13,7 +10,6 @@ mod api;
 mod init;
 mod mongo;
 
-pub type CacheFiles = Arc<DashMap<String, String>>;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
@@ -23,13 +19,13 @@ async fn main() -> Result<(), String> {
         Ok(client) => client,
         Err(err) => return Err(format!("{:?}", err)),
     };
-    println!("Database connection sucessfull");
+    println!("Database connection successfully");
     println!("Starting up disco-core...");
 
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
     let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
-    let mongo_session_collection = mongo_database.collection::<mongo::session::Session>("sessions");
+    let mongo_session_collection = mongo_database.collection::<mongo::session::Session>("Sessions");
 
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
@@ -41,9 +37,6 @@ async fn main() -> Result<(), String> {
         println!("{}", x)
     }
 
-    let sender = init_temporal_files_gc().await;
-    let temporal_files: CacheFiles = Arc::new(dashmap::DashMap::new());
-
     // launch Rocket server
     rocket::build()
         // DB Collections
@@ -51,9 +44,6 @@ async fn main() -> Result<(), String> {
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
         .manage(mongo_session_collection)
-        // Temporal files
-        .manage(temporal_files)
-        .manage(sender)
         // Mounted routes
         .mount(
             "/api/posts",
@@ -89,7 +79,7 @@ async fn main() -> Result<(), String> {
                 api::sessions::post::delete_all_sessions,
             ],
         )
-        .mount("/api/media", FileServer::from("media")) // TODO Auth media
+        //.mount("/api/media", FileServer::from("media")) // TODO Auth media
         // Static website server
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))

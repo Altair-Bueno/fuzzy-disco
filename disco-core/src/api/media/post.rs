@@ -1,79 +1,81 @@
-use chrono::{DateTime, Utc};
-use dashmap::mapref::entry::Entry;
 use mongodb::bson::doc;
-use rand::random;
 use rocket::fs::TempFile;
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::serde::json::serde_json::json;
-use rocket::tokio::sync::mpsc::Sender;
 use rocket::State;
 
-use crate::api::result::ApiResult;
-use crate::CacheFiles;
+use crate::api::result::{ApiError};
+use rocket::serde::json::Value;
+use crate::api::users::auth::token::claims::TokenClaims;
+use crate::mongo::media::{Format, Media};
+use mongodb::Collection;
 
-#[cfg(debug_assertions)]
-const TTL: u64 = 10;
-#[cfg(not(debug_assertions))]
 const TTL: u64 = 60;
 
 // TODO variants for png,jpg and mp3
 // , format = "application/x-www-form-urlencoded"
 #[post("/upload", data = "<file>")]
 pub async fn upload(
-    file: TempFile<'_>,
-    cache_files: &State<CacheFiles>,
-    gc: &State<Sender<String>>,
-) -> ApiResult {
-    let recived_at = Utc::now();
-    let key = match temporal_store(recived_at, file, cache_files, gc).await {
-        Ok(key) => key,
-        Err(err) => {
-            return status::Custom(
-                Status::InternalServerError,
-                json!({"message": err.to_string()}),
-            );
-        }
-    };
-    let response = json!({
-        "key" : key,
-        "TTL" : TTL,
-    });
+    _token: TokenClaims,
+    mut file: TempFile<'_>,
+    mongo: &State<Collection<Media>>,
+) -> Result<status::Custom<Value>, ApiError> {
+    // inspect file
+    let file_type : Format = file.path()
+        .ok_or(ApiError::InternalServerError("Couldn't inspect file"))
+        .map(|x| infer::get_from_path(x))??
+        .ok_or(ApiError::BadRequest("Unknown file format"))
+        .map(|x| x.mime_type().parse())??;
 
-    status::Custom(Status::Ok, response)
+    // insert document
+    let media = Media::new(file_type);
+    let inserted = mongo.insert_one(media, None).await?;
+    // Unwrap is safe. If the document has been inserted, it contains an oid
+    let oid = inserted.inserted_id.as_object_id().unwrap();
+    // copy to folder
+    let folder = oid_to_folder(&oid);
+    let path = format!("{}/{}.blob",folder,oid);
+    rocket::tokio::fs::create_dir_all(&folder).await?;
+    println!("path created");
+    file.copy_to(&path).await?;
+    let response = json!({ "key" : oid.to_string(), "TTL" : TTL });
+    timed_gc(oid,path,(*mongo).clone()).await;
+    Ok(status::Custom(Status::Ok, response))
 }
 
-pub async fn temporal_store(
-    recived_date: DateTime<Utc>,
-    mut file: TempFile<'_>,
-    cache_files: &State<CacheFiles>,
-    gc: &State<Sender<String>>,
-) -> std::io::Result<String> {
-    // Find unike key
-    let (key, path) = {
-        loop {
-            let key = format!("{}-{}", recived_date, random::<usize>());
-            let filename = format!("temp/{}", key);
-            if let Entry::Vacant(x) = cache_files.entry(key.clone()) {
-                x.insert(filename.clone());
-                break (key, filename);
-            }
-        }
-    };
-    // Copy the temporal file
-    file.copy_to(&path).await?;
-
-    // Set up GC
-    let gc_clone = (*gc).clone();
-    let cache_files_clone = (*cache_files).clone();
-    let key_clone = key.clone();
+/// Sets up a timed gc for a temporal file using its key. If the key is still
+/// present on the CacheFiles index, it will remove the entry and send it to
+/// the garbage collector routine
+///
+/// > NOTE: Although it is called *garbage collector*, it is **not** related to
+/// > memory management. This GC is used for scheduling file removals
+async fn timed_gc (
+    oid:mongodb::bson::oid::ObjectId,
+    path: String,
+    collection: Collection<Media>
+) {
     rocket::tokio::spawn(async move {
         rocket::tokio::time::sleep(rocket::tokio::time::Duration::new(TTL, 0)).await;
-        let entry = cache_files_clone.remove(&key_clone);
-        if let Some((_, expired)) = entry {
-            let _ = gc_clone.send(expired).await;
+        let result = collection.delete_one(doc! {"_id": oid},None).await;
+        match result {
+            Ok(x) if x.deleted_count == 1 => {
+                #[cfg(debug_assertions)]
+                println!("[GC]: Deleting {}", oid);
+                let _ = rocket::tokio::fs::remove_file(path).await;
+            },
+            _=>{}
         }
     });
+}
 
-    Ok(key)
+pub fn oid_to_path(oid:&mongodb::bson::oid::ObjectId) -> String {
+    format!("{}/{}.blob",oid_to_folder(&oid),oid)
+}
+
+pub fn oid_to_folder(oid:&mongodb::bson::oid::ObjectId) -> String {
+    oid
+        .bytes()
+        .iter()
+        .fold("media/".to_string(),|acc,n| format!("{}/{}",acc,n))
 }

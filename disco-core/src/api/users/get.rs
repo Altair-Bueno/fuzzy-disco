@@ -54,17 +54,16 @@ pub async fn get_user_info(
     alias: &str,
     mongo: &State<Collection<User>>,
 ) -> Result<Custom<Value>, ApiError> {
-    todo!()
-    /*let alias = alias.parse::<Alias>()?;
+    let alias = alias.parse::<Alias>()?;
     let user = crate::api::users::locate_user(&alias, mongo).await?;
     Ok(Custom(
         Status::Ok,
         json!({
+            // TODO add something more, this looks depressing
                 "alias": user.alias(),
-                "posts": user.posts(),
             }
         ),
-    ))*/
+    ))
 }
 
 /// # AUTH! `GET /api/users`
@@ -114,15 +113,13 @@ pub async fn get_full_user_info(
     mongo: &State<Collection<User>>,
     token: TokenClaims,
 ) -> Result<Custom<Value>, ApiError> {
-    todo!()
-    /*let user = crate::api::users::locate_user(token.alias(), mongo).await?;
+    let user = crate::api::users::locate_user(token.alias(), mongo).await?;
     Ok(Custom(
         Status::Ok,
         json!({
             "alias": user.alias(),
-            "posts": user.posts(),
             "email": user.email(),
             "creation_date": user.creation_date().to_string()
         }),
-    ))*/
+    ))
 }

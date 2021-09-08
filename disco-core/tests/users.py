@@ -46,7 +46,7 @@ def delete_user(auth_header: dict[str, str]):
 
 
 def test_api_users():
-    print('create test user')
+    print('create test user:')
     body = """
     {
         "alias": "somecoolalias",
@@ -57,11 +57,11 @@ def test_api_users():
     r = create_user(body)
     print(r.json())
 
-    print('Check if the user has been created')
+    print('Check if the user has been created:')
     r = get_basic_user_data("somecoolalias")
     print(r.json())
 
-    print('using email for log in')
+    print('using email for log in:')
     body = """
     {
         "password": "somecoolpassword",
@@ -72,7 +72,7 @@ def test_api_users():
     print(r.json())
 
     # alias log in
-    print('using alias for log in')
+    print('using alias for log in:')
     old_user_login = """
     {
         "alias": "somecoolalias",
@@ -82,7 +82,7 @@ def test_api_users():
     r = alias_log_in(old_user_login)
     print(r.json())
 
-    print('starting auth queries')
+    print('starting auth queries:')
     bearer_token = r.json()['access_token']
     refresh_token = r.json()['refresh_token']
     auth_header = {
@@ -92,7 +92,7 @@ def test_api_users():
     print(auth_header)
 
     # get full user info
-    print('get the full user info')
+    print('get the full user info:')
     r = get_full_user_data(auth_header)
     print(r.json())
 
@@ -108,7 +108,7 @@ def test_api_users():
     # update password
     # NOTE: althought the session has been closed, we can still log in using
     # the token
-    print("change user's password")
+    print("change user's password:")
     body = """
     {
         "password": "somecoolpassword",
@@ -119,15 +119,15 @@ def test_api_users():
     print(r.status_code)
 
     # old login should fail
-    print('old login info should fail with 4xx code')
+    print('old login info should fail with 4xx code:')
     r = alias_log_in(old_user_login)
     print(f'4xx: {r.status_code}')
 
-    print('Old refresh token should fail')
+    print('Old refresh token should fail:')
     r = refresh_token_log_in('{"refresh_token": "' + refresh_token + '" }')
     print(r)
 
-    print('change user email')
+    print('change user email:')
     body = """
     {
         "email": "the@email.com"
@@ -139,6 +139,6 @@ def test_api_users():
     print(r.json())
 
     # delete user
-    print('delete the test user')
+    print('delete the test user:')
     r = delete_user(auth_header)
     print(r.json())
