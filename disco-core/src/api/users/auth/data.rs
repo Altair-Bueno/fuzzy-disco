@@ -54,3 +54,8 @@ pub struct JoinedRefreshToken {
     // joined field
     pub users: Vec<User>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RefreshJWT{
+    pub refresh_token: ObjectId,
+}

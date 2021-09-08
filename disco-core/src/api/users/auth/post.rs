@@ -5,7 +5,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::result::ApiError;
-use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp};
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp, RefreshJWT};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::auth::token::response::TokenResponse;
 use crate::mongo::sesion::Sesion;
@@ -93,8 +93,16 @@ pub async fn signup(
 
 /// # `POST api/users/auth/login?using=<method>`
 /// Returns a JWT for user authentication. The token must be included on the
-/// `Authorization` HTTP header for authenticated requests. You can authenticate
-/// by either the user alias (method `alias`) or by user email (method `email`).
+/// `Authorization` HTTP header for authenticated requests;
+///
+/// ```text
+/// Authorization: Bearer <token>
+/// ```
+///
+/// You can authenticate by either the user alias (method `alias`) or by user
+/// email (method `email`). When the token expires, you can send your
+/// `refresh_token` to get another access token if the user sesion is still
+///  valid. To see how to invalidate sesions, check [crate::api::users::post]
 ///
 /// ## Alias
 /// ```json
@@ -109,6 +117,14 @@ pub async fn signup(
 /// {
 ///     "email": String,
 ///     "password": String,
+/// }
+/// ```
+///
+/// ## Refresh token
+///
+/// ```json
+/// {
+///     "refresh_token": String
 /// }
 /// ```
 ///
@@ -197,6 +213,22 @@ pub async fn login_alias(
     create_sesion(x, session_collection).await
 }
 
+#[post("/login?using=refresh_token", format = "json", data = "<info>")]
+pub async fn login_refresh_token(
+    info: Json<RefreshJWT>,
+    session_collection: &State<Collection<Sesion>>,
+) -> Result<TokenResponse, ApiError> {
+    let filter = doc! {"_id": info.refresh_token};
+    let search = session_collection.find_one(filter,None).await?;
+    match search {
+        None => Err(ApiError::Unauthorized("Sesion closed")),
+        Some(x) => {
+            let (expiresin,token) = TokenClaims::new_encrypted(x.sub().clone());
+            Ok(TokenResponse::new(expiresin, info.refresh_token.to_string(), token))
+        }
+    }
+}
+
 async fn create_sesion(
     user: User,
     session_collection: &State<Collection<Sesion>>,
@@ -214,5 +246,4 @@ async fn verify_password(user: &User, password: &str) -> Result<(), ApiError> {
         Err(_) => Err(ApiError::InternalServerError("Couldn't hash password")),
     }
 }
-// TODO LOGIN USING REFRESH TOKEN
-// POST /api/users/auth/login?using=refresh_token
+

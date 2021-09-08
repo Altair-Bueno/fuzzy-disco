@@ -12,7 +12,12 @@ use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use rocket::request::Request;
 
 /// JWT Time To Live
-const TTL_AUTH: i64 = 60;
+#[cfg(debug_assertions)]
+const TTL_AUTH: i64 = 120;
+
+#[cfg(not(debug_assertions))]
+const TTL_AUTH: i64 = 30;
+
 
 pub type EncryptedToken = String;
 pub type ExpiresIn = i64;
