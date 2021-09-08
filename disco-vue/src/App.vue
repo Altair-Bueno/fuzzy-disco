@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import RegisterPage from "@/components/RegisterPage";
+import RegisterPage from "@/components/auth-components/RegisterPage";
 
 export default {
   name: 'App',
