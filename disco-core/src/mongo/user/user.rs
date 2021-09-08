@@ -27,7 +27,6 @@ pub struct User {
     alias: Alias,
     email: Email,
     password: Password,
-    posts: Vec<ObjectId>,
     creation_date: DateTime,
 }
 
@@ -41,7 +40,6 @@ impl User {
             alias,
             email,
             password,
-            posts: vec![],
             creation_date: mongodb::bson::DateTime::now(),
         }
     }
@@ -54,9 +52,6 @@ impl User {
     }
     pub fn password(&self) -> &Password {
         &self.password
-    }
-    pub fn posts(&self) -> &Vec<ObjectId> {
-        &self.posts
     }
     pub fn creation_date(&self) -> DateTime {
         self.creation_date
@@ -73,7 +68,7 @@ mod test {
 
     #[test]
     pub fn deserialization() {
-        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"posts\":[],\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
+        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
         let _: User = serde_json::from_str(json).unwrap();
     }
 
