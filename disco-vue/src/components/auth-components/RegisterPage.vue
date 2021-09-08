@@ -9,8 +9,8 @@
         <FormInput @input-update="getRepeatPasswd" inputType="password" identifier="repeat-pwd" field="Repeat Password" :input-ok="repeatPasswdOk"></FormInput>
       </form>
       <button @click="submit" class="submit-btn">Register</button>
-      <div class="login-text">
-        <p>Already have an account? <a class="login-link" href="#">Login here</a></p>
+      <div class="register-text">
+        <p>Already have an account? <a class="register-link" href="#">Login here</a></p>
       </div>
     </div>
   </div>
@@ -44,7 +44,7 @@ export default {
           email: this.email,
           password: this.passwd
         }
-        let response = await fetch('api/users/auth/signup', {
+        let response = await fetch('/api/users/auth/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -57,27 +57,11 @@ export default {
     },
 
     validateUser() {
-      if(!this.validateEmail(this.email)) {
-        this.emailOk = false;
-        return false;
-      }
-      if(!this.validateUsername(this.username)) {
-        this.usernameOk = false;
-        return false;
-      }
-      if(!this.validatePasswd(this.passwd)) {
-        this.passwdOk = false;
-        return false;
-      }
-      if(!this.validateRepeatPasswd(this.repeatPasswd)) {
-        this.repeatPasswdOk = false;
-        return false;
-      }
-      this.emailOk = true;
-      this.usernameOk = true;
-      this.passwdOk = true;
-      this.repeatPasswdOk = true;
-      return true;
+      this.emailOk = this.validateEmail(this.email);
+      this.usernameOk = this.validateUsername(this.username);
+      this.passwdOk = this.validatePasswd(this.passwd);
+      this.repeatPasswdOk = this.validateRepeatPasswd(this.repeatPasswd);
+      return (this.emailOk && this.usernameOk && this.passwdOk && this.repeatPasswdOk);
     },
 
     getEmail(email) {
@@ -158,11 +142,11 @@ export default {
     cursor: default;
   }
 
-  .login-text {
+  .register-text {
     margin-top: 6rem;
   }
 
-  .login-link {
+  .register-link {
     color: var(--login-border);
   }
 </style>

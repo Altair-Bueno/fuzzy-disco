@@ -2,24 +2,100 @@
   <div class="object-cont">
     <div class="form-cont">
       <form class="login-form">
-        <h1>Login</h1>
-        <label for="alias">Username or Email</label><br>
-        <input class="input-text" type="email" id="alias"><br><br>
-        <label for="pwd">Password</label><br>
-        <input class="input-text" type="password" id="pwd"><br><br>
-        <input class="submit-btn" type="submit" value="Login">
+        <h1>Sign Up</h1>
+        <FormInput @input-update="getEmailUsername" identifier="email" field="Email or Username" :input-ok="(emailOk || usernameOk)"></FormInput>
+        <FormInput @input-update="getPasswd" inputType="password" identifier="pwd" field="Password" :input-ok="passwdOk"></FormInput>
       </form>
+      <button @click="submit" class="submit-btn">Login</button>
       <br>
-      <div class="register-text">
-        <p>Dont have an acoount yet? <a class="register-link" href="#">Register now</a></p>
+      <div class="login-text">
+        <p>Dont have an account yet? <a class="login-link" href="#">Register now</a></p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import FormInput from "@/components/auth-components/FormInput";
+
 export default {
-  name: "LoginPage"
+  name: "LoginPage",
+  components: {FormInput},
+  data() {
+    return {
+      emailUsername: String,
+      passwd: String,
+
+      emailOk: true,
+      usernameOk: true,
+      passwdOk: true
+    }
+  },
+  methods: {
+    async submit() {
+      let loginMethod = this.validateUser();
+      if(loginMethod === "") {
+        console.log("repeat");
+      } else {
+        let user = {
+          [loginMethod]: this.emailUsername,
+          password: this.passwd
+        }
+        let response = await fetch(`/api/users/auth/login?using=${loginMethod}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(user)
+        });
+        let result = await response.json();
+        console.log(result.message);
+      }
+    },
+
+    validateUser() {
+      let loginMethod = this.validateEmailUsername(this.emailUsername);
+      if(loginMethod === "email") {
+        this.emailOk = true;
+      } else if(loginMethod === "alias") {
+        this.usernameOk = true;
+      } else {
+        this.emailOk = false;
+        this.usernameOk = false;
+      }
+      this.passwdOk = this.validatePasswd(this.passwd);
+      return loginMethod;
+    },
+
+    getEmailUsername(emailUsername) {
+      this.emailUsername = emailUsername.update;
+    },
+    getPasswd(passwd) {
+      this.passwd = passwd.update;
+    },
+
+    validateEmail(email) {
+      const regex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return regex.test(email);
+    },
+    validateUsername(username) {
+      const regex =/^[a-zA-Z_\-0-9]{4,30}$/;
+      return regex.test(username);
+    },
+    validatePasswd(passwd) {
+      return passwd.length >= 8;
+    },
+    validateEmailUsername(emailUsername) {
+      let res = "";
+      if(this.validateEmail(emailUsername)) {
+        res = "email"
+      } else if(this.validateUsername(emailUsername)) {
+        res = "alias";
+      }
+      return res;
+    }
+  }
+
 }
 </script>
 
@@ -47,33 +123,6 @@ export default {
     box-shadow: 5px 5px 25px 10px rgba(0, 0, 0, 0.5);
   }
 
-  .input-text {
-    margin: 0 1.5rem;
-    border: none;
-    border-bottom: 1px solid #ccc;
-    height: 1.5rem;
-    width: 5rem;
-    background-color: var(--navbar-color);
-    color: whitesmoke;
-    transition: 300ms;
-    font-family: "Open Sans", sans-serif;
-    font-size: 16px;
-    opacity: 0.9;
-    font-weight: lighter;
-  }
-
-  .input-text:hover {
-    outline: none;
-    width: 15rem;
-    border-color: var(--login-border);
-  }
-
-  .input-text:focus {
-    outline: none;
-    width: 15rem;
-    border-color: var(--login-border);
-  }
-
   .submit-btn {
     font-family: "Open Sans", sans-serif;
     color: #444444;
@@ -97,11 +146,11 @@ export default {
     cursor: default;
   }
 
-  .register-text {
+  .login-text {
     margin-top: 6rem;
   }
 
-  .register-link {
+  .login-link {
     color: var(--login-border);
   }
 
