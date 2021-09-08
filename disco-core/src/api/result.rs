@@ -1,10 +1,11 @@
+use std::io::Cursor;
+
 use rocket::http::{ContentType, Status};
 use rocket::response::status::Custom;
 use rocket::response::Responder;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::{response, Request, Response};
-use std::io::Cursor;
 use thiserror::Error;
 
 pub type ApiResult = Custom<Value>;
@@ -26,15 +27,18 @@ pub enum ApiError {
     #[error("{0} not found")]
     NotFound(&'static str),
     #[error("{0}")]
-    BadRequest(&'static str)
+    BadRequest(&'static str),
 }
+
 impl<'r> Responder<'r, 'static> for ApiError {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
         let status = match self {
             ApiError::DatabaseError(_) | ApiError::InternalServerError(_) => {
                 Status::InternalServerError
             }
-            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) | ApiError::BadRequest(_) => Status::BadRequest,
+            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) | ApiError::BadRequest(_) => {
+                Status::BadRequest
+            }
             ApiError::Conflict(_) => Status::Conflict,
             ApiError::Unauthorized(_) => Status::Unauthorized,
             ApiError::NotFound(_) => Status::NotFound,

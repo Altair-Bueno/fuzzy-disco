@@ -41,7 +41,7 @@ def change_user_info(body: str, auth_header: dict[str, str]):
     return requests.put(_URL + 'update', body, headers=auth_header)
 
 
-def delete_user(auth_header:dict [str,str]):
+def delete_user(auth_header: dict[str, str]):
     return requests.delete(_URL, headers=auth_header)
 
 

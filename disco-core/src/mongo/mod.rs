@@ -8,7 +8,7 @@ pub mod media;
 pub mod post;
 /// Contains data structures that represents a user session
 #[allow(dead_code)]
-pub mod sesion;
+pub mod session;
 mod traits;
 /// Contains data structures that represents users on a document-based database
 pub mod user;

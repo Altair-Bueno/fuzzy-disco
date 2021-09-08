@@ -1,15 +1,13 @@
-use serde::{Deserialize, Serialize};
-
 use chrono::Utc;
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use rocket::http::Status;
+use rocket::request::Request;
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
+use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::Alias;
-use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
-
-use rocket::request::Request;
 
 /// JWT Time To Live
 #[cfg(debug_assertions)]
@@ -17,7 +15,6 @@ const TTL_AUTH: i64 = 120;
 
 #[cfg(not(debug_assertions))]
 const TTL_AUTH: i64 = 30;
-
 
 pub type EncryptedToken = String;
 pub type ExpiresIn = i64;

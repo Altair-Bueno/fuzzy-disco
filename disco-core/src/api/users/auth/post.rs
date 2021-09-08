@@ -1,18 +1,21 @@
+use std::net::IpAddr;
+
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
-use rocket::{State, Request};
+use rocket::serde::json::Value;
+use rocket::{Request, State};
 
 use crate::api::result::ApiError;
-use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp, RefreshJWT, IpAdd};
+use crate::api::users::auth::data::{
+    IpAdd, RefreshJWT, UserLogInAlias, UserLogInEmail, UserSingUp,
+};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::auth::token::response::TokenResponse;
-use crate::mongo::sesion::Sesion;
+use crate::mongo::session::session;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
-use rocket::serde::json::Value;
-use std::net::IpAddr;
 
 /// # `POST /api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -102,8 +105,8 @@ pub async fn signup(
 ///
 /// You can authenticate by either the user alias (method `alias`) or by user
 /// email (method `email`). When the token expires, you can send your
-/// `refresh_token` to get another access token if the user sesion is still
-///  valid. To see how to invalidate sesions, check [crate::api::users::post]
+/// `refresh_token` to get another access token if the user session is still
+///  valid. To see how to invalidate sessions, check [crate::api::users::post]
 ///
 /// ## Alias
 /// ```json
@@ -182,8 +185,8 @@ pub async fn signup(
 pub async fn login_email(
     info: Json<UserLogInEmail<'_>>,
     user_collection: &State<Collection<User>>,
-    session_collection: &State<Collection<Sesion>>,
-    ip: Option<IpAdd>
+    session_collection: &State<Collection<session>>,
+    ip: Option<IpAdd>,
 ) -> Result<TokenResponse, ApiError> {
     let email = info.email.parse::<Email>()?;
     let user = user_collection
@@ -194,15 +197,15 @@ pub async fn login_email(
         None => return Err(ApiError::NotFound("User")),
     };
     verify_password(&x, info.password).await?;
-    create_sesion(x, session_collection,ip.map(|x|x.ip)).await
+    create_session(x, session_collection, ip.map(|x| x.ip)).await
 }
 
 #[post("/login?using=alias", format = "json", data = "<info>", rank = 2)]
 pub async fn login_alias(
     info: Json<UserLogInAlias<'_>>,
     user_collection: &State<Collection<User>>,
-    session_collection: &State<Collection<Sesion>>,
-    ip: Option<IpAdd>
+    session_collection: &State<Collection<session>>,
+    ip: Option<IpAdd>,
 ) -> Result<TokenResponse, ApiError> {
     let alias = info.alias.parse::<Alias>()?;
     let user = user_collection
@@ -213,36 +216,41 @@ pub async fn login_alias(
         None => return Err(ApiError::NotFound("User")),
     };
     verify_password(&x, info.password).await?;
-    create_sesion(x, session_collection,ip.map(|x|x.ip)).await
+    create_session(x, session_collection, ip.map(|x| x.ip)).await
 }
 
 #[post("/login?using=refresh_token", format = "json", data = "<info>")]
 pub async fn login_refresh_token(
     info: Json<RefreshJWT>,
-    session_collection: &State<Collection<Sesion>>,
+    session_collection: &State<Collection<session>>,
 ) -> Result<TokenResponse, ApiError> {
     let filter = doc! {"_id": info.refresh_token};
-    let search = session_collection.find_one(filter,None).await?;
+    let search = session_collection.find_one(filter, None).await?;
     match search {
-        None => Err(ApiError::Unauthorized("Sesion closed")),
+        None => Err(ApiError::Unauthorized("session closed")),
         Some(x) => {
-            let (expiresin,token) = TokenClaims::new_encrypted(x.sub().clone());
-            Ok(TokenResponse::new(expiresin, info.refresh_token.to_string(), token))
+            let (expiresin, token) = TokenClaims::new_encrypted(x.sub().clone());
+            Ok(TokenResponse::new(
+                expiresin,
+                info.refresh_token.to_string(),
+                token,
+            ))
         }
     }
 }
 
-async fn create_sesion(
+async fn create_session(
     user: User,
-    session_collection: &State<Collection<Sesion>>,
-    ip:Option<IpAddr>
+    session_collection: &State<Collection<session>>,
+    ip: Option<IpAddr>,
 ) -> Result<TokenResponse, ApiError> {
-    let sesion = Sesion::new(user.alias().clone(),ip);
-    let x = session_collection.insert_one(&sesion, None).await?;
-    let sesion: mongodb::bson::oid::ObjectId = mongodb::bson::from_bson(x.inserted_id).unwrap();
+    let session = session::new(user.alias().clone(), ip);
+    let x = session_collection.insert_one(&session, None).await?;
+    let session: mongodb::bson::oid::ObjectId = mongodb::bson::from_bson(x.inserted_id).unwrap();
     let (expires, payload) = TokenClaims::new_encrypted(user.alias().clone());
-    Ok(TokenResponse::new(expires, sesion.to_string(), payload))
+    Ok(TokenResponse::new(expires, session.to_string(), payload))
 }
+
 async fn verify_password(user: &User, password: &str) -> Result<(), ApiError> {
     match user.password().validate(password) {
         Ok(true) => Ok(()),
@@ -250,4 +258,3 @@ async fn verify_password(user: &User, password: &str) -> Result<(), ApiError> {
         Err(_) => Err(ApiError::InternalServerError("Couldn't hash password")),
     }
 }
-

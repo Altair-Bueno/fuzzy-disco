@@ -1,5 +1,5 @@
+from sessions import test_api_sessions
 from users import test_api_users
-from sesions import test_api_sessions
 
 
 def main():

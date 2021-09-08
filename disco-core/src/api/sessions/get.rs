@@ -1,16 +1,18 @@
-use crate::api::users::auth::token::claims::TokenClaims;
-use rocket::serde::json::Json;
-use crate::mongo::user::Sesion;
-use mongodb::Collection;
-use rocket::State;
-use mongodb::bson::doc;
-use rocket::futures::StreamExt;
-use crate::api::result::ApiError;
 use std::collections::HashMap;
-use crate::api::sesions::data::PublicSesionData;
 
-/// # AUTH! `GET /api/sesions`
-/// Returns all current sesions from the user
+use mongodb::bson::doc;
+use mongodb::Collection;
+use rocket::futures::StreamExt;
+use rocket::serde::json::Json;
+use rocket::State;
+
+use crate::api::result::ApiError;
+use crate::api::sessions::data::PublicsessionData;
+use crate::api::users::auth::token::claims::TokenClaims;
+use crate::mongo::user::session;
+
+/// # AUTH! `GET /api/sessions`
+/// Returns all current sessions from the user
 ///
 /// # Returns
 /// ## Ok (200)
@@ -36,7 +38,7 @@ use crate::api::sesions::data::PublicSesionData;
 ///
 /// # Example
 ///
-/// `GET /api/sesions`
+/// `GET /api/sessions`
 ///
 /// ```json
 /// {
@@ -44,15 +46,17 @@ use crate::api::sesions::data::PublicSesionData;
 ///     "date": "2021-09-08 12:36:51.077 UTC"
 /// }
 /// ```
-
 #[get("/", format = "json")]
-pub async fn get_user_sesions(session_collection: &State<Collection<Sesion>>,token: TokenClaims) -> Result<Json<Vec<PublicSesionData>>, ApiError> {
+pub async fn get_user_sessions(
+    session_collection: &State<Collection<session>>,
+    token: TokenClaims,
+) -> Result<Json<Vec<PublicsessionData>>, ApiError> {
     let filter = doc! { "user_alias" : token.alias().to_string() };
     let mut cursor = session_collection.find(filter, None).await?;
 
     let mut vec = Vec::new();
     while let Some(res) = cursor.next().await {
-        vec.push(PublicSesionData::from_sesion(res?));
+        vec.push(PublicsessionData::from_session(res?));
     }
     Ok(Json(vec))
 }

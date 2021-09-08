@@ -4,7 +4,7 @@ pub mod media;
 pub mod posts;
 /// Errors that can be produced on the API
 pub mod result;
+/// /api/sessions
+pub mod sessions;
 /// /api/users
 pub mod users;
-/// /api/sesions
-pub mod sesions;

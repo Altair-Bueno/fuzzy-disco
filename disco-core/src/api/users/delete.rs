@@ -1,7 +1,3 @@
-use crate::api::result::ApiError;
-use crate::api::users::auth::token::claims::TokenClaims;
-use crate::mongo::sesion::Sesion;
-use crate::mongo::user::User;
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::http::Status;
@@ -9,7 +5,12 @@ use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
-use crate::api::sesions::delete_all_sesions_from;
+
+use crate::api::result::ApiError;
+use crate::api::sessions::delete_all_sessions_from;
+use crate::api::users::auth::token::claims::TokenClaims;
+use crate::mongo::session::session;
+use crate::mongo::user::User;
 
 /// # AUTH! `DELETE /api/users`
 /// Deletes the current authenticated user from the database
@@ -41,14 +42,14 @@ use crate::api::sesions::delete_all_sesions_from;
 pub async fn delete_user(
     token: TokenClaims,
     mongo: &State<Collection<User>>,
-    sesion_collection: &State<Collection<Sesion>>,
+    session_collection: &State<Collection<session>>,
 ) -> Result<Custom<Value>, ApiError> {
     let bearer_token_alias = token.alias();
     let query = doc! {"alias": bearer_token_alias.to_string() };
     match mongo.find_one_and_delete(query, None).await? {
         Some(_) => {
-            // Delete all user sesions
-           delete_all_sesions_from(bearer_token_alias,sesion_collection).await?;
+            // Delete all user sessions
+            delete_all_sessions_from(bearer_token_alias, session_collection).await?;
             Ok(Custom(
                 Status::Ok,
                 json!({"status": Status::Ok.reason(), "message": "User deleted"}),
