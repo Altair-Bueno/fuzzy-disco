@@ -1,6 +1,3 @@
-use crate::api::result::ApiError;
-use crate::api::users::auth::token::claims::TokenClaims;
-use crate::mongo::user::{Alias, User};
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::http::Status;
@@ -8,6 +5,10 @@ use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
+
+use crate::api::result::ApiError;
+use crate::api::users::auth::token::claims::TokenClaims;
+use crate::mongo::user::{Alias, User};
 
 /// # `GET /api/users/<alias>`
 /// Returns the public information avaliable for the given user
@@ -64,6 +65,7 @@ pub async fn get_user_info(
         ),
     ))
 }
+
 /// # AUTH! `GET /api/users`
 /// Returns the **private** information stored about the user. This includes
 /// everything except the hashed password
@@ -106,7 +108,6 @@ pub async fn get_user_info(
 ///   "creation_date": "2021-09-06 16:13:02.797 UTC"
 /// }
 /// ```
-
 #[get("/")]
 pub async fn get_full_user_info(
     mongo: &State<Collection<User>>,

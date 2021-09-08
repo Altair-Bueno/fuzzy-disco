@@ -1,13 +1,12 @@
-use serde::{Deserialize, Serialize};
-
-use rocket::http::Status;
-use rocket::serde::json::serde_json::json;
-
 use std::io::Cursor;
 
 use rocket::http::ContentType;
+use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::{Responder, Response};
+use rocket::serde::json::serde_json::json;
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenResponse {
     access_token: String,

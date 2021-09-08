@@ -28,7 +28,7 @@ async fn main() -> Result<(), String> {
     let mongo_user_collection = mongo_database.collection::<mongo::user::User>("Users");
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
     let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
-    let mongo_sesion_collection = mongo_database.collection::<mongo::sesion::Sesion>("Sesions");
+    let mongo_session_collection = mongo_database.collection::<mongo::session::session>("sessions");
 
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
@@ -61,7 +61,7 @@ async fn main() -> Result<(), String> {
         .manage(mongo_user_collection)
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
-        .manage(mongo_sesion_collection)
+        .manage(mongo_session_collection)
         .manage(temporal_files)
         .manage(sender)
         // Mounted routes
@@ -90,6 +90,13 @@ async fn main() -> Result<(), String> {
                 api::users::put::update_user_password,
                 api::users::put::update_user_info,
                 api::users::delete::delete_user,
+            ],
+        )
+        .mount(
+            "/api/sessions",
+            routes![
+                api::sessions::get::get_user_sessions,
+                api::sessions::post::delete_all_sessions,
             ],
         )
         .mount("/api/media", FileServer::from("media")) // TODO Auth media

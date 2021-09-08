@@ -2,11 +2,11 @@ use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use regex::Regex;
+use rocket::request::FromParam;
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::result;
 use crate::mongo::user::result::UserError;
-use rocket::request::FromParam;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(r"^[a-zA-Z_\-0-9]{4,30}$").unwrap();
@@ -19,6 +19,7 @@ lazy_static! {
 pub struct Alias {
     alias: String,
 }
+
 impl<'a> FromParam<'a> for Alias {
     type Error = UserError;
 

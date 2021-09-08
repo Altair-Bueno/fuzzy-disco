@@ -1,13 +1,16 @@
-use crate::api::result::ApiError;
-use crate::api::result::ApiError::InternalServerError;
-use crate::api::users::auth::token::claims::TokenClaims;
-use crate::api::users::data::{UpdatePassword, UpdateUser};
-use crate::mongo::user::{Password, Sesion, User, Email};
+use std::collections::HashMap;
+
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::Json;
 use rocket::State;
-use std::collections::HashMap;
+
+use crate::api::result::ApiError;
+use crate::api::result::ApiError::InternalServerError;
+use crate::api::sessions::delete_all_sessions_from;
+use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::data::{UpdatePassword, UpdateUser};
+use crate::mongo::user::{session, Email, Password, User};
 
 /// # AUTH! `PUT /api/users/update/password`
 /// Changes the user password to another one
@@ -54,7 +57,7 @@ use std::collections::HashMap;
 pub async fn update_user_password(
     updated: Json<UpdatePassword<'_>>,
     user_collection: &State<Collection<User>>,
-    sesion_collection: &State<Collection<Sesion>>,
+    session_collection: &State<Collection<session>>,
     token: TokenClaims,
 ) -> Result<rocket::response::status::NoContent, ApiError> {
     let validated_document = updated.new_password.parse::<Password>()?;
@@ -65,8 +68,7 @@ pub async fn update_user_password(
             let filter = doc! { "alias": user.alias().to_string() };
             let update_op = doc! {"$set": { "password": validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
-            let filter = doc! { "user_alias": user.alias().alias() };
-            let _response = sesion_collection.delete_many(filter, None).await?;
+            delete_all_sessions_from(user.alias(), session_collection).await?;
             Ok(rocket::response::status::NoContent)
         }
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),
@@ -114,7 +116,6 @@ pub async fn update_user_password(
 /// ```
 ///
 /// ## Response (204)
-
 #[put("/update", format = "json", data = "<updated>")]
 pub async fn update_user_info(
     updated: Json<UpdateUser<'_>>,
@@ -122,9 +123,9 @@ pub async fn update_user_info(
     token: TokenClaims,
 ) -> Result<rocket::response::status::NoContent, ApiError> {
     let mut dic = HashMap::new();
-    if let Some (s) = updated.email {
+    if let Some(s) = updated.email {
         let email = s.parse::<Email>()?;
-        dic.insert("email",s);
+        dic.insert("email", s);
     }
     // more fields if needed
     // Unwrap is safe. Valid string slices
@@ -132,6 +133,6 @@ pub async fn update_user_info(
         "$set": mongodb::bson::to_document(&dic).unwrap()
     };
     let filter = doc! { "alias": token.alias().alias().to_string() };
-    user_collection.update_one(filter,update_doc,None).await?;
+    user_collection.update_one(filter, update_doc, None).await?;
     Ok(rocket::response::status::NoContent)
 }

@@ -35,7 +35,7 @@ pub async fn init_mongo_db() -> mongodb::error::Result<MongoDatabase> {
     let index_response = db
         .run_command(
             doc! {
-                "createIndexes": "Sesions",
+                "createIndexes": "sessions",
                 "indexes": [
                     {
                         "key": { "sub": 1 },

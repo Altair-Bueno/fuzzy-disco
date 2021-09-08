@@ -1,8 +1,9 @@
-use crate::api::result::ApiError;
-use crate::mongo::user::{Alias, User};
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::State;
+
+use crate::api::result::ApiError;
+use crate::mongo::user::{Alias, User};
 
 /// /api/users/auth
 pub mod auth;

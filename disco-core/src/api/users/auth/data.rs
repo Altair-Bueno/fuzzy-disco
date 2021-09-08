@@ -1,9 +1,12 @@
+use std::net::IpAddr;
+
+use mongodb::bson::oid::ObjectId;
+use rocket::request::{FromRequest, Outcome};
+use rocket::Request;
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::{User, UserError};
 use crate::mongo::IntoDocument;
-
-use mongodb::bson::oid::ObjectId;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
@@ -28,6 +31,22 @@ impl IntoDocument<User> for UserSingUp<'_> {
     }
 }
 
+pub struct IpAdd {
+    pub ip: IpAddr,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for IpAdd {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match request.client_ip() {
+            None => Outcome::Forward(()),
+            Some(ip) => Outcome::Success(IpAdd { ip }),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserLogInEmail<'a> {
     pub email: &'a str,
@@ -47,7 +66,7 @@ pub struct UserLogInRefreshToken<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JoinedRefreshToken {
-    // sesion token
+    // session token
     pub id: ObjectId,
     // date
     pub date: mongodb::bson::DateTime,
@@ -56,6 +75,6 @@ pub struct JoinedRefreshToken {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RefreshJWT{
+pub struct RefreshJWT {
     pub refresh_token: ObjectId,
 }
