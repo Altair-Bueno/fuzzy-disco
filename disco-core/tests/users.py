@@ -41,6 +41,10 @@ def change_user_info(body: str, auth_header: dict[str, str]):
     return requests.put(_URL + 'update', body, headers=auth_header)
 
 
+def delete_user(auth_header:dict [str,str]):
+    return requests.delete(_URL, headers=auth_header)
+
+
 def test_api_users():
     print('create test user')
     body = """
@@ -136,5 +140,5 @@ def test_api_users():
 
     # delete user
     print('delete the test user')
-    r = requests.delete(_URL, headers=auth_header)
+    r = delete_user(auth_header)
     print(r.json())

@@ -3,6 +3,7 @@ use crate::mongo::user::Alias;
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
+use std::net::IpAddr;
 
 /// Contains information about a user login sesion (aka refresh token). Each
 /// time the server recives a valid `POST /api/user/login`, a new Sesion will
@@ -14,21 +15,25 @@ pub struct Sesion {
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
-    // subject object id
+    // subject alias
     user_alias: Alias,
+    // where
+    ip: Option<IpAddr>,
     // date
     date: DateTime,
 }
 
 impl Sesion {
     /// Generates a new sesion token that is linked to the user's alias
-    pub fn new(user_alias: Alias) -> Sesion {
+    pub fn new(user_alias: Alias,ip:Option<IpAddr>) -> Sesion {
         Sesion {
             id: None,
             user_alias,
+            ip,
             date: DateTime::now(),
         }
     }
+
 
     pub fn id(&self) -> Option<ObjectId> {
         self.id
@@ -38,6 +43,13 @@ impl Sesion {
     }
     pub fn date(&self) -> DateTime {
         self.date
+    }
+    pub fn user_alias(&self) -> &Alias {
+        &self.user_alias
+    }
+
+    pub fn ip(&self) -> Option<IpAddr> {
+        self.ip
     }
 }
 

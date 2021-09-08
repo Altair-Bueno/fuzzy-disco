@@ -9,6 +9,8 @@ use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
+use crate::api::sesions::delete_all_sesions_from;
+
 /// # AUTH! `DELETE /api/users`
 /// Deletes the current authenticated user from the database
 ///
@@ -46,8 +48,7 @@ pub async fn delete_user(
     match mongo.find_one_and_delete(query, None).await? {
         Some(_) => {
             // Delete all user sesions
-            let filter = doc! { "user_alias": bearer_token_alias.to_string() };
-            let _response = sesion_collection.delete_many(filter, None).await?;
+           delete_all_sesions_from(bearer_token_alias,sesion_collection).await?;
             Ok(Custom(
                 Status::Ok,
                 json!({"status": Status::Ok.reason(), "message": "User deleted"}),

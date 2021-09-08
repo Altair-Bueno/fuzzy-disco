@@ -92,6 +92,13 @@ async fn main() -> Result<(), String> {
                 api::users::delete::delete_user,
             ],
         )
+        .mount(
+            "/api/sesions",
+            routes![
+                api::sesions::get::get_user_sesions,
+                api::sesions::post::delete_all_sessions,
+            ]
+        )
         .mount("/api/media", FileServer::from("media")) // TODO Auth media
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))

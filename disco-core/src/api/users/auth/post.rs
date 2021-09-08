@@ -2,18 +2,19 @@ use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
-use rocket::State;
+use rocket::{State, Request};
 
 use crate::api::result::ApiError;
-use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp, RefreshJWT};
+use crate::api::users::auth::data::{UserLogInAlias, UserLogInEmail, UserSingUp, RefreshJWT, IpAdd};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::auth::token::response::TokenResponse;
 use crate::mongo::sesion::Sesion;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 use rocket::serde::json::Value;
+use std::net::IpAddr;
 
-/// # `POST api/users/auth/signup`
+/// # `POST /api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
 /// must be **JSON** formated with the following content:
 ///
@@ -54,7 +55,7 @@ use rocket::serde::json::Value;
 ///
 /// # Example
 ///
-/// `POST /auth/signup`
+/// `POST /api/users/auth/signup`
 ///
 /// ## Body payload
 ///
@@ -91,7 +92,7 @@ pub async fn signup(
     // fixme check if it is colision or db connection error
 }
 
-/// # `POST api/users/auth/login?using=<method>`
+/// # `POST /api/users/auth/login?using=<method>`
 /// Returns a JWT for user authentication. The token must be included on the
 /// `Authorization` HTTP header for authenticated requests;
 ///
@@ -182,6 +183,7 @@ pub async fn login_email(
     info: Json<UserLogInEmail<'_>>,
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Sesion>>,
+    ip: Option<IpAdd>
 ) -> Result<TokenResponse, ApiError> {
     let email = info.email.parse::<Email>()?;
     let user = user_collection
@@ -192,7 +194,7 @@ pub async fn login_email(
         None => return Err(ApiError::NotFound("User")),
     };
     verify_password(&x, info.password).await?;
-    create_sesion(x, session_collection).await
+    create_sesion(x, session_collection,ip.map(|x|x.ip)).await
 }
 
 #[post("/login?using=alias", format = "json", data = "<info>", rank = 2)]
@@ -200,6 +202,7 @@ pub async fn login_alias(
     info: Json<UserLogInAlias<'_>>,
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Sesion>>,
+    ip: Option<IpAdd>
 ) -> Result<TokenResponse, ApiError> {
     let alias = info.alias.parse::<Alias>()?;
     let user = user_collection
@@ -210,7 +213,7 @@ pub async fn login_alias(
         None => return Err(ApiError::NotFound("User")),
     };
     verify_password(&x, info.password).await?;
-    create_sesion(x, session_collection).await
+    create_sesion(x, session_collection,ip.map(|x|x.ip)).await
 }
 
 #[post("/login?using=refresh_token", format = "json", data = "<info>")]
@@ -232,8 +235,9 @@ pub async fn login_refresh_token(
 async fn create_sesion(
     user: User,
     session_collection: &State<Collection<Sesion>>,
+    ip:Option<IpAddr>
 ) -> Result<TokenResponse, ApiError> {
-    let sesion = Sesion::new(user.alias().clone());
+    let sesion = Sesion::new(user.alias().clone(),ip);
     let x = session_collection.insert_one(&sesion, None).await?;
     let sesion: mongodb::bson::oid::ObjectId = mongodb::bson::from_bson(x.inserted_id).unwrap();
     let (expires, payload) = TokenClaims::new_encrypted(user.alias().clone());

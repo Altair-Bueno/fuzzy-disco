@@ -4,6 +4,9 @@ use crate::mongo::user::{User, UserError};
 use crate::mongo::IntoDocument;
 
 use mongodb::bson::oid::ObjectId;
+use rocket::request::{FromRequest, Outcome};
+use rocket::Request;
+use std::net::IpAddr;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserSingUp<'a> {
@@ -25,6 +28,20 @@ impl IntoDocument<User> for UserSingUp<'_> {
         let email = email.parse()?;
         let password = password.parse()?;
         Ok(User::new(alias, email, password))
+    }
+}
+pub struct IpAdd {
+    pub ip: IpAddr
+}
+#[rocket::async_trait]
+impl <'r>FromRequest<'r> for IpAdd{
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match request.client_ip() {
+            None => Outcome::Forward(()),
+            Some(ip) => Outcome::Success(IpAdd{ ip })
+        }
     }
 }
 

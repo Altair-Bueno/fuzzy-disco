@@ -6,3 +6,5 @@ pub mod posts;
 pub mod result;
 /// /api/users
 pub mod users;
+/// /api/sesions
+pub mod sesions;

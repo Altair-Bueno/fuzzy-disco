@@ -8,6 +8,7 @@ use mongodb::Collection;
 use rocket::serde::json::Json;
 use rocket::State;
 use std::collections::HashMap;
+use crate::api::sesions::delete_all_sesions_from;
 
 /// # AUTH! `PUT /api/users/update/password`
 /// Changes the user password to another one
@@ -65,8 +66,7 @@ pub async fn update_user_password(
             let filter = doc! { "alias": user.alias().to_string() };
             let update_op = doc! {"$set": { "password": validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
-            let filter = doc! { "user_alias": user.alias().alias() };
-            let _response = sesion_collection.delete_many(filter, None).await?;
+            delete_all_sesions_from(user.alias(),sesion_collection).await?;
             Ok(rocket::response::status::NoContent)
         }
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),

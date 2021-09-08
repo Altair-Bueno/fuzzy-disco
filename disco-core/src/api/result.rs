@@ -25,6 +25,8 @@ pub enum ApiError {
     InternalServerError(&'static str),
     #[error("{0} not found")]
     NotFound(&'static str),
+    #[error("{0}")]
+    BadRequest(&'static str)
 }
 impl<'r> Responder<'r, 'static> for ApiError {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
@@ -32,7 +34,7 @@ impl<'r> Responder<'r, 'static> for ApiError {
             ApiError::DatabaseError(_) | ApiError::InternalServerError(_) => {
                 Status::InternalServerError
             }
-            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) => Status::BadRequest,
+            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) | ApiError::BadRequest(_) => Status::BadRequest,
             ApiError::Conflict(_) => Status::Conflict,
             ApiError::Unauthorized(_) => Status::Unauthorized,
             ApiError::NotFound(_) => Status::NotFound,
