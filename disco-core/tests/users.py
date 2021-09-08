@@ -23,6 +23,11 @@ def email_log_in(body: str):
                          headers=_basic_header)
 
 
+def refresh_token_log_in(body: str):
+    return requests.post(_URL + 'auth/login?using=refresh_token', body,
+                         headers=_basic_header)
+
+
 def alias_log_in(body: str):
     return requests.post(_URL + 'auth/login?using=alias', body,
                          headers=_basic_header)
@@ -75,6 +80,7 @@ def test_api_users():
 
     print('starting auth queries')
     bearer_token = r.json()['access_token']
+    refresh_token = r.json()['refresh_token']
     auth_header = {
         "Authorization": ("Bearer " + bearer_token),
         "Content-Type": "application/json; charset=utf-8"
@@ -85,6 +91,15 @@ def test_api_users():
     print('get the full user info')
     r = get_full_user_data(auth_header)
     print(r.json())
+
+    print('refresh token log in. Refresh token: ' + refresh_token)
+    r = refresh_token_log_in('{"refresh_token": "' + refresh_token + '" }')
+    print(r.json())
+
+    auth_header = {
+        "Authorization": ("Bearer " + r.json()['access_token']),
+        "Content-Type": "application/json; charset=utf-8"
+    }
 
     # update password
     # NOTE: althought the session has been closed, we can still log in using
@@ -103,6 +118,10 @@ def test_api_users():
     print('old login info should fail with 4xx code')
     r = alias_log_in(old_user_login)
     print(f'4xx: {r.status_code}')
+
+    print('Old refresh token should fail')
+    r = refresh_token_log_in('{"refresh_token": "' + refresh_token + '" }')
+    print(r)
 
     print('change user email')
     body = """

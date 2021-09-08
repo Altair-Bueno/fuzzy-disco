@@ -78,7 +78,8 @@ async fn main() -> Result<(), String> {
             routes![
                 api::users::auth::post::signup,
                 api::users::auth::post::login_alias,
-                api::users::auth::post::login_email
+                api::users::auth::post::login_email,
+                api::users::auth::post::login_refresh_token,
             ],
         )
         .mount(
