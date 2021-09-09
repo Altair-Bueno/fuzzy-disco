@@ -16,10 +16,12 @@ use crate::mongo::user::Session;
 /// ## Ok (200)
 ///
 /// ```json
-/// {
+/// [{
 ///     "ip": String,
 ///     "date": String
-/// }
+/// },
+///
+/// ...]
 /// ```
 ///
 /// ## Err
@@ -39,10 +41,10 @@ use crate::mongo::user::Session;
 /// `GET /api/sessions`
 ///
 /// ```json
-/// {
+/// [{
 ///     "ip": "127.0.0.1",
 ///     "date": "2021-09-08 12:36:51.077 UTC"
-/// }
+/// }]
 /// ```
 #[get("/", format = "json")]
 pub async fn get_user_sessions(

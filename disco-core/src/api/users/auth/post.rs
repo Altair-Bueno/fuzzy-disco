@@ -29,7 +29,7 @@ use crate::mongo::IntoDocument;
 /// }
 /// ```
 ///
-/// Each field must follow the user requirements descrived on [User](crate::mongo::user::User)
+/// Each field must follow the user requirements described on [User](crate::mongo::user::User)
 ///
 ///
 /// # Returns
@@ -106,7 +106,7 @@ pub async fn signup(
 /// You can authenticate by either the user alias (method `alias`) or by user
 /// email (method `email`). When the token expires, you can send your
 /// `refresh_token` to get another access token if the user Session is still
-///  valid. To see how to invalidate sessions, check [crate::api::users::post]
+///  valid. To see how to invalidate sessions, check [crate::api::sessions::post::delete_all_sessions]
 ///
 /// ## Alias
 /// ```json
@@ -154,8 +154,10 @@ pub async fn signup(
 ///
 /// | Code | Description |
 /// | -----| ----------- |
-/// | 400 | Alias/email or password incorrect |
-/// | 500 | Database error |
+/// | 400 | Alias/email or password incorrect (bad format) |
+/// | 401 | Password doesn't match with database |
+/// | 404 | User not found |
+/// | 500 | Internal server error |
 ///
 /// # Example
 ///

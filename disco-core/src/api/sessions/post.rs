@@ -27,6 +27,7 @@ use crate::mongo::session::Session;
 ///
 /// | Code | Description |
 /// | -----| ----------- |
+/// | 400 | Body is not empty |
 /// | 500 | Couldn't connect to database |
 ///
 /// # Example

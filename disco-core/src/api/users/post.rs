@@ -41,6 +41,7 @@ use crate::mongo::visibility::Visibility;
 /// | Code | Description |
 /// | -----| ----------- |
 /// | 400 | Bad request |
+/// | 401 | Old password doesn't match |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
 ///
@@ -81,6 +82,42 @@ pub async fn update_user_password(
     }
 }
 
+/// # AUTH! `POST /api/users/update/avatar`
+/// Deletes the old avatar image and updates it with the new file. If no other
+/// file is provided, the actual image will be deleted.
+///
+/// > Note: mediaid == key from [crate::api::media::post::upload]
+///
+/// ```json
+/// {
+///     "mediaid": String // Optional
+/// }
+/// ```
+///
+/// # Returns
+/// ## Ok (204)
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | Bad request |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database |
+///
+/// # Example
+///
+/// `POST /api/users/update/avatar`
+///
+/// ## Response (204)
+
+
 #[post("/update/avatar", format = "json", data = "<updated>")]
 pub async fn update_user_avatar (
     token: TokenClaims,
@@ -88,7 +125,7 @@ pub async fn update_user_avatar (
     user_collection: &State<Collection<User>>,
     media_collection: &State<Collection<Media>>
 )-> Result<rocket::response::status::NoContent,ApiError> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(updated.avatar)?;
+    let oid = mongodb::bson::oid::ObjectId::from_str(updated.mediaid)?;
     let media = claim_media(&oid, media_collection, &Format::Image, token.alias()).await?;
     match media {
         None => Err(ApiError::NotFound("Media")),
@@ -98,6 +135,7 @@ pub async fn update_user_avatar (
             media_collection.find_one_and_update(filter,update_with,None).await?;
             // TODO do something if the operation fails, use mongodb transactions instead
             // TODO remove old photo (if it exists)
+            // TODO remove photo if avatar picture is none
             let filter = doc! {"alias": token.alias().to_string() };
             let update_with = doc! {"$set": { "avatar": x.id() }};
             print!("{}\n{}",filter,update_with);
@@ -131,7 +169,7 @@ pub async fn update_user_avatar (
 ///
 /// | Code | Description |
 /// | -----| ----------- |
-/// | 400 | Bad request (invalid email or description) |
+/// | 400 | Bad request |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
 ///

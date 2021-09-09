@@ -17,14 +17,64 @@ const TTL:u64 = 3600;
 #[cfg(not(debug_assertions))]
 const TTL: u64 = 60;
 
-// TODO variants for png,jpg and mp3
-// , format = "application/x-www-form-urlencoded"
+/// # AUTH! `POST /api/media/upload`
+///
+/// Uploads the file to the server and stores it temporarly. The file **must**
+/// be claimed before the Time To Live expires, otherwise the server will delete
+/// the file. You can claim a file by using it as an *user avatar* or *post*
+///
+/// > Note: The key attribute on the response is the media ID. Don't loose it!!
+///
+/// # Supported files:
+///
+/// ## Image
+/// - jpeg
+/// - png
+///
+/// ## Audio
+/// - mp3
+///
+/// # Response
+///
+/// ## Ok
+/// ```json
+/// {
+///     "key": String,
+///     "TTL": u64          // Seconds
+/// }
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | Invalid file type |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database. Couldn't store file|
+///
+/// # Example
+///
+/// `POST /api/media/upload`
+///
+/// ```json
+/// {
+///     "key": "88ea329a",
+///     "TTL": 60
+/// }
+/// ```
 #[post("/upload", data = "<file>")]
 pub async fn upload(
     token: TokenClaims,
     mut file: TempFile<'_>,
     mongo: &State<Collection<Media>>,
 ) -> Result<status::Custom<Value>, ApiError> {
+    // TODO variants for png,jpg and mp3
     // inspect file
     let file_type : Format = file.path()
         .ok_or(ApiError::InternalServerError("Couldn't inspect file"))
@@ -39,8 +89,10 @@ pub async fn upload(
     let oid = inserted.inserted_id.as_object_id().unwrap();
     // copy to folder
     let folder = oid_to_folder(&oid);
+    // fixme filename should be user alias to avoid serving the file wthout
+    // privileges
     let path = format!("{}/{}.blob",folder,oid);
-    rocket::tokio::fs::create_dir_all(&folder).await?;
+    rocket::tokio::fs::create_dir_all(&folder).await;
     println!("path created");
     file.copy_to(&path).await?;
     let response = json!({ "key" : oid.to_string(), "TTL" : TTL });
