@@ -41,7 +41,7 @@ use crate::mongo::user::{Email, Password, Session, User};
 ///
 /// # Example
 ///
-/// `PUT /api/users/update/password`
+/// `POST /api/users/update/password`
 ///
 /// ## Body payload
 ///
@@ -105,7 +105,7 @@ pub async fn update_user_password(
 ///
 /// # Example
 ///
-/// `PUT /api/users/update`
+/// `POST /api/users/update`
 ///
 /// ## Body payload
 ///
