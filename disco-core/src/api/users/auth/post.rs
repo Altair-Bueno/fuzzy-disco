@@ -106,7 +106,7 @@ pub async fn signup(
 /// You can authenticate by either the user alias (method `alias`) or by user
 /// email (method `email`). When the token expires, you can send your
 /// `refresh_token` to get another access token if the user Session is still
-///  valid. To see how to invalidate sessions, check [crate::api::sessions::post::delete_all_sessions]
+///  valid. To see how to invalidate sessions, check [crate::api::sessions::post::delete_all_sessions()]
 ///
 /// ## Alias
 /// ```json

@@ -86,7 +86,7 @@ pub async fn update_user_password(
 /// Deletes the old avatar image and updates it with the new file. If no other
 /// file is provided, the actual image will be deleted.
 ///
-/// > Note: mediaid == key from [crate::api::media::post::upload]
+/// > Note: mediaid == key from [crate::api::media::post::upload()]
 ///
 /// ```json
 /// {

@@ -37,7 +37,6 @@ use crate::mongo::user::User;
 /// | -----| ----------- |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
-/// ```
 #[delete("/")]
 pub async fn delete_user(
     token: TokenClaims,
