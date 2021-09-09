@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use mongodb::bson::doc;
-use mongodb::Collection;
+use mongodb::{Client};
 use rocket::serde::json::Json;
 use rocket::State;
 
@@ -13,9 +12,14 @@ use crate::api::users::data::{UpdatePassword, UpdateUser, AvatarPictureID};
 use crate::mongo::user::{Email, Password, Session, User, Description};
 use crate::mongo::media::{Media, Format};
 use std::str::FromStr;
-use crate::api::media::claim_media;
 use rocket::response::status::NoContent;
-use crate::mongo::visibility::Visibility;
+
+use mongodb::{
+    bson::{doc, Document},
+    options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
+    Collection,
+};
+use crate::api::media::{claim_media_filter, claim_media_update};
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -116,31 +120,37 @@ pub async fn update_user_password(
 /// `POST /api/users/update/avatar`
 ///
 /// ## Response (204)
-
-
 #[post("/update/avatar", format = "json", data = "<updated>")]
 pub async fn update_user_avatar (
     token: TokenClaims,
     updated: Json<AvatarPictureID<'_>>,
     user_collection: &State<Collection<User>>,
-    media_collection: &State<Collection<Media>>
+    media_collection: &State<Collection<Media>>,
+    mongo_client: &State<Client>
 )-> Result<rocket::response::status::NoContent,ApiError> {
+    // TODO if avatar picture id has already a photo
     let oid = mongodb::bson::oid::ObjectId::from_str(updated.mediaid)?;
-    let media = claim_media(&oid, media_collection, &Format::Image, token.alias()).await?;
-    match media {
-        None => Err(ApiError::NotFound("Media")),
-        Some(x) => {
-            let filter = doc! {"_id": x.id() };
-            let update_with = doc! {"$set": {"visibility": mongodb::bson::to_bson(&Visibility::Public).unwrap() }};
-            media_collection.find_one_and_update(filter,update_with,None).await?;
-            // TODO do something if the operation fails, use mongodb transactions instead
-            // TODO remove old photo (if it exists)
-            // TODO remove photo if avatar picture is none
-            let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
-            let update_with = doc! {"$set": { "avatar": x.id() }};
-            user_collection.find_one_and_update(filter,update_with,None).await?;
-            Ok(NoContent)
-        }
+    let mut transaction_session = mongo_client.start_session(None).await?;
+    let options = TransactionOptions::builder()
+        .read_concern(ReadConcern::majority())
+        .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
+        .build();
+    transaction_session.start_transaction(options).await?;
+    // Claim media
+    let filter = claim_media_filter(&oid,&Format::Image,token.alias()).await;
+    let update = claim_media_update().await;
+    let media = media_collection.find_one_and_update(filter,update,None).await?
+        .ok_or(ApiError::BadRequest("Media file not found"))?;
+    // Update user
+    let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+    let update = doc! {"$set": {"avatar": media.id() }};
+    let result = user_collection.update_one(filter,update,None).await?;
+
+    if result.modified_count == 1 {
+        transaction_session.commit_transaction().await?;
+        Ok(NoContent)
+    } else {
+        Err(ApiError::NotFound("User"))
     }
 }
 

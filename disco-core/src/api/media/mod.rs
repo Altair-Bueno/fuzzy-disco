@@ -3,28 +3,28 @@ pub mod post;
 pub mod data;
 
 use mongodb::bson::oid::ObjectId;
-use mongodb::Collection;
-use crate::mongo::media::{Media, Format, Status};
+use crate::mongo::media::{Format, Status};
 use mongodb::bson::doc;
 use crate::mongo::user::Alias;
 
 const MEDIA_ROOT_FOLDER: &str = "media/";
 
 
-pub async fn claim_media(
+pub async fn claim_media_filter(
     oid: &ObjectId,
-    collection: &Collection<Media>,
     expected:&Format,
     uploaded_by: &Alias
-) -> mongodb::error::Result<Option<Media>> {
-    let filter = doc! {
+) -> mongodb::bson::Document {
+    doc! {
         "_id": oid ,
         "status": mongodb::bson::to_bson(&Status::Waiting).unwrap(),
         "format": mongodb::bson::to_bson(expected).unwrap(),
         "uploaded_by" : mongodb::bson::to_bson(uploaded_by).unwrap()
-    };
-    let update = doc! { "$set": { "status": mongodb::bson::to_bson(&Status::Assigned).unwrap() } };
-    collection.find_one_and_update(filter,update,None).await
+    }
+}
+
+pub async fn claim_media_update() -> mongodb::bson::Document {
+    doc! { "$set": { "status": mongodb::bson::to_bson(&Status::Assigned).unwrap() } }
 }
 
 

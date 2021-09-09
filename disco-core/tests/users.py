@@ -173,6 +173,7 @@ def test_api_users():
     r = media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',auth_header)
     r = change_user_avatar(r.json()['key'],auth_header)
     print(f'Should be a 2xx code: {r}')
+    print(get_full_user_data(auth_header).json())
 
 
     # delete user

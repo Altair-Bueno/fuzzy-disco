@@ -15,8 +15,8 @@ mod mongo;
 async fn main() -> Result<(), String> {
     // Setting up mongodb connection
     println!("Connecting to database...");
-    let mongo_database = match init_mongo_db().await {
-        Ok(client) => client,
+    let (mongo_database,mongo_client) = match init_mongo_db().await {
+        Ok(a) => a,
         Err(err) => return Err(format!("{:?}", err)),
     };
     println!("Database connection successfully");
@@ -44,6 +44,7 @@ async fn main() -> Result<(), String> {
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
         .manage(mongo_session_collection)
+        .manage(mongo_client)
         // Mounted routes
         .mount(
             "/api/posts",

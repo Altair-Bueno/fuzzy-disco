@@ -49,7 +49,7 @@ pub async fn delete_user(
         Some(_) => {
             // Delete all user sessions
             delete_all_sessions_from(bearer_token_alias, session_collection).await?;
-            // todo Delete all posts. Delete all media
+            // todo Delete all posts. Delete all media. Delete profile picture
             Ok(Custom(
                 Status::Ok,
                 json!({"status": Status::Ok.reason(), "message": "User deleted"}),

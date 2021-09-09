@@ -1,5 +1,3 @@
-use std::net::IpAddr;
-
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
