@@ -44,9 +44,7 @@ use crate::mongo::user::{Alias, User};
 /// ```json
 /// {
 ///  "alias": "altair-bueno",
-///  "posts": [
-///     "6132137e6c2cc66344ef2a88"
-///  ]
+///  "description" : "My cool profile"
 ///}
 /// ```
 #[get("/<alias>")]
@@ -59,8 +57,8 @@ pub async fn get_user_info(
     Ok(Custom(
         Status::Ok,
         json!({
-            // TODO add something more, this looks depressing
                 "alias": user.alias(),
+                "description": user.description()
             }
         ),
     ))
@@ -76,9 +74,9 @@ pub async fn get_user_info(
 /// ```json
 /// {
 ///     "alias": String,
-///     "posts": [String],
 ///     "email": String,
 ///     "creation_date": Date
+///     "description": String
 /// }
 /// ```
 ///
@@ -102,10 +100,9 @@ pub async fn get_user_info(
 /// ```json
 /// {
 ///   "alias": "helloworld",
-///   "posts": [
-///   ],
 ///   "email": "e@hello.es",
-///   "creation_date": "2021-09-06 16:13:02.797 UTC"
+///   "creation_date": "2021-09-06 16:13:02.797 UTC",
+///   "description" : "My cool profile"
 /// }
 /// ```
 #[get("/")]
@@ -119,7 +116,8 @@ pub async fn get_full_user_info(
         json!({
             "alias": user.alias(),
             "email": user.email(),
-            "creation_date": user.creation_date().to_string()
+            "creation_date": user.creation_date().to_string(),
+            "description": user.description()
         }),
     ))
 }

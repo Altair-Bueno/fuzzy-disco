@@ -138,6 +138,17 @@ def test_api_users():
     r = get_full_user_data(auth_header)
     print(r.json())
 
+    print('change user description')
+    body = """
+    {
+        "description": "The coolest description"
+    }
+    """
+    r = change_user_info(body, auth_header)
+    print(r)
+    r = get_full_user_data(auth_header)
+    print(r.json())
+
     # delete user
     print('delete the test user:')
     r = delete_user(auth_header)

@@ -6,6 +6,7 @@ use crate::mongo::traits::Document;
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::email::Email;
 use crate::mongo::user::password::Password;
+use crate::mongo::user::Description;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -19,6 +20,7 @@ use crate::mongo::user::password::Password;
 /// - [crate::mongo::user::Alias]
 /// - [crate::mongo::user::Password]
 /// - [mongodb::bson::DateTime]
+/// - [crate::mongo::post::Caption]
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone)]
 pub struct User {
     #[serde(rename = "_id")]
@@ -27,6 +29,7 @@ pub struct User {
     alias: Alias,
     email: Email,
     password: Password,
+    description: Option<Description>,
     creation_date: DateTime,
 }
 
@@ -40,6 +43,7 @@ impl User {
             alias,
             email,
             password,
+            description: None,
             creation_date: mongodb::bson::DateTime::now(),
         }
     }
@@ -59,6 +63,10 @@ impl User {
 
     pub fn email(&self) -> &Email {
         &self.email
+    }
+
+    pub fn description(&self) -> &Option<Description> {
+        &self.description
     }
 }
 

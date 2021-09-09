@@ -9,4 +9,5 @@ pub struct UpdatePassword<'a> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateUser<'a> {
     pub email: Option<&'a str>,
+    pub description: Option<&'a str>
 }

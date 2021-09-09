@@ -10,7 +10,8 @@ use crate::api::result::ApiError::InternalServerError;
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::data::{UpdatePassword, UpdateUser};
-use crate::mongo::user::{Email, Password, Session, User};
+use crate::mongo::user::{Email, Password, Session, User, Description};
+use crate::mongo::post::Caption;
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -82,7 +83,8 @@ pub async fn update_user_password(
 ///
 /// ```json
 /// {
-///     "email": String
+///     "email": String,        // Optional
+///     "description": String   // Optional
 /// }
 /// ```
 ///
@@ -99,7 +101,7 @@ pub async fn update_user_password(
 ///
 /// | Code | Description |
 /// | -----| ----------- |
-/// | 400 | Bad request |
+/// | 400 | Bad request (invalid email or description) |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
 ///
@@ -127,12 +129,23 @@ pub async fn update_user_info(
         let _ = s.parse::<Email>()?;
         dic.insert("email", s);
     }
-    // more fields if needed
+
+    if let Some(s) = updated.description {
+        let _ = s.parse::<Description>()?;
+        dic.insert("description", s);
+    }
+
     // Unwrap is safe. Valid string slices
     let update_doc = doc! {
         "$set": mongodb::bson::to_document(&dic).unwrap()
     };
+
     let filter = doc! { "alias": token.alias().alias().to_string() };
-    user_collection.update_one(filter, update_doc, None).await?;
-    Ok(rocket::response::status::NoContent)
+    let res = user_collection.update_one(filter, update_doc, None).await?;
+
+    if res.modified_count == 1 {
+        Ok(rocket::response::status::NoContent)
+    } else {
+        Err(ApiError::NotFound("User"))
+    }
 }
