@@ -19,7 +19,7 @@ use crate::mongo::user::{Alias, User};
 /// ```json
 /// {
 ///     "alias": String,
-///     "posts": [String],
+///     "description": String
 /// }
 /// ```
 ///
@@ -75,7 +75,7 @@ pub async fn get_user_info(
 /// {
 ///     "alias": String,
 ///     "email": String,
-///     "creation_date": Date
+///     "creation_date": Date,
 ///     "description": String
 /// }
 /// ```
@@ -117,7 +117,7 @@ pub async fn get_full_user_info(
             "alias": user.alias(),
             "email": user.email(),
             "creation_date": user.creation_date().to_string(),
-            "description": user.description()
+            "description": user.description(),
         }),
     ))
 }

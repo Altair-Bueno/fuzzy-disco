@@ -11,7 +11,6 @@ use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::data::{UpdatePassword, UpdateUser};
 use crate::mongo::user::{Email, Password, Session, User, Description};
-use crate::mongo::post::Caption;
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -76,6 +75,11 @@ pub async fn update_user_password(
         Err(_) => Err(InternalServerError("Couldn't hash password")),
     }
 }
+/*
+#[post("/update/avatar", format = "json", data = <media>)]
+pub async fn update_user_avatar(
+    updated: Json<Upda>
+)*/
 
 /// # AUTH! `POST /api/users/update/`
 ///

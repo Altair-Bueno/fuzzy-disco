@@ -12,3 +12,5 @@ pub mod session;
 mod traits;
 /// Contains data structures that represents users on a document-based database
 pub mod user;
+/// Enum for profile, post and media visibility
+pub mod visibility;

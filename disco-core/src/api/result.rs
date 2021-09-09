@@ -32,7 +32,8 @@ pub enum ApiError {
     NotFound(&'static str),
     #[error("{0}")]
     BadRequest(&'static str),
-
+    #[error("{0}")]
+    Other(&'static str,Status),
 }
 
 impl<'r> Responder<'r, 'static> for ApiError {
@@ -47,6 +48,7 @@ impl<'r> Responder<'r, 'static> for ApiError {
             ApiError::Conflict(_) => Status::Conflict,
             ApiError::Unauthorized(_) => Status::Unauthorized,
             ApiError::NotFound(_) => Status::NotFound,
+            ApiError::Other(_,x) => x
         };
         let body = json!({
             "status": status.reason(),

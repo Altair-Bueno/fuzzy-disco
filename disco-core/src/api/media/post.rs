@@ -17,7 +17,7 @@ const TTL: u64 = 60;
 // , format = "application/x-www-form-urlencoded"
 #[post("/upload", data = "<file>")]
 pub async fn upload(
-    _token: TokenClaims,
+    token: TokenClaims,
     mut file: TempFile<'_>,
     mongo: &State<Collection<Media>>,
 ) -> Result<status::Custom<Value>, ApiError> {
@@ -29,7 +29,7 @@ pub async fn upload(
         .map(|x| x.mime_type().parse())??;
 
     // insert document
-    let media = Media::new(file_type);
+    let media = Media::new(token.alias().clone(),file_type);
     let inserted = mongo.insert_one(media, None).await?;
     // Unwrap is safe. If the document has been inserted, it contains an oid
     let oid = inserted.inserted_id.as_object_id().unwrap();
