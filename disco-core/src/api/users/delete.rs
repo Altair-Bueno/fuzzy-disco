@@ -44,7 +44,7 @@ pub async fn delete_user(
     session_collection: &State<Collection<Session>>,
 ) -> Result<Custom<Value>, ApiError> {
     let bearer_token_alias = token.alias();
-    let query = doc! {"alias": bearer_token_alias.to_string() };
+    let query = doc! {"alias": mongodb::bson::to_bson(bearer_token_alias).unwrap() };
     match mongo.find_one_and_delete(query, None).await? {
         Some(_) => {
             // Delete all user sessions

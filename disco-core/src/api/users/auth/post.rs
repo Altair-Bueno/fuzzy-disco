@@ -191,7 +191,7 @@ pub async fn login_email(
 ) -> Result<TokenResponse, ApiError> {
     let email = info.email.parse::<Email>()?;
     let user = user_collection
-        .find_one(Some(doc! {"email": email.email()}), None)
+        .find_one(Some(doc! {"email": mongodb::bson::to_bson(&email).unwrap() }), None)
         .await?;
     let x = match user {
         Some(x) => x,

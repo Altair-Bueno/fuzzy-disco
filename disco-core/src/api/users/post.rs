@@ -71,7 +71,7 @@ pub async fn update_user_password(
 
     match user.password().validate(updated.password) {
         Ok(true) => {
-            let filter = doc! { "alias": user.alias().to_string() };
+            let filter = doc! { "alias": mongodb::bson::to_bson(user.alias()).unwrap() };
             let update_op = doc! {"$set": { "password": validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
             delete_all_sessions_from(user.alias(), session_collection).await?;
@@ -136,7 +136,7 @@ pub async fn update_user_avatar (
             // TODO do something if the operation fails, use mongodb transactions instead
             // TODO remove old photo (if it exists)
             // TODO remove photo if avatar picture is none
-            let filter = doc! {"alias": token.alias().to_string() };
+            let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
             let update_with = doc! {"$set": { "avatar": x.id() }};
             print!("{}\n{}",filter,update_with);
             user_collection.find_one_and_update(filter,update_with,None).await?;
@@ -205,10 +205,10 @@ pub async fn update_user_info(
 
     // Unwrap is safe. Valid string slices
     let update_doc = doc! {
-        "$set": mongodb::bson::to_document(&dic).unwrap()
+        "$set": mongodb::bson::to_bson(&dic).unwrap()
     };
 
-    let filter = doc! { "alias": token.alias().alias().to_string() };
+    let filter = doc! { "alias": mongodb::bson::to_bson(token.alias()).unwrap() };
     let res = user_collection.update_one(filter, update_doc, None).await?;
 
     if res.modified_count == 1 {

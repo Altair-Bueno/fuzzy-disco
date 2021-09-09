@@ -14,7 +14,7 @@ pub async fn delete_all_sessions_from(
     user_alias: &Alias,
     session_collection: &State<Collection<Session>>,
 ) -> Result<(), ApiError> {
-    let filter = doc! { "user_alias": user_alias.to_string() };
+    let filter = doc! { "user_alias": mongodb::bson::to_bson(user_alias).unwrap() };
     session_collection
         .delete_many(filter, None)
         .await

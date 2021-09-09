@@ -19,7 +19,7 @@ pub async fn claim_media(
         "_id": oid ,
         "status": mongodb::bson::to_bson(&Status::Waiting).unwrap(),
         "format": mongodb::bson::to_bson(expected).unwrap(),
-        "uploaded_by" : uploaded_by.to_string()
+        "uploaded_by" : mongodb::bson::to_bson(uploaded_by).unwrap()
     };
     let update = doc! { "$set": { "status": mongodb::bson::to_bson(&Status::Assigned).unwrap() } };
     collection.find_one_and_update(filter,update,None).await

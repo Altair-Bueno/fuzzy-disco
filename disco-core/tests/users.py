@@ -47,7 +47,7 @@ def delete_user(auth_header: dict[str, str]):
 
 
 def change_user_avatar(image_id: str, auth_header:dict[str,str]):
-    return requests.post(_URL + 'update/avatar','{"avatar": "' + image_id + '" }', headers=auth_header)
+    return requests.post(_URL + 'update/avatar','{"mediaid": "' + image_id + '" }', headers=auth_header)
 
 
 def test_api_users():

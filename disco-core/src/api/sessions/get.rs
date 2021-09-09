@@ -51,7 +51,7 @@ pub async fn get_user_sessions(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> Result<Json<Vec<PublicsessionData>>, ApiError> {
-    let filter = doc! { "user_alias" : token.alias().to_string() };
+    let filter = doc! { "user_alias" : mongodb::bson::to_bson(token.alias()).unwrap() };
     let mut cursor = session_collection.find(filter, None).await?;
 
     let mut vec = Vec::new();
