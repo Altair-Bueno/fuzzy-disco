@@ -34,11 +34,11 @@ def alias_log_in(body: str):
 
 
 def change_password(body: str, auth_header: dict[str, str]):
-    return requests.put(_URL + 'update/password', body, headers=auth_header)
+    return requests.post(_URL + 'update/password', body, headers=auth_header)
 
 
 def change_user_info(body: str, auth_header: dict[str, str]):
-    return requests.put(_URL + 'update', body, headers=auth_header)
+    return requests.post(_URL + 'update', body, headers=auth_header)
 
 
 def delete_user(auth_header: dict[str, str]):

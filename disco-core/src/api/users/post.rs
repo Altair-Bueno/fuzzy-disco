@@ -12,7 +12,7 @@ use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::data::{UpdatePassword, UpdateUser};
 use crate::mongo::user::{Email, Password, Session, User};
 
-/// # AUTH! `PUT /api/users/update/password`
+/// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
 ///
 /// ```json
@@ -53,7 +53,7 @@ use crate::mongo::user::{Email, Password, Session, User};
 /// ```
 ///
 /// ## Response (204)
-#[put("/update/password", format = "json", data = "<updated>")]
+#[post("/update/password", format = "json", data = "<updated>")]
 pub async fn update_user_password(
     updated: Json<UpdatePassword<'_>>,
     user_collection: &State<Collection<User>>,
@@ -76,7 +76,7 @@ pub async fn update_user_password(
     }
 }
 
-/// # AUTH! `PUT /api/users/update/`
+/// # AUTH! `POST /api/users/update/`
 ///
 /// Updates the user data with the recived data
 ///
@@ -116,7 +116,7 @@ pub async fn update_user_password(
 /// ```
 ///
 /// ## Response (204)
-#[put("/update", format = "json", data = "<updated>")]
+#[post("/update", format = "json", data = "<updated>")]
 pub async fn update_user_info(
     updated: Json<UpdateUser<'_>>,
     user_collection: &State<Collection<User>>,
