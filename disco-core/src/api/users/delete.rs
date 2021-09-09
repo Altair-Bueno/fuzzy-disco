@@ -9,7 +9,7 @@ use rocket::State;
 use crate::api::result::ApiError;
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
-use crate::mongo::session::session;
+use crate::mongo::session::Session;
 use crate::mongo::user::User;
 
 /// # AUTH! `DELETE /api/users`
@@ -37,19 +37,19 @@ use crate::mongo::user::User;
 /// | -----| ----------- |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
-/// ```
 #[delete("/")]
 pub async fn delete_user(
     token: TokenClaims,
     mongo: &State<Collection<User>>,
-    session_collection: &State<Collection<session>>,
+    session_collection: &State<Collection<Session>>,
 ) -> Result<Custom<Value>, ApiError> {
     let bearer_token_alias = token.alias();
-    let query = doc! {"alias": bearer_token_alias.to_string() };
+    let query = doc! {"alias": mongodb::bson::to_bson(bearer_token_alias).unwrap() };
     match mongo.find_one_and_delete(query, None).await? {
         Some(_) => {
             // Delete all user sessions
             delete_all_sessions_from(bearer_token_alias, session_collection).await?;
+            // todo Delete all posts. Delete all media. Delete profile picture
             Ok(Custom(
                 Status::Ok,
                 json!({"status": Status::Ok.reason(), "message": "User deleted"}),

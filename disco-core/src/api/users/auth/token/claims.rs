@@ -37,7 +37,7 @@ impl<'r> FromRequest<'r> for TokenClaims {
             if authen_str.starts_with("Bearer") {
                 let token = authen_str[6..authen_str.len()].trim();
                 if let Ok(token_data) = jsonwebtoken::decode::<TokenClaims>(
-                    &token,
+                    token,
                     &DecodingKey::from_secret(include_bytes!("secret.key")),
                     &Validation::default(),
                 ) {

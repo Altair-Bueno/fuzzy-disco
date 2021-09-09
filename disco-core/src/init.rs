@@ -1,14 +1,14 @@
 use mongodb::bson::doc;
 use mongodb::Client as MongoClient;
 use mongodb::Database as MongoDatabase;
-use redis::Client as RedisClient;
 
-pub async fn init_mongo_db() -> mongodb::error::Result<MongoDatabase> {
+pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase,MongoClient)> {
     let url = std::env::var("MONGODB_URI").unwrap_or_else(|_| "mongodb://127.0.0.1/".to_string());
     let options = mongodb::options::ClientOptions::parse(&url).await?;
     #[cfg(debug_assertions)]
     println!("[MONGO]: Expecting mongo on {}", url);
-    let db = MongoClient::with_options(options).map(|x| x.database("fuzzy-disco"))?;
+    let client = MongoClient::with_options(options)?;
+    let db = client.database("fuzzy-disco");
     // FIXME rust driver version 2.0 should allow index creation more easily
     let index_response = db
         .run_command(
@@ -31,11 +31,11 @@ pub async fn init_mongo_db() -> mongodb::error::Result<MongoDatabase> {
         )
         .await?;
     #[cfg(debug_assertions)]
-    println!("[MONGO] {:?}", index_response);
+    println!("[MONGO]: Index creation response {:?}", index_response);
     let index_response = db
         .run_command(
             doc! {
-                "createIndexes": "sessions",
+                "createIndexes": "Sessions",
                 "indexes": [
                     {
                         "key": { "sub": 1 },
@@ -49,11 +49,26 @@ pub async fn init_mongo_db() -> mongodb::error::Result<MongoDatabase> {
         .await?;
 
     #[cfg(debug_assertions)]
-    println!("[MONGO] {:?}", index_response);
+    println!("[MONGO]: Index creation response {:?}", index_response);
 
-    Ok(db)
-}
+    let index_response = db
+        .run_command(
+            doc! {
+                "createIndexes": "Media",
+                "indexes": [
+                    {
+                        "key": { "status": 1 },
+                        "name": "status",
+                        "unique": false
+                    },
+                ]
+            },
+            None,
+        )
+        .await?;
 
-pub fn redis_client() -> redis::RedisResult<RedisClient> {
-    todo!()
+    #[cfg(debug_assertions)]
+    println!("[MONGO]: Index creation response {:?}", index_response);
+
+    Ok((db,client))
 }

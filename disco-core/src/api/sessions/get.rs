@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::futures::StreamExt;
@@ -9,7 +7,7 @@ use rocket::State;
 use crate::api::result::ApiError;
 use crate::api::sessions::data::PublicsessionData;
 use crate::api::users::auth::token::claims::TokenClaims;
-use crate::mongo::user::session;
+use crate::mongo::user::Session;
 
 /// # AUTH! `GET /api/sessions`
 /// Returns all current sessions from the user
@@ -18,10 +16,12 @@ use crate::mongo::user::session;
 /// ## Ok (200)
 ///
 /// ```json
-/// {
+/// [{
 ///     "ip": String,
 ///     "date": String
-/// }
+/// },
+///
+/// ...]
 /// ```
 ///
 /// ## Err
@@ -41,17 +41,17 @@ use crate::mongo::user::session;
 /// `GET /api/sessions`
 ///
 /// ```json
-/// {
+/// [{
 ///     "ip": "127.0.0.1",
 ///     "date": "2021-09-08 12:36:51.077 UTC"
-/// }
+/// }]
 /// ```
 #[get("/", format = "json")]
 pub async fn get_user_sessions(
-    session_collection: &State<Collection<session>>,
+    session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> Result<Json<Vec<PublicsessionData>>, ApiError> {
-    let filter = doc! { "user_alias" : token.alias().to_string() };
+    let filter = doc! { "user_alias" : mongodb::bson::to_bson(token.alias()).unwrap() };
     let mut cursor = session_collection.find(filter, None).await?;
 
     let mut vec = Vec::new();

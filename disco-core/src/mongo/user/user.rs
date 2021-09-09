@@ -6,6 +6,7 @@ use crate::mongo::traits::Document;
 use crate::mongo::user::alias::Alias;
 use crate::mongo::user::email::Email;
 use crate::mongo::user::password::Password;
+use crate::mongo::user::Description;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -19,6 +20,7 @@ use crate::mongo::user::password::Password;
 /// - [crate::mongo::user::Alias]
 /// - [crate::mongo::user::Password]
 /// - [mongodb::bson::DateTime]
+/// - [crate::mongo::post::Caption]
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone)]
 pub struct User {
     #[serde(rename = "_id")]
@@ -27,8 +29,9 @@ pub struct User {
     alias: Alias,
     email: Email,
     password: Password,
-    posts: Vec<ObjectId>,
+    description: Option<Description>,
     creation_date: DateTime,
+    avatar: Option<ObjectId>
 }
 
 impl Document for User {}
@@ -41,8 +44,9 @@ impl User {
             alias,
             email,
             password,
-            posts: vec![],
+            description: None,
             creation_date: mongodb::bson::DateTime::now(),
+            avatar: None
         }
     }
 
@@ -55,15 +59,19 @@ impl User {
     pub fn password(&self) -> &Password {
         &self.password
     }
-    pub fn posts(&self) -> &Vec<ObjectId> {
-        &self.posts
-    }
     pub fn creation_date(&self) -> DateTime {
         self.creation_date
     }
 
     pub fn email(&self) -> &Email {
         &self.email
+    }
+
+    pub fn description(&self) -> &Option<Description> {
+        &self.description
+    }
+    pub fn avatar(&self) -> Option<ObjectId> {
+        self.avatar
     }
 }
 
@@ -73,7 +81,7 @@ mod test {
 
     #[test]
     pub fn deserialization() {
-        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"posts\":[],\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
+        let json = "{\"alias\":\"Altair-Bueno\",\"email\":\"hello@world.com\",\"password\":\"$2b$12$NpqbpxgCy2EN6sdm/3YB4eRGfn1LdPbeMPHoxHW3bpQqAiytYDn46\",\"creation_date\":{\"$date\":{\"$numberLong\":\"1630711570146\"}}}";
         let _: User = serde_json::from_str(json).unwrap();
     }
 

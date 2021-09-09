@@ -3,21 +3,21 @@ use mongodb::Collection;
 use rocket::State;
 
 use crate::api::result::ApiError;
-use crate::mongo::session::session;
-use crate::mongo::user::{Alias, User};
+use crate::mongo::session::Session;
+use crate::mongo::user::Alias;
 
-pub mod data;
+mod data;
 pub mod get;
 pub mod post;
 
 pub async fn delete_all_sessions_from(
     user_alias: &Alias,
-    session_collection: &State<Collection<session>>,
+    session_collection: &State<Collection<Session>>,
 ) -> Result<(), ApiError> {
-    let filter = doc! { "user_alias": user_alias.to_string() };
+    let filter = doc! { "user_alias": mongodb::bson::to_bson(user_alias).unwrap() };
     session_collection
         .delete_many(filter, None)
         .await
         .map(|_| ())
-        .map_err(|x| ApiError::DatabaseError(x))
+        .map_err(ApiError::DatabaseError)
 }

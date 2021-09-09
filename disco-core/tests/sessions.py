@@ -43,10 +43,14 @@ def test_api_sessions():
         "Authorization": ("Bearer " + bearer_token),
         "Content-Type": "application/json; charset=utf-8"
     }
-    print('get all sessions')
+    print('get all sessions:')
     print(get_sessions(auth_header).json())
 
-    print('Delete sessions')
+    print('Delete sessions:')
     print(delete_all_sessions(auth_header))
 
     delete_user(auth_header)
+
+
+if __name__ == '__main__':
+    test_api_sessions()

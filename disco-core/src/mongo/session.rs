@@ -1,5 +1,3 @@
-use std::net::IpAddr;
-
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
@@ -12,23 +10,23 @@ use crate::mongo::user::Alias;
 /// be created on the server. This allows the user to refresh its JWT auth token
 /// without use of username and password
 #[derive(Debug, Serialize, Deserialize, Ord, PartialOrd, PartialEq, Eq, Clone)]
-pub struct session {
-    // session token
+pub struct Session {
+    // Session token
     #[serde(rename = "_id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
     // subject alias
     user_alias: Alias,
     // where
-    ip: Option<IpAddr>,
+    ip: Option<String>,
     // date
     date: DateTime,
 }
 
-impl session {
+impl Session {
     /// Generates a new session token that is linked to the user's alias
-    pub fn new(user_alias: Alias, ip: Option<IpAddr>) -> session {
-        session {
+    pub fn new(user_alias: Alias, ip: Option<String>) -> Session {
+        Session {
             id: None,
             user_alias,
             ip,
@@ -49,9 +47,9 @@ impl session {
         &self.user_alias
     }
 
-    pub fn ip(&self) -> Option<IpAddr> {
-        self.ip
+    pub fn ip(&self) -> &Option<String> {
+        &self.ip
     }
 }
 
-impl Document for session {}
+impl Document for Session {}
