@@ -1,15 +1,14 @@
 use mongodb::bson::doc;
 use rocket::fs::TempFile;
-use rocket::http::Status;
-use rocket::response::status;
 use rocket::serde::json::serde_json::json;
 use rocket::State;
 
 use crate::api::result::{ApiError};
-use rocket::serde::json::Value;
+use rocket::serde::json::{Value, Json};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::media::{Format, Media};
 use mongodb::Collection;
+use crate::api::media::oid_to_folder;
 
 #[cfg(debug_assertions)]
 const TTL:u64 = 3600;
@@ -73,8 +72,8 @@ pub async fn upload(
     token: TokenClaims,
     mut file: TempFile<'_>,
     mongo: &State<Collection<Media>>,
-) -> Result<status::Custom<Value>, ApiError> {
-    // TODO variants for png,jpg and mp3
+) -> Result<Json<Value>, ApiError> {
+    // TODO More variants
     // inspect file
     let file_type : Format = file.path()
         .ok_or(ApiError::InternalServerError("Couldn't inspect file"))
@@ -89,15 +88,13 @@ pub async fn upload(
     let oid = inserted.inserted_id.as_object_id().unwrap();
     // copy to folder
     let folder = oid_to_folder(&oid);
-    // fixme filename should be user alias to avoid serving the file wthout
-    // privileges
     let path = format!("{}/{}.blob",folder,oid);
-    rocket::tokio::fs::create_dir_all(&folder).await;
-    println!("path created");
+    let _ = rocket::tokio::fs::create_dir_all(&folder).await;
     file.copy_to(&path).await?;
     let response = json!({ "key" : oid.to_string(), "TTL" : TTL });
-    timed_gc(oid,path,(*mongo).clone()).await;
-    Ok(status::Custom(Status::Ok, response))
+    timed_gc_routine(oid, path, (*mongo).clone()).await;
+
+    Ok(Json(response))
 }
 
 /// Sets up a timed gc for a temporal file using its key. If the key is still
@@ -106,7 +103,7 @@ pub async fn upload(
 ///
 /// > NOTE: Although it is called *garbage collector*, it is **not** related to
 /// > memory management. This GC is used for scheduling file removals
-async fn timed_gc (
+async fn timed_gc_routine(
     oid:mongodb::bson::oid::ObjectId,
     path: String,
     collection: Collection<Media>
@@ -123,15 +120,4 @@ async fn timed_gc (
             _=>{}
         }
     });
-}
-
-pub fn oid_to_path(oid:&mongodb::bson::oid::ObjectId) -> String {
-    format!("{}/{}.blob",oid_to_folder(&oid),oid)
-}
-
-pub fn oid_to_folder(oid:&mongodb::bson::oid::ObjectId) -> String {
-    oid
-        .bytes()
-        .iter()
-        .fold("media/".to_string(),|acc,n| format!("{}/{}",acc,n))
 }

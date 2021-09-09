@@ -11,7 +11,6 @@ regex = "1.5.4"
 lazy_static = "1.4.0"
 bcrypt = "0.10"
 jsonwebtoken = "7.2.0"
-dashmap = "4.0.2"
 rand = "0"
 thiserror = "1.0"
 infer = "0.5.0"
@@ -29,7 +28,7 @@ version = "1.0"
 features = ["derive"]
 
 [dependencies.validator]
-version = "0.14.0" # was using 0.12
+version = "0.14.0"
 features = ["derive"]
 
 [dependencies.chrono]
