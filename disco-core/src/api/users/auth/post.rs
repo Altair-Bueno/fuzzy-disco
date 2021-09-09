@@ -245,7 +245,7 @@ async fn create_session(
     session_collection: &State<Collection<Session>>,
     ip: Option<IpAddr>,
 ) -> Result<TokenResponse, ApiError> {
-    let session = Session::new(user.alias().clone(), ip);
+    let session = Session::new(user.alias().clone(), ip.map(|x|x.to_string()));
     let x = session_collection.insert_one(&session, None).await?;
     let session: mongodb::bson::oid::ObjectId = mongodb::bson::from_bson(x.inserted_id).unwrap();
     let (expires, payload) = TokenClaims::new_encrypted(user.alias().clone());

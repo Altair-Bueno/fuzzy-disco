@@ -138,7 +138,6 @@ pub async fn update_user_avatar (
             // TODO remove photo if avatar picture is none
             let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
             let update_with = doc! {"$set": { "avatar": x.id() }};
-            print!("{}\n{}",filter,update_with);
             user_collection.find_one_and_update(filter,update_with,None).await?;
             Ok(NoContent)
         }

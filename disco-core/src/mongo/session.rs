@@ -20,14 +20,14 @@ pub struct Session {
     // subject alias
     user_alias: Alias,
     // where
-    ip: Option<IpAddr>,
+    ip: Option<String>,
     // date
     date: DateTime,
 }
 
 impl Session {
     /// Generates a new session token that is linked to the user's alias
-    pub fn new(user_alias: Alias, ip: Option<IpAddr>) -> Session {
+    pub fn new(user_alias: Alias, ip: Option<String>) -> Session {
         Session {
             id: None,
             user_alias,
@@ -49,8 +49,8 @@ impl Session {
         &self.user_alias
     }
 
-    pub fn ip(&self) -> Option<IpAddr> {
-        self.ip
+    pub fn ip(&self) -> &Option<String> {
+        &self.ip
     }
 }
 
