@@ -1,4 +1,5 @@
 import requests
+import media
 
 _basic_header = {
     "Content-Type": "application/json; charset=utf-8"
@@ -43,6 +44,10 @@ def change_user_info(body: str, auth_header: dict[str, str]):
 
 def delete_user(auth_header: dict[str, str]):
     return requests.delete(_URL, headers=auth_header)
+
+
+def change_user_avatar(image_id: str, auth_header:dict[str,str]):
+    return requests.post(_URL + 'update/avatar','{"avatar": "' + image_id + '" }', headers=auth_header)
 
 
 def test_api_users():
@@ -149,7 +154,32 @@ def test_api_users():
     r = get_full_user_data(auth_header)
     print(r.json())
 
+
+    print('re-login')
+    r = alias_log_in("""
+    {
+        "alias": "somecoolalias",
+        "password": "newpassworddd"
+    }
+    """)
+    print(r)
+    auth_header = {
+        "Authorization": ("Bearer " + r.json()['access_token']),
+        "Content-Type": "application/json; charset=utf-8"
+    }
+
+    print('change user avatar')
+
+    r = media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',auth_header)
+    r = change_user_avatar(r.json()['key'],auth_header)
+    print(f'Should be a 2xx code: {r}')
+
+
     # delete user
     print('delete the test user:')
     r = delete_user(auth_header)
     print(r.json())
+
+
+if __name__ == '__main__':
+    test_api_users()

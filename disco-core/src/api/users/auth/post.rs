@@ -155,7 +155,6 @@ pub async fn signup(
 /// | Code | Description |
 /// | -----| ----------- |
 /// | 400 | Alias/email or password incorrect |
-/// | 409 | Another user already has the same alias |
 /// | 500 | Database error |
 ///
 /// # Example

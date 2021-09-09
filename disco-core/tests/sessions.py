@@ -50,3 +50,7 @@ def test_api_sessions():
     print(delete_all_sessions(auth_header))
 
     delete_user(auth_header)
+
+
+if __name__ == '__main__':
+    test_api_sessions()

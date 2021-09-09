@@ -19,7 +19,8 @@ use crate::mongo::user::{Alias, User};
 /// ```json
 /// {
 ///     "alias": String,
-///     "description": String
+///     "description": String,
+///     "avatar": String
 /// }
 /// ```
 ///
@@ -45,6 +46,7 @@ use crate::mongo::user::{Alias, User};
 /// {
 ///  "alias": "altair-bueno",
 ///  "description" : "My cool profile"
+///  "avatar": "sadiofa899823iurasfa238"
 ///}
 /// ```
 #[get("/<alias>")]
@@ -58,7 +60,8 @@ pub async fn get_user_info(
         Status::Ok,
         json!({
                 "alias": user.alias(),
-                "description": user.description()
+                "description": user.description(),
+                "avatar": user.avatar().map(|x| x.to_string())
             }
         ),
     ))
@@ -76,7 +79,8 @@ pub async fn get_user_info(
 ///     "alias": String,
 ///     "email": String,
 ///     "creation_date": Date,
-///     "description": String
+///     "description": String,
+///     "avatar": String
 /// }
 /// ```
 ///
@@ -95,14 +99,15 @@ pub async fn get_user_info(
 ///
 /// # Example
 ///
-/// `GET /api/users/altair-bueno`
+/// `GET /api/users`
 ///
 /// ```json
 /// {
-///   "alias": "helloworld",
+///   "alias": "altair-bueno",
 ///   "email": "e@hello.es",
 ///   "creation_date": "2021-09-06 16:13:02.797 UTC",
 ///   "description" : "My cool profile"
+///   "avatar": "a2352ef"
 /// }
 /// ```
 #[get("/")]
@@ -118,6 +123,7 @@ pub async fn get_full_user_info(
             "email": user.email(),
             "creation_date": user.creation_date().to_string(),
             "description": user.description(),
+            "avatar": user.avatar().map(|x| x.to_string())
         }),
     ))
 }

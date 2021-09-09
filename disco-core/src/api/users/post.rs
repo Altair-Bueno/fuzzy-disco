@@ -9,8 +9,13 @@ use crate::api::result::ApiError;
 use crate::api::result::ApiError::InternalServerError;
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
-use crate::api::users::data::{UpdatePassword, UpdateUser};
+use crate::api::users::data::{UpdatePassword, UpdateUser, AvatarPictureID};
 use crate::mongo::user::{Email, Password, Session, User, Description};
+use crate::mongo::media::{Media, Format};
+use std::str::FromStr;
+use crate::api::media::claim_media;
+use rocket::response::status::NoContent;
+use crate::mongo::visibility::Visibility;
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -75,11 +80,32 @@ pub async fn update_user_password(
         Err(_) => Err(InternalServerError("Couldn't hash password")),
     }
 }
-/*
-#[post("/update/avatar", format = "json", data = <media>)]
-pub async fn update_user_avatar(
-    updated: Json<Upda>
-)*/
+
+#[post("/update/avatar", format = "json", data = "<updated>")]
+pub async fn update_user_avatar (
+    token: TokenClaims,
+    updated: Json<AvatarPictureID<'_>>,
+    user_collection: &State<Collection<User>>,
+    media_collection: &State<Collection<Media>>
+)-> Result<rocket::response::status::NoContent,ApiError> {
+    let oid = mongodb::bson::oid::ObjectId::from_str(updated.avatar)?;
+    let media = claim_media(&oid, media_collection, &Format::Image, token.alias()).await?;
+    match media {
+        None => Err(ApiError::NotFound("Media")),
+        Some(x) => {
+            let filter = doc! {"_id": x.id() };
+            let update_with = doc! {"$set": {"visibility": mongodb::bson::to_bson(&Visibility::Public).unwrap() }};
+            media_collection.find_one_and_update(filter,update_with,None).await?;
+            // TODO do something if the operation fails, use mongodb transactions instead
+            // TODO remove old photo (if it exists)
+            let filter = doc! {"alias": token.alias().to_string() };
+            let update_with = doc! {"$set": { "avatar": x.id() }};
+            print!("{}\n{}",filter,update_with);
+            user_collection.find_one_and_update(filter,update_with,None).await?;
+            Ok(NoContent)
+        }
+    }
+}
 
 /// # AUTH! `POST /api/users/update/`
 ///

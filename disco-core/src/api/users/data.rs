@@ -14,5 +14,5 @@ pub struct UpdateUser<'a> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AvatarPictureID<'a> {
-    pub s : &'a str
+    pub avatar: &'a str
 }

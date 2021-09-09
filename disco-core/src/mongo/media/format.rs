@@ -4,12 +4,8 @@ use crate::mongo::media::result::MediaError;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Debug, Copy, Clone)]
 pub enum Format {
-    #[serde(rename = "png")]
-    PNG,
-    #[serde(rename = "jpeg")]
-    JPEG,
-    #[serde(rename = "mp3")]
-    MP3,
+    Audio,
+    Image
 }
 
 impl FromStr for Format {
@@ -17,9 +13,9 @@ impl FromStr for Format {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let r = match s {
-            "image/jpeg" => Format::JPEG,
-            "image/png" => Format::PNG,
-            "audio/mpeg" => Format::MP3,
+            "image/jpeg" => Format::Image,
+            "image/png" => Format::Image,
+            "audio/mpeg" => Format::Audio,
             format => return Err(MediaError::InvalidFormat(format.to_string()))
         };
         Ok(r)

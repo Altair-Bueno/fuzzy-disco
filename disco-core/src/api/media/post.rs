@@ -11,6 +11,10 @@ use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::media::{Format, Media};
 use mongodb::Collection;
 
+#[cfg(debug_assertions)]
+const TTL:u64 = 3600;
+
+#[cfg(not(debug_assertions))]
 const TTL: u64 = 60;
 
 // TODO variants for png,jpg and mp3

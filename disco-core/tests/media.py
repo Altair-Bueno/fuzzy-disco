@@ -1,16 +1,13 @@
-from typing import BinaryIO
 
 import requests
-from users import create_user
-from users import delete_user
-from users import alias_log_in
+import users
 
-_URL = 'http://127.0.0.1:8000/api/media'
+_URL = 'http://127.0.0.1:8000/api/media/'
 
 
 def upload_media(file: str, auth_headers: dict[str, str]):
     with open(file, 'rb') as f:
-        return requests.post(_URL + '/upload', data=f, headers=auth_headers)
+        return requests.post(_URL + 'upload', data=f, headers=auth_headers)
 
 
 def test_media_upload():
@@ -21,8 +18,8 @@ def test_media_upload():
         "password": "passwordddd"
     }
     """
-    create_user(body)
-    r = alias_log_in('{"alias": "cooool", "password": "passwordddd"}')
+    users.create_user(body)
+    r = users.alias_log_in('{"alias": "cooool", "password": "passwordddd"}')
     auth_header = {
         "Authorization": ("Bearer " + r.json()['access_token']),
         "Content-Type": "application/json; charset=utf-8"
@@ -47,4 +44,7 @@ def test_media_upload():
     print('should fail:')
     print(r)
 
-    delete_user(auth_header)
+    users.delete_user(auth_header)
+
+if __name__ == '__main__':
+    test_media_upload()

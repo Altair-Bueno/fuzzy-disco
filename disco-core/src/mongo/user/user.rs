@@ -31,6 +31,7 @@ pub struct User {
     password: Password,
     description: Option<Description>,
     creation_date: DateTime,
+    avatar: Option<ObjectId>
 }
 
 impl Document for User {}
@@ -45,6 +46,7 @@ impl User {
             password,
             description: None,
             creation_date: mongodb::bson::DateTime::now(),
+            avatar: None
         }
     }
 
@@ -67,6 +69,9 @@ impl User {
 
     pub fn description(&self) -> &Option<Description> {
         &self.description
+    }
+    pub fn avatar(&self) -> Option<ObjectId> {
+        self.avatar
     }
 }
 

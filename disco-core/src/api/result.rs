@@ -16,6 +16,8 @@ pub enum ApiError {
     DatabaseError(#[from] mongodb::error::Error),
     #[error("Couldn't store file")]
     FileTransferError(#[from] std::io::Error),
+    #[error("Invalid ID")]
+    InvalidID(#[from] mongodb::bson::oid::Error),
     #[error(transparent)]
     InvalidUser(#[from] crate::mongo::user::UserError),
     #[error(transparent)]
@@ -39,9 +41,12 @@ pub enum ApiError {
 impl<'r> Responder<'r, 'static> for ApiError {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
         let status = match self {
-            ApiError::InvalidUser(_) | ApiError::InvalidPost(_) | ApiError::BadRequest(_) | ApiError::InvalidFormat(_)=> {
-                Status::BadRequest
-            },
+            ApiError::InvalidUser(_) |
+            ApiError::InvalidPost(_) |
+            ApiError::BadRequest(_) |
+            ApiError::InvalidID(_) |
+            ApiError::InvalidFormat(_)=>Status::BadRequest,
+
             ApiError::DatabaseError(_) | ApiError::InternalServerError(_) | ApiError::FileTransferError(_) => {
                 Status::InternalServerError
             },
