@@ -1,4 +1,4 @@
-name: Build Docker container
+name: Test docker-compose
 env:
   at: 127.0.0.1:8000
 on:
