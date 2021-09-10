@@ -10,12 +10,11 @@ mod api;
 mod init;
 mod mongo;
 
-
 #[rocket::main]
 async fn main() -> Result<(), String> {
     // Setting up mongodb connection
     println!("Connecting to database...");
-    let (mongo_database,mongo_client) = match init_mongo_db().await {
+    let (mongo_database, mongo_client) = match init_mongo_db().await {
         Ok(a) => a,
         Err(err) => return Err(format!("{:?}", err)),
     };
@@ -53,7 +52,10 @@ async fn main() -> Result<(), String> {
                 api::posts::get::get_posts,
             ],
         )
-        .mount("/api/media", routes![api::media::post::upload,])
+        .mount(
+            "/api/media",
+            routes![api::media::post::upload, api::media::get::get_media,],
+        )
         .mount(
             "/api/users/auth",
             routes![

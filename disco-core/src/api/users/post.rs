@@ -1,25 +1,24 @@
 use std::collections::HashMap;
-
-use mongodb::{Client};
-use rocket::serde::json::Json;
-use rocket::State;
-
-use crate::api::result::ApiError;
-use crate::api::result::ApiError::InternalServerError;
-use crate::api::sessions::delete_all_sessions_from;
-use crate::api::users::auth::token::claims::TokenClaims;
-use crate::api::users::data::{UpdatePassword, UpdateUser, AvatarPictureID};
-use crate::mongo::user::{Email, Password, Session, User, Description};
-use crate::mongo::media::{Media, Format};
 use std::str::FromStr;
-use rocket::response::status::NoContent;
 
+use mongodb::Client;
 use mongodb::{
     bson::{doc, Document},
     options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
+use rocket::response::status::NoContent;
+use rocket::serde::json::Json;
+use rocket::State;
+
 use crate::api::media::{claim_media_filter, claim_media_update};
+use crate::api::result::ApiError;
+use crate::api::result::ApiError::InternalServerError;
+use crate::api::sessions::delete_all_sessions_from;
+use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::data::{AvatarPictureID, UpdatePassword, UpdateUser};
+use crate::mongo::media::{Format, Media};
+use crate::mongo::user::{Description, Email, Password, Session, User};
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -121,13 +120,13 @@ pub async fn update_user_password(
 ///
 /// ## Response (204)
 #[post("/update/avatar", format = "json", data = "<updated>")]
-pub async fn update_user_avatar (
+pub async fn update_user_avatar(
     token: TokenClaims,
     updated: Json<AvatarPictureID<'_>>,
     user_collection: &State<Collection<User>>,
     media_collection: &State<Collection<Media>>,
-    mongo_client: &State<Client>
-)-> Result<rocket::response::status::NoContent,ApiError> {
+    mongo_client: &State<Client>,
+) -> Result<rocket::response::status::NoContent, ApiError> {
     // TODO if avatar picture id has already a photo
     let oid = mongodb::bson::oid::ObjectId::from_str(updated.mediaid)?;
     let mut transaction_session = mongo_client.start_session(None).await?;
@@ -137,14 +136,16 @@ pub async fn update_user_avatar (
         .build();
     transaction_session.start_transaction(options).await?;
     // Claim media
-    let filter = claim_media_filter(&oid,&Format::Image,token.alias()).await;
+    let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
     let update = claim_media_update().await;
-    let media = media_collection.find_one_and_update(filter,update,None).await?
+    let media = media_collection
+        .find_one_and_update(filter, update, None)
+        .await?
         .ok_or(ApiError::BadRequest("Media file not found"))?;
     // Update user
     let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
     let update = doc! {"$set": {"avatar": media.id() }};
-    let result = user_collection.update_one(filter,update,None).await?;
+    let result = user_collection.update_one(filter, update, None).await?;
 
     if result.modified_count == 1 {
         transaction_session.commit_transaction().await?;

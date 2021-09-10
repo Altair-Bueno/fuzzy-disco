@@ -1,5 +1,6 @@
-use serde::{Serialize,Deserialize};
 use std::str::FromStr;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum Visibility {
@@ -14,7 +15,7 @@ impl FromStr for Visibility {
         match s {
             "Private" => Ok(Visibility::Private),
             "Public" => Ok(Visibility::Public),
-            _=> Err(())
+            _ => Err(()),
         }
     }
 }

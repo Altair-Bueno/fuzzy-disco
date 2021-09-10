@@ -1,5 +1,5 @@
-
 import requests
+
 import users
 
 _URL = 'http://127.0.0.1:8000/api/media/'
@@ -8,6 +8,10 @@ _URL = 'http://127.0.0.1:8000/api/media/'
 def upload_media(file: str, auth_headers: dict[str, str]):
     with open(file, 'rb') as f:
         return requests.post(_URL + 'upload', data=f, headers=auth_headers)
+
+
+def download_media(id: str, auth_headers: dict[str, str]):
+    return requests.get(_URL + id, headers=auth_headers)
 
 
 def test_media_upload():
@@ -40,11 +44,12 @@ def test_media_upload():
         auth_header)
     print(r.json())
 
-    r = upload_media('test.py', auth_header)
     print('should fail:')
+    r = upload_media('test.py', auth_header)
     print(r)
 
     users.delete_user(auth_header)
+
 
 if __name__ == '__main__':
     test_media_upload()

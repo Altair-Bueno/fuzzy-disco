@@ -1,4 +1,5 @@
 import requests
+
 import media
 
 _basic_header = {
@@ -46,8 +47,10 @@ def delete_user(auth_header: dict[str, str]):
     return requests.delete(_URL, headers=auth_header)
 
 
-def change_user_avatar(image_id: str, auth_header:dict[str,str]):
-    return requests.post(_URL + 'update/avatar','{"mediaid": "' + image_id + '" }', headers=auth_header)
+def change_user_avatar(image_id: str, auth_header: dict[str, str]):
+    return requests.post(_URL + 'update/avatar',
+                         '{"mediaid": "' + image_id + '" }',
+                         headers=auth_header)
 
 
 def test_api_users():
@@ -154,7 +157,6 @@ def test_api_users():
     r = get_full_user_data(auth_header)
     print(r.json())
 
-
     print('re-login')
     r = alias_log_in("""
     {
@@ -170,11 +172,11 @@ def test_api_users():
 
     print('change user avatar')
 
-    r = media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',auth_header)
-    r = change_user_avatar(r.json()['key'],auth_header)
+    r = media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',
+                           auth_header)
+    r = change_user_avatar(r.json()['key'], auth_header)
     print(f'Should be a 2xx code: {r}')
     print(get_full_user_data(auth_header).json())
-
 
     # delete user
     print('delete the test user:')

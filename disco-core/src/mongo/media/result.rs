@@ -1,6 +1,7 @@
 use thiserror::Error;
-#[derive(Error,Debug)]
+
+#[derive(Error, Debug)]
 pub enum MediaError {
     #[error("Invalid format: {0}")]
-    InvalidFormat(String)
+    InvalidFormat(String),
 }

@@ -19,7 +19,10 @@ pub mod post;
 
 async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User, ApiError> {
     let result = mongo
-        .find_one(doc! {"alias": mongodb::bson::to_bson(alias).unwrap() }, None)
+        .find_one(
+            doc! {"alias": mongodb::bson::to_bson(alias).unwrap() },
+            None,
+        )
         .await?;
     match result {
         None => Err(ApiError::NotFound("User")),

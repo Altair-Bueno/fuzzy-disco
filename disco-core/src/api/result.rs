@@ -46,25 +46,25 @@ pub enum ApiError {
     /// http 400
     BadRequest(&'static str),
     #[error("{0}")]
-    Other(&'static str,Status),
+    Other(&'static str, Status),
 }
 
 impl<'r> Responder<'r, 'static> for ApiError {
     fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
         let status = match self {
-            ApiError::InvalidUser(_) |
-            ApiError::InvalidPost(_) |
-            ApiError::BadRequest(_) |
-            ApiError::InvalidID(_) |
-            ApiError::InvalidFormat(_)=>Status::BadRequest,
+            ApiError::InvalidUser(_)
+            | ApiError::InvalidPost(_)
+            | ApiError::BadRequest(_)
+            | ApiError::InvalidID(_)
+            | ApiError::InvalidFormat(_) => Status::BadRequest,
 
-            ApiError::DatabaseError(_) | ApiError::InternalServerError(_) | ApiError::FileTransferError(_) => {
-                Status::InternalServerError
-            },
+            ApiError::DatabaseError(_)
+            | ApiError::InternalServerError(_)
+            | ApiError::FileTransferError(_) => Status::InternalServerError,
             ApiError::Conflict(_) => Status::Conflict,
             ApiError::Unauthorized(_) => Status::Unauthorized,
             ApiError::NotFound(_) => Status::NotFound,
-            ApiError::Other(_,x) => x
+            ApiError::Other(_, x) => x,
         };
         let body = json!({
             "status": status.reason(),
