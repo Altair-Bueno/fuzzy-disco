@@ -19,6 +19,7 @@ use crate::api::users::auth::token::claims::TokenClaims;
 use crate::api::users::data::{AvatarPictureID, UpdatePassword, UpdateUser};
 use crate::mongo::media::{Format, Media};
 use crate::mongo::user::{Description, Email, Password, Session, User};
+use crate::api::{USER_ALIAS, USER_PASSWORD, USER_ID, USER_AVATAR, MEDIA_ID};
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -74,8 +75,8 @@ pub async fn update_user_password(
 
     match user.password().validate(updated.password) {
         Ok(true) => {
-            let filter = doc! { "alias": mongodb::bson::to_bson(user.alias()).unwrap() };
-            let update_op = doc! {"$set": { "password": validated_document.password() }};
+            let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(user.alias()).unwrap() };
+            let update_op = doc! {"$set": { USER_PASSWORD: validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
             delete_all_sessions_from(user.alias(), session_collection).await?;
             Ok(rocket::response::status::NoContent)
@@ -134,12 +135,12 @@ pub async fn update_user_avatar(
         .build();
     transaction_session.start_transaction(options).await?;
     // Delete old profile picture
-    let filter = doc! { "alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
     let user = user_collection
         .find_one_with_session(filter, None, &mut transaction_session)
         .await?
         .ok_or(ApiError::NotFound("User"))?;
-    let filter = doc! {"_id": user.avatar() };
+    let filter = doc! {MEDIA_ID: user.avatar() };
     let deleted = media_collection
         .find_one_and_delete_with_session(filter, None, &mut transaction_session)
         .await?;
@@ -159,8 +160,8 @@ pub async fn update_user_avatar(
             .await?
             .ok_or(ApiError::BadRequest("Media file not found"))?;
         // Update user
-        let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
-        let update = doc! {"$set": {"avatar": media.id() }};
+        let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
+        let update = doc! {"$set": {USER_AVATAR: media.id() }};
         let result = user_collection
             .update_one_with_session(filter, update, None, &mut transaction_session)
             .await?;
@@ -240,7 +241,7 @@ pub async fn update_user_info(
         "$set": mongodb::bson::to_bson(&dic).unwrap()
     };
 
-    let filter = doc! { "alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
     let res = user_collection.update_one(filter, update_doc, None).await?;
 
     if res.modified_count == 1 {

@@ -16,6 +16,7 @@ use crate::api::users::auth::token::response::TokenResponse;
 use crate::mongo::session::Session;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
+use crate::api::{USER_EMAIL, USER_ALIAS, SESSION_ID};
 
 /// # `POST /api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -192,7 +193,7 @@ pub async fn login_email(
     let email = info.email.parse::<Email>()?;
     let user = user_collection
         .find_one(
-            Some(doc! {"email": mongodb::bson::to_bson(&email).unwrap() }),
+            Some(doc! {USER_EMAIL: mongodb::bson::to_bson(&email).unwrap() }),
             None,
         )
         .await?;
@@ -213,7 +214,7 @@ pub async fn login_alias(
 ) -> Result<TokenResponse, ApiError> {
     let alias = info.alias.parse::<Alias>()?;
     let user = user_collection
-        .find_one(Some(doc! {"alias": alias.alias()}), None)
+        .find_one(Some(doc! {USER_ALIAS: alias.alias()}), None)
         .await?;
     let x = match user {
         Some(x) => x,
@@ -228,7 +229,7 @@ pub async fn login_refresh_token(
     info: Json<RefreshJWT>,
     session_collection: &State<Collection<Session>>,
 ) -> Result<TokenResponse, ApiError> {
-    let filter = doc! {"_id": info.refresh_token};
+    let filter = doc! {SESSION_ID: info.refresh_token};
     let search = session_collection.find_one(filter, None).await?;
     match search {
         None => Err(ApiError::Unauthorized("Session closed")),

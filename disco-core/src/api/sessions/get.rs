@@ -8,6 +8,7 @@ use crate::api::result::ApiError;
 use crate::api::sessions::data::PublicsessionData;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::user::Session;
+use crate::api::SESSION_USER_ALIAS;
 
 /// # AUTH! `GET /api/sessions`
 /// Returns all current sessions from the user
@@ -51,7 +52,7 @@ pub async fn get_user_sessions(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> Result<Json<Vec<PublicsessionData>>, ApiError> {
-    let filter = doc! { "user_alias" : mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { SESSION_USER_ALIAS : mongodb::bson::to_bson(token.alias()).unwrap() };
     let mut cursor = session_collection.find(filter, None).await?;
 
     let mut vec = Vec::new();

@@ -4,6 +4,7 @@ use rocket::State;
 
 use crate::api::result::ApiError;
 use crate::mongo::user::{Alias, User};
+use crate::api::USER_ALIAS;
 
 /// /api/users/auth
 pub mod auth;
@@ -20,7 +21,7 @@ pub mod post;
 async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User, ApiError> {
     let result = mongo
         .find_one(
-            doc! {"alias": mongodb::bson::to_bson(alias).unwrap() },
+            doc! {USER_ALIAS: mongodb::bson::to_bson(alias).unwrap() },
             None,
         )
         .await?;

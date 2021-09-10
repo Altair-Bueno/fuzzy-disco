@@ -9,6 +9,7 @@ use crate::api::result::ApiError;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::media::{Media, Status};
 use crate::mongo::visibility::Visibility;
+use crate::api::{MEDIA_ID, MEDIA_STATUS};
 
 /// # `GET /api/media/<id>`
 /// Returns the requested media by its id
@@ -37,7 +38,7 @@ pub async fn get_media(
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> Result<File, ApiError> {
     let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
-    let filter = doc! {"_id": oid, "status" : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
+    let filter = doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
     let media = mongo_media
         .find_one(filter, None)
         .await?

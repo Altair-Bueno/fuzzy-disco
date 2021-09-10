@@ -18,6 +18,7 @@ use mongodb::{
     Collection,
 };
 use std::option::Option::Some;
+use crate::api::{USER_ALIAS, SESSION_USER_ALIAS, MEDIA_UPLOADED_BY};
 
 /// # AUTH! `DELETE /api/users`
 /// Deletes the current authenticated user from the database
@@ -62,7 +63,7 @@ pub async fn delete_user(
     transaction_session.start_transaction(options).await?;
 
     // Delete the user
-    let filter = doc! {"alias": mongodb::bson::to_bson(bearer_token_alias).unwrap() };
+    let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(bearer_token_alias).unwrap() };
     let count = user_collection
         .delete_one_with_session(filter, None, &mut transaction_session)
         .await?;
@@ -70,12 +71,12 @@ pub async fn delete_user(
         Err(ApiError::NotFound("User"))
     } else {
         // Delete user sessions
-        let filter = doc! { "user_alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+        let filter = doc! { SESSION_USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
         session_collection
             .delete_many_with_session(filter, None, &mut transaction_session)
             .await?;
         // Delete all media uploaded by user
-        let filter = doc! { "uploaded_by": mongodb::bson::to_bson(token.alias()).unwrap() };
+        let filter = doc! { MEDIA_UPLOADED_BY: mongodb::bson::to_bson(token.alias()).unwrap() };
         let mut remove_list = media_collection
             .find_with_session(Some(filter.clone()), None, &mut transaction_session)
             .await?;

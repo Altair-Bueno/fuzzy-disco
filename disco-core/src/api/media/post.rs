@@ -9,6 +9,7 @@ use crate::api::media::oid_to_folder;
 use crate::api::result::ApiError;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::media::{Format, Media};
+use crate::api::MEDIA_ID;
 
 #[cfg(debug_assertions)]
 const TTL: u64 = 3600;
@@ -111,7 +112,7 @@ async fn timed_gc_routine(
 ) {
     rocket::tokio::spawn(async move {
         rocket::tokio::time::sleep(rocket::tokio::time::Duration::new(TTL, 0)).await;
-        let result = collection.delete_one(doc! {"_id": oid}, None).await;
+        let result = collection.delete_one(doc! {MEDIA_ID: oid}, None).await;
         match result {
             Ok(x) if x.deleted_count == 1 => {
                 #[cfg(debug_assertions)]
