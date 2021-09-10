@@ -1,7 +1,5 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
-use rocket::http::Status;
-use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
@@ -53,18 +51,14 @@ use crate::mongo::user::{Alias, User};
 pub async fn get_user_info(
     alias: &str,
     mongo: &State<Collection<User>>,
-) -> ApiResult<Custom<Value>> {
+) -> ApiResult<Value> {
     let alias = alias.parse::<Alias>()?;
     let user = crate::api::users::locate_user(&alias, mongo).await?;
-    Ok(Custom(
-        Status::Ok,
-        json!({
-                "alias": user.alias(),
-                "description": user.description(),
-                "avatar": user.avatar().map(|x| x.to_string())
-            }
-        ),
-    ))
+    Ok(json!({
+        "alias": user.alias(),
+        "description": user.description(),
+        "avatar": user.avatar().map(|x| x.to_string())
+    }))
 }
 
 /// # AUTH! `GET /api/users`
@@ -114,16 +108,13 @@ pub async fn get_user_info(
 pub async fn get_full_user_info(
     mongo: &State<Collection<User>>,
     token: TokenClaims,
-) -> ApiResult<Custom<Value>> {
+) -> ApiResult<Value> {
     let user = crate::api::users::locate_user(token.alias(), mongo).await?;
-    Ok(Custom(
-        Status::Ok,
-        json!({
-            "alias": user.alias(),
-            "email": user.email(),
-            "creation_date": user.creation_date().to_string(),
-            "description": user.description(),
-            "avatar": user.avatar().map(|x| x.to_string())
-        }),
-    ))
+    Ok(json!({
+        "alias": user.alias(),
+        "email": user.email(),
+        "creation_date": user.creation_date().to_string(),
+        "description": user.description(),
+        "avatar": user.avatar().map(|x| x.to_string())
+    }))
 }

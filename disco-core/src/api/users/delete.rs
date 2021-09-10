@@ -1,6 +1,5 @@
 use mongodb::Client;
 use rocket::http::Status;
-use rocket::response::status::Custom;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
@@ -52,7 +51,7 @@ pub async fn delete_user(
     media_collection: &State<Collection<Media>>,
     session_collection: &State<Collection<Session>>,
     mongo_client: &State<Client>,
-) -> ApiResult<Custom<Value>> {
+) -> ApiResult<Value> {
     let bearer_token_alias = token.alias();
 
     let mut transaction_session = mongo_client.start_session(None).await?;
@@ -89,9 +88,6 @@ pub async fn delete_user(
             .await?;
 
         transaction_session.commit_transaction().await?;
-        Ok(Custom(
-            Status::Ok,
-            json!({"status": Status::Ok.reason(), "message": "User deleted"}),
-        ))
+        Ok(json!({"status": Status::Ok.reason(), "message": "User deleted"}))
     }
 }

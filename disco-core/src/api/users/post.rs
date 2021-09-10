@@ -7,7 +7,6 @@ use mongodb::{
     options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
-use rocket::response::status::NoContent;
 use rocket::serde::json::Json;
 use rocket::State;
 
@@ -32,7 +31,7 @@ use crate::api::{USER_ALIAS, USER_PASSWORD, USER_AVATAR, MEDIA_ID};
 /// ```
 ///
 /// # Returns
-/// ## Ok (204)
+/// ## Ok (200)
 ///
 /// ## Err
 /// ```json
@@ -62,14 +61,14 @@ use crate::api::{USER_ALIAS, USER_PASSWORD, USER_AVATAR, MEDIA_ID};
 /// }
 /// ```
 ///
-/// ## Response (204)
+/// ## Response (200)
 #[post("/update/password", format = "json", data = "<updated>")]
 pub async fn update_user_password(
     updated: Json<UpdatePassword<'_>>,
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
-) -> ApiResult<rocket::response::status::NoContent> {
+) -> ApiResult<()> {
     let validated_document = updated.new_password.parse::<Password>()?;
     let user = crate::api::users::locate_user(token.alias(), user_collection).await?;
 
@@ -79,7 +78,7 @@ pub async fn update_user_password(
             let update_op = doc! {"$set": { USER_PASSWORD: validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
             delete_all_sessions_from(user.alias(), session_collection).await?;
-            Ok(rocket::response::status::NoContent)
+            Ok(())
         }
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),
         Err(_) => Err(InternalServerError("Couldn't hash password")),
@@ -99,7 +98,7 @@ pub async fn update_user_password(
 /// ```
 ///
 /// # Returns
-/// ## Ok (204)
+/// ## Ok (200)
 ///
 /// ## Err
 /// ```json
@@ -119,7 +118,7 @@ pub async fn update_user_password(
 ///
 /// `POST /api/users/update/avatar`
 ///
-/// ## Response (204)
+/// ## Response (200)
 #[post("/update/avatar", format = "json", data = "<updated>")]
 pub async fn update_user_avatar(
     token: TokenClaims,
@@ -127,7 +126,7 @@ pub async fn update_user_avatar(
     user_collection: &State<Collection<User>>,
     media_collection: &State<Collection<Media>>,
     mongo_client: &State<Client>,
-) -> ApiResult<rocket::response::status::NoContent> {
+) -> ApiResult<()> {
     let mut transaction_session = mongo_client.start_session(None).await?;
     let options = TransactionOptions::builder()
         .read_concern(ReadConcern::majority())
@@ -168,13 +167,13 @@ pub async fn update_user_avatar(
 
         if result.modified_count == 1 {
             transaction_session.commit_transaction().await?;
-            Ok(NoContent)
+            Ok(())
         } else {
             Err(ApiError::NotFound("User"))
         }
     } else {
         transaction_session.commit_transaction().await?;
-        Ok(NoContent)
+        Ok(())
     }
 }
 
@@ -190,7 +189,7 @@ pub async fn update_user_avatar(
 /// ```
 ///
 /// # Returns
-/// ## Ok (204)
+/// ## Ok (200)
 ///
 /// ## Err
 /// ```json
@@ -218,13 +217,13 @@ pub async fn update_user_avatar(
 /// }
 /// ```
 ///
-/// ## Response (204)
+/// ## Response (200)
 #[post("/update", format = "json", data = "<updated>")]
 pub async fn update_user_info(
     updated: Json<UpdateUser<'_>>,
     user_collection: &State<Collection<User>>,
     token: TokenClaims,
-) -> ApiResult<rocket::response::status::NoContent> {
+) -> ApiResult<()> {
     let mut dic = HashMap::new();
     if let Some(s) = updated.email {
         let _ = s.parse::<Email>()?;
@@ -245,7 +244,7 @@ pub async fn update_user_info(
     let res = user_collection.update_one(filter, update_doc, None).await?;
 
     if res.modified_count == 1 {
-        Ok(rocket::response::status::NoContent)
+        Ok(())
     } else {
         Err(ApiError::NotFound("User"))
     }
