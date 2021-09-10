@@ -5,7 +5,8 @@ use crate::mongo::media::{Format, Status};
 use crate::mongo::user::Alias;
 
 pub mod data;
-mod get;
+/// GET /api/media
+pub mod get;
 /// POST /api/media
 pub mod post;
 
