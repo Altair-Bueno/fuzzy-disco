@@ -10,7 +10,7 @@
       </form>
       <button @click="submit" class="submit-btn">Register</button>
       <div class="register-text">
-        <p>Already have an account? <a class="register-link" href="#">Login here</a></p>
+        <p>Already have an account? <RouterLink class="register-link" to="/login">Login here</RouterLink></p>
       </div>
     </div>
   </div>
@@ -39,6 +39,7 @@ export default {
       if(!this.validateUser()) {
         console.log("repeat");
       } else {
+
         let user = {
           alias: this.username,
           email: this.email,
@@ -51,8 +52,18 @@ export default {
           },
           body: JSON.stringify(user)
         });
-        let result = await response.json();
-        console.log(result.message);
+
+        let status_code = await response.status;
+        if(status_code === 409) {
+          this.usernameOk = false;
+          alert("Username is already in use");
+
+        } else if(status_code >= 200 && status_code <=299) {
+          await this.$router.push({name: 'login'});
+
+        } else {
+          alert("Server error. Try later.");
+        }
       }
     },
 

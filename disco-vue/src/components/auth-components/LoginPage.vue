@@ -2,14 +2,14 @@
   <div class="object-cont">
     <div class="form-cont">
       <form class="login-form">
-        <h1>Sign Up</h1>
+        <h1>Login</h1>
         <FormInput @input-update="getEmailUsername" identifier="email" field="Email or Username" :input-ok="(emailOk || usernameOk)"></FormInput>
         <FormInput @input-update="getPasswd" inputType="password" identifier="pwd" field="Password" :input-ok="passwdOk"></FormInput>
       </form>
       <button @click="submit" class="submit-btn">Login</button>
       <br>
       <div class="login-text">
-        <p>Dont have an account yet? <a class="login-link" href="#">Register now</a></p>
+        <p>Dont have an account yet? <RouterLink class="login-link" to="/signup">Register now</RouterLink></p>
       </div>
     </div>
   </div>
@@ -37,6 +37,7 @@ export default {
       if(loginMethod === "") {
         console.log("repeat");
       } else {
+
         let user = {
           [loginMethod]: this.emailUsername,
           password: this.passwd
@@ -48,8 +49,24 @@ export default {
           },
           body: JSON.stringify(user)
         });
+
         let result = await response.json();
-        console.log(result.message);
+        let status_code = await response.status;
+        if(status_code >= 400 && status_code <= 499) {
+          this.emailOk = false;
+          this.usernameOk = false;
+          this.passwdOk = false;
+          alert(`${loginMethod} or password incorrect`);
+
+        } else if(status_code >= 200 && status_code <= 299) {
+          const server_payload = result;
+          document.cookie = "refresh_token=" + server_payload.refresh_token + "; SameSite=Lax";
+          sessionStorage.setItem("access_token", server_payload.access_token);
+          await this.$router.push({name: 'home'});
+
+        } else {
+          alert("Server error. Try later.")
+        }
       }
     },
 
