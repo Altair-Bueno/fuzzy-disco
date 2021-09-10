@@ -1,7 +1,9 @@
 name: Publish docker container
 
 on:
-  push: master
+  push:
+    branches:
+      - master
 
 env:
   REGISTRY: ghcr.io
