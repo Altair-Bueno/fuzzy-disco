@@ -9,6 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  at: "127.0.0.1:8000"
 
 jobs:
   build-and-push-image:
