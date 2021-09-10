@@ -37,7 +37,7 @@ pub async fn get_media(
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> Result<File, ApiError> {
     let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
-    let filter = doc! {"_id": oid, "status" : Status::Assigned };
+    let filter = doc! {"_id": oid, "status" : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
     let media = mongo_media
         .find_one(filter, None)
         .await?
