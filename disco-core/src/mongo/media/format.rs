@@ -1,11 +1,13 @@
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+use serde::{Deserialize, Serialize};
+
 use crate::mongo::media::result::MediaError;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Debug, Copy, Clone)]
 pub enum Format {
     Audio,
-    Image
+    Image,
 }
 
 impl FromStr for Format {
@@ -16,7 +18,7 @@ impl FromStr for Format {
             "image/jpeg" => Format::Image,
             "image/png" => Format::Image,
             "audio/mpeg" => Format::Audio,
-            format => return Err(MediaError::InvalidFormat(format.to_string()))
+            format => return Err(MediaError::InvalidFormat(format.to_string())),
         };
         Ok(r)
     }

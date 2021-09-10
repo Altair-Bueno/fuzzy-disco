@@ -1,6 +1,6 @@
+from media import test_media_upload
 from sessions import test_api_sessions
 from users import test_api_users
-from media import test_media_upload
 
 
 def main():

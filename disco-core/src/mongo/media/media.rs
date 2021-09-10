@@ -2,8 +2,8 @@ use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::media::format::Format;
-use crate::mongo::traits::Document;
 use crate::mongo::media::Status;
+use crate::mongo::traits::Document;
 use crate::mongo::user::Alias;
 use crate::mongo::visibility::Visibility;
 
@@ -17,19 +17,19 @@ pub struct Media {
     uploaded_by: Alias,
     status: Status,
     format: Format,
-    visibility: Visibility
+    visibility: Visibility,
 }
 
 impl Document for Media {}
 
 impl Media {
-    pub fn new(alias: Alias,class: Format) -> Media {
+    pub fn new(alias: Alias, class: Format) -> Media {
         Media {
             id: None,
             uploaded_by: alias,
             status: Status::Waiting,
             format: class,
-            visibility: Visibility::Private
+            visibility: Visibility::Private,
         }
     }
 
