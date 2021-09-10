@@ -1,9 +1,9 @@
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 
+use crate::api::result::ApiError;
 use crate::mongo::media::{Format, Status};
 use crate::mongo::user::Alias;
-use crate::api::result::ApiError;
 
 pub mod data;
 /// GET /api/media
@@ -26,12 +26,10 @@ pub async fn claim_media_filter(
     }
 }
 
-
-pub async fn delete_media(
-    oid:&ObjectId
-) -> Result<(),ApiError> {
+pub async fn delete_media(oid: &ObjectId) -> Result<(), ApiError> {
     let path = oid_to_path(oid);
-    rocket::tokio::fs::remove_file(path).await
+    rocket::tokio::fs::remove_file(path)
+        .await
         .map_err(ApiError::FileTransferError)
 }
 
@@ -40,7 +38,7 @@ pub async fn claim_media_update() -> mongodb::bson::Document {
 }
 
 pub fn oid_to_path(oid: &mongodb::bson::oid::ObjectId) -> String {
-    format!("{}/{}.blob", oid_to_folder(&oid), oid)
+    format!("{}/{}.blob", oid_to_folder(oid), oid)
 }
 
 fn oid_to_folder(oid: &mongodb::bson::oid::ObjectId) -> String {

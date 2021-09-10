@@ -78,7 +78,7 @@ pub async fn upload(
     let file_type: Format = file
         .path()
         .ok_or(ApiError::InternalServerError("Couldn't inspect file"))
-        .map(|x| infer::get_from_path(x))??
+        .map(infer::get_from_path)??
         .ok_or(ApiError::BadRequest("Unknown file format"))
         .map(|x| x.mime_type().parse())??;
 

@@ -1,5 +1,3 @@
-use std::net::IpAddr;
-
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::user::Session;

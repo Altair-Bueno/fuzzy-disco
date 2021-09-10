@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use mongodb::Client;
 use mongodb::{
-    bson::{doc, Document},
+    bson::doc,
     options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
@@ -135,10 +135,14 @@ pub async fn update_user_avatar(
     transaction_session.start_transaction(options).await?;
     // Delete old profile picture
     let filter = doc! { "alias": mongodb::bson::to_bson(token.alias()).unwrap() };
-    let user = user_collection.find_one_with_session(filter,None, &mut transaction_session).await?
+    let user = user_collection
+        .find_one_with_session(filter, None, &mut transaction_session)
+        .await?
         .ok_or(ApiError::NotFound("User"))?;
     let filter = doc! {"_id": user.avatar() };
-    let deleted = media_collection.find_one_and_delete_with_session(filter,None,&mut transaction_session).await?;
+    let deleted = media_collection
+        .find_one_and_delete_with_session(filter, None, &mut transaction_session)
+        .await?;
 
     if let Some(media) = deleted {
         delete_media(&media.id().unwrap()).await?;
@@ -151,13 +155,15 @@ pub async fn update_user_avatar(
         let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
         let update = claim_media_update().await;
         let media = media_collection
-            .find_one_and_update_with_session(filter, update, None,&mut transaction_session)
+            .find_one_and_update_with_session(filter, update, None, &mut transaction_session)
             .await?
             .ok_or(ApiError::BadRequest("Media file not found"))?;
         // Update user
         let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
         let update = doc! {"$set": {"avatar": media.id() }};
-        let result = user_collection.update_one_with_session(filter, update, None, &mut transaction_session).await?;
+        let result = user_collection
+            .update_one_with_session(filter, update, None, &mut transaction_session)
+            .await?;
 
         if result.modified_count == 1 {
             transaction_session.commit_transaction().await?;
