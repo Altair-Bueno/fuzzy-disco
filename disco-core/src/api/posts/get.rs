@@ -7,9 +7,11 @@ use rocket::serde::json::Value;
 use rocket::serde::json::{serde_json::json, Json};
 use rocket::State;
 
-use crate::api::posts::data::Id;
-use crate::api::result::ApiResult;
+use crate::api::result::{ApiResult, ApiError};
 use crate::mongo::post::Post;
+use std::str::FromStr;
+use crate::api::POSTS_ID;
+use mongodb::bson::to_bson;
 
 /// # `GET /api/posts/<id>`
 /// Returns information for a given post. It expects a well formated string
@@ -58,39 +60,23 @@ use crate::mongo::post::Post;
 ///}
 /// ```
 #[get("/<id>", format = "json")]
-pub async fn get_post_content(id: Result<Id, Value>, mongo: &State<Collection<Post>>) -> ApiResult {
-    let oid = match id {
-        Ok(x) => x.extract(),
-        Err(x) => return status::Custom(Status::BadRequest, x),
-    };
-    let filter = doc! { "_id": oid };
-
-    let post = match mongo.find_one(Some(filter), None).await {
-        Ok(Some(x)) => x,
-        Ok(None) => {
-            return status::Custom(
-                Status::NotFound,
-                json!({"status":"Not Found","message":"Post doesn't exist"}),
-            );
-        }
-        Err(_) => {
-            return status::Custom(
-                Status::InternalServerError,
-                json!({"status":"Internal Error","message": "Couldn't connect to database"}),
-            );
-        }
-    };
+pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Json<Value>> {
+    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+    let filter = doc! {POSTS_ID:oid};
+    let post = mongo.find_one(Some(filter),None)
+        .await?
+        .ok_or(ApiError::NotFound("Post"))?;
 
     let response = json!({
         // `unwrap` here is safe, represents _id from db
         "id": post.id().unwrap().to_string(),
-        "title": post.title(),
-        "caption": post.caption(),
-        "author": post.author().to_string(), // TODO Author
-        "audio": post.audio_path().to_string(),
-        "photo": post.photo_path().to_string(),
+        "title": to_bson(post.title()).unwrap(),
+        "caption": to_bson(post.caption()).unwrap(),
+        "author": to_bson(post.author()).unwrap(), // TODO Author
+        "audio": post.audio().to_string(),
+        "photo": post.photo().to_string(),
     });
-    status::Custom(Status::Ok, response)
+    Ok(Json(response))
 }
 
 /// #!DEBUG

@@ -6,7 +6,7 @@ use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiResult};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
 
@@ -53,7 +53,7 @@ use crate::mongo::user::{Alias, User};
 pub async fn get_user_info(
     alias: &str,
     mongo: &State<Collection<User>>,
-) -> Result<Custom<Value>, ApiError> {
+) -> ApiResult<Custom<Value>> {
     let alias = alias.parse::<Alias>()?;
     let user = crate::api::users::locate_user(&alias, mongo).await?;
     Ok(Custom(
@@ -114,7 +114,7 @@ pub async fn get_user_info(
 pub async fn get_full_user_info(
     mongo: &State<Collection<User>>,
     token: TokenClaims,
-) -> Result<Custom<Value>, ApiError> {
+) -> ApiResult<Custom<Value>> {
     let user = crate::api::users::locate_user(token.alias(), mongo).await?;
     Ok(Custom(
         Status::Ok,

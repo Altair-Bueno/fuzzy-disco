@@ -1,7 +1,7 @@
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::mongo::media::{Format, Status};
 use crate::mongo::user::Alias;
 use crate::api::{MEDIA_STATUS, MEDIA_UPLOADED_BY, MEDIA_ID, MEDIA_FORMAT};
@@ -27,7 +27,7 @@ pub async fn claim_media_filter(
     }
 }
 
-pub async fn delete_media(oid: &ObjectId) -> Result<(), ApiError> {
+pub async fn delete_media(oid: &ObjectId) -> ApiResult<()> {
     let path = oid_to_path(oid);
     rocket::tokio::fs::remove_file(path)
         .await

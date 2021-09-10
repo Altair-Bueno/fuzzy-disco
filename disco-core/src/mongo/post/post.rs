@@ -50,6 +50,7 @@ impl Post {
         }
     }
 
+
     pub fn id(&self) -> Option<ObjectId> {
         self.id
     }
@@ -62,28 +63,10 @@ impl Post {
     pub fn author(&self) -> &Alias {
         &self.author
     }
-    pub fn audio_path(&self) -> &ObjectId {
-        &self.audio
+    pub fn audio(&self) -> ObjectId {
+        self.audio
     }
-    pub fn photo_path(&self) -> &ObjectId {
-        &self.photo
-    }
-    pub fn set_id(&mut self, id: Option<ObjectId>) {
-        self.id = id;
-    }
-    pub fn set_title(&mut self, title: Title) {
-        self.title = title;
-    }
-    pub fn set_caption(&mut self, caption: Caption) {
-        self.caption = caption;
-    }
-    pub fn set_author_id(&mut self, author_id: Alias) {
-        self.author = author_id;
-    }
-    pub fn set_audio_path(&mut self, audio_path: ObjectId) {
-        self.audio = audio_path;
-    }
-    pub fn set_photo_path(&mut self, photo_path: ObjectId) {
-        self.photo = photo_path;
+    pub fn photo(&self) -> ObjectId {
+        self.photo
     }
 }

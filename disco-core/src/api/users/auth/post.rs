@@ -7,7 +7,7 @@ use rocket::serde::json::Json;
 use rocket::serde::json::Value;
 use rocket::State;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::data::{
     IpAdd, RefreshJWT, UserLogInAlias, UserLogInEmail, UserSingUp,
 };
@@ -83,7 +83,7 @@ use crate::api::{USER_EMAIL, USER_ALIAS, SESSION_ID};
 pub async fn signup(
     user: Json<UserSingUp<'_>>,
     mongo: &State<Collection<User>>,
-) -> Result<rocket::response::status::Created<Value>, ApiError> {
+) -> ApiResult<rocket::response::status::Created<Value>> {
     let valid_user = user.0.validate()?;
     mongo
         .insert_one(valid_user, None)
@@ -189,7 +189,7 @@ pub async fn login_email(
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Session>>,
     ip: Option<IpAdd>,
-) -> Result<TokenResponse, ApiError> {
+) -> ApiResult<TokenResponse> {
     let email = info.email.parse::<Email>()?;
     let user = user_collection
         .find_one(
@@ -211,7 +211,7 @@ pub async fn login_alias(
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Session>>,
     ip: Option<IpAdd>,
-) -> Result<TokenResponse, ApiError> {
+) -> ApiResult<TokenResponse> {
     let alias = info.alias.parse::<Alias>()?;
     let user = user_collection
         .find_one(Some(doc! {USER_ALIAS: alias.alias()}), None)
@@ -228,7 +228,7 @@ pub async fn login_alias(
 pub async fn login_refresh_token(
     info: Json<RefreshJWT>,
     session_collection: &State<Collection<Session>>,
-) -> Result<TokenResponse, ApiError> {
+) -> ApiResult<TokenResponse> {
     let filter = doc! {SESSION_ID: info.refresh_token};
     let search = session_collection.find_one(filter, None).await?;
     match search {
@@ -248,7 +248,7 @@ async fn create_session(
     user: User,
     session_collection: &State<Collection<Session>>,
     ip: Option<IpAddr>,
-) -> Result<TokenResponse, ApiError> {
+) -> ApiResult<TokenResponse> {
     let session = Session::new(user.alias().clone(), ip.map(|x| x.to_string()));
     let x = session_collection.insert_one(&session, None).await?;
     let session: mongodb::bson::oid::ObjectId = mongodb::bson::from_bson(x.inserted_id).unwrap();
@@ -256,7 +256,7 @@ async fn create_session(
     Ok(TokenResponse::new(expires, session.to_string(), payload))
 }
 
-async fn verify_password(user: &User, password: &str) -> Result<(), ApiError> {
+async fn verify_password(user: &User, password: &str) -> ApiResult<()> {
     match user.password().validate(password) {
         Ok(true) => Ok(()),
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),

@@ -5,7 +5,7 @@ use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use rocket::State;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::media::Media;
 use crate::mongo::session::Session;
@@ -52,7 +52,7 @@ pub async fn delete_user(
     media_collection: &State<Collection<Media>>,
     session_collection: &State<Collection<Session>>,
     mongo_client: &State<Client>,
-) -> Result<Custom<Value>, ApiError> {
+) -> ApiResult<Custom<Value>> {
     let bearer_token_alias = token.alias();
 
     let mut transaction_session = mongo_client.start_session(None).await?;

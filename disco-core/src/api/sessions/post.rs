@@ -1,7 +1,7 @@
 use mongodb::Collection;
 use rocket::State;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::session::Session;
@@ -38,7 +38,7 @@ pub async fn delete_all_sessions(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
     body: &str,
-) -> Result<rocket::response::status::NoContent, ApiError> {
+) -> ApiResult<rocket::response::status::NoContent> {
     if !body.is_empty() {
         Err(ApiError::BadRequest("Body must be empty"))
     } else {

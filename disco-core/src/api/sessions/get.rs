@@ -4,7 +4,7 @@ use rocket::futures::StreamExt;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiResult};
 use crate::api::sessions::data::PublicsessionData;
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::user::Session;
@@ -51,7 +51,7 @@ use crate::api::SESSION_USER_ALIAS;
 pub async fn get_user_sessions(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
-) -> Result<Json<Vec<PublicsessionData>>, ApiError> {
+) ->  ApiResult<Json<Vec<PublicsessionData>>> {
     let filter = doc! { SESSION_USER_ALIAS : mongodb::bson::to_bson(token.alias()).unwrap() };
     let mut cursor = session_collection.find(filter, None).await?;
 

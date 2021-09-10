@@ -28,3 +28,8 @@ const SESSION_ID:&str = "_id";
 const SESSION_USER_ALIAS:&str = "user_alias";
 const SESSION_IP:&str = "ip";
 const SESSION_DATE:&str = "date";
+
+// TODO Add the rest
+// TODO refactor errors
+// TODO refactor return values: NoContent should be () etc
+const POSTS_ID:&str = "_id";

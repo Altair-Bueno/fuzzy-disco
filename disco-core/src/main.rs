@@ -29,8 +29,6 @@ async fn main() -> Result<(), String> {
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
 
-    // Create Hashmap for temporal files
-    // TODO use redis instead
     if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
         #[cfg(debug_assertions)]
         println!("{}", x)

@@ -6,7 +6,7 @@ use rocket::serde::json::{Json, Value};
 use rocket::State;
 
 use crate::api::media::oid_to_folder;
-use crate::api::result::ApiError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::token::claims::TokenClaims;
 use crate::mongo::media::{Format, Media};
 use crate::api::MEDIA_ID;
@@ -73,7 +73,7 @@ pub async fn upload(
     token: TokenClaims,
     mut file: TempFile<'_>,
     mongo: &State<Collection<Media>>,
-) -> Result<Json<Value>, ApiError> {
+) -> ApiResult<Json<Value>> {
     // TODO More variants
     // inspect file
     let file_type: Format = file
