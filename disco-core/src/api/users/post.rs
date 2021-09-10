@@ -11,7 +11,7 @@ use rocket::response::status::NoContent;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::media::{claim_media_filter, claim_media_update};
+use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
 use crate::api::result::ApiError;
 use crate::api::result::ApiError::InternalServerError;
 use crate::api::sessions::delete_all_sessions_from;
@@ -127,31 +127,47 @@ pub async fn update_user_avatar(
     media_collection: &State<Collection<Media>>,
     mongo_client: &State<Client>,
 ) -> Result<rocket::response::status::NoContent, ApiError> {
-    // TODO if avatar picture id has already a photo
-    let oid = mongodb::bson::oid::ObjectId::from_str(updated.mediaid)?;
     let mut transaction_session = mongo_client.start_session(None).await?;
     let options = TransactionOptions::builder()
         .read_concern(ReadConcern::majority())
         .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
         .build();
     transaction_session.start_transaction(options).await?;
-    // Claim media
-    let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
-    let update = claim_media_update().await;
-    let media = media_collection
-        .find_one_and_update(filter, update, None)
-        .await?
-        .ok_or(ApiError::BadRequest("Media file not found"))?;
-    // Update user
-    let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
-    let update = doc! {"$set": {"avatar": media.id() }};
-    let result = user_collection.update_one(filter, update, None).await?;
+    // Delete old profile picture
+    let filter = doc! { "alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+    let user = user_collection.find_one_with_session(filter,None, &mut transaction_session).await?
+        .ok_or(ApiError::NotFound("User"))?;
+    let filter = doc! {"_id": user.avatar() };
+    let deleted = media_collection.find_one_and_delete_with_session(filter,None,&mut transaction_session).await?;
 
-    if result.modified_count == 1 {
+    if let Some(media) = deleted {
+        delete_media(&media.id().unwrap()).await?;
+    }
+
+    if let Some(x) = updated.mediaid {
+        let oid = mongodb::bson::oid::ObjectId::from_str(x)?;
+
+        // Claim media
+        let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
+        let update = claim_media_update().await;
+        let media = media_collection
+            .find_one_and_update_with_session(filter, update, None,&mut transaction_session)
+            .await?
+            .ok_or(ApiError::BadRequest("Media file not found"))?;
+        // Update user
+        let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+        let update = doc! {"$set": {"avatar": media.id() }};
+        let result = user_collection.update_one_with_session(filter, update, None, &mut transaction_session).await?;
+
+        if result.modified_count == 1 {
+            transaction_session.commit_transaction().await?;
+            Ok(NoContent)
+        } else {
+            Err(ApiError::NotFound("User"))
+        }
+    } else {
         transaction_session.commit_transaction().await?;
         Ok(NoContent)
-    } else {
-        Err(ApiError::NotFound("User"))
     }
 }
 
