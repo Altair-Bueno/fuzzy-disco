@@ -29,7 +29,7 @@ export default {
 
 <style scoped>
   .card-wrap {
-    margin: 0;
+    margin: 30px;
     padding: 0;
     border: 0;
   }
