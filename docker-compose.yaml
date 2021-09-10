@@ -2,7 +2,7 @@ version: "3.7"
 services:
   fuzzy-disco:
     container_name: fuzzy-disco
-    build: .
+    image: ghcr.io/altair-bueno/fuzzy-disco:master
     ports:
       - "8000:8000"
     depends_on:
