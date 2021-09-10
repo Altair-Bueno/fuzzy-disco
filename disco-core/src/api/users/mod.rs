@@ -8,6 +8,7 @@ use crate::api::USER_ALIAS;
 
 /// /api/users/auth
 pub mod auth;
+/// Data Structures used on this module
 mod data;
 /// DELETE /api/users
 pub mod delete;

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 /// /api/media
 pub mod media;
 /// /api/posts
@@ -29,6 +30,9 @@ const SESSION_USER_ALIAS:&str = "user_alias";
 const SESSION_IP:&str = "ip";
 const SESSION_DATE:&str = "date";
 
-// TODO Add the rest
-// TODO refactor errors
 const POSTS_ID:&str = "_id";
+const POSTS_TITLE:&str = "title";
+const POSTS_CAPTION:&str = "caption";
+const POSTS_AUTHOR:&str = "author";
+const POSTS_AUDIO:&str = "audio";
+const POSTS_PHOTO:&str = "photo";

@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
 
 use init::*;
@@ -81,7 +80,6 @@ async fn main() -> Result<(), String> {
                 api::sessions::post::delete_all_sessions,
             ],
         )
-        //.mount("/api/media", FileServer::from("media")) // TODO Auth media
         // Static website server
         .mount("/", FileServer::from("static").rank(11))
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))

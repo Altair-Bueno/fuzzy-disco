@@ -23,13 +23,10 @@ const TTL: u64 = 60;
 /// be claimed before the Time To Live expires, otherwise the server will delete
 /// the file. You can claim a file by using it as an *user avatar* or *post*
 ///
+/// The full list of supported file formats is [here](crate::mongo::media::format)
+///
+///
 /// > Note: The key attribute on the response is the media ID. Don't loose it!!
-///
-/// # Supported files:
-///
-/// ## Image
-/// - jpeg
-/// - png
 ///
 /// ## Audio
 /// - mp3
@@ -74,7 +71,6 @@ pub async fn upload(
     mut file: TempFile<'_>,
     mongo: &State<Collection<Media>>,
 ) -> ApiResult<Json<Value>> {
-    // TODO More variants
     // inspect file
     let file_type: Format = file
         .path()

@@ -5,8 +5,8 @@ use crate::api::result::{ApiError, ApiResult};
 use crate::mongo::media::{Format, Status};
 use crate::mongo::user::Alias;
 use crate::api::{MEDIA_STATUS, MEDIA_UPLOADED_BY, MEDIA_ID, MEDIA_FORMAT};
-
-pub mod data;
+/// Data Structures used on this module
+mod data;
 /// GET /api/media
 pub mod get;
 /// POST /api/media

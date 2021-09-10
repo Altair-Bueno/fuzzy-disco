@@ -17,6 +17,7 @@ use crate::mongo::session::Session;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
 use crate::api::{USER_EMAIL, USER_ALIAS, SESSION_ID};
+use mongodb::error::ErrorKind;
 
 /// # `POST /api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -92,8 +93,11 @@ pub async fn signup(
             rocket::response::status::Created::new(format!("/api/user/{}", user.0.alias))
                 .body(json!({"status":"Created","message": "User created"}))
         })
-        .map_err(|_| ApiError::Conflict("User Alias"))
-    // fixme check if it is colision or db connection error
+        .map_err(|x| if let ErrorKind::Write(_)  = *x.kind{
+            ApiError::Conflict("User Alias")
+        } else {
+            ApiError::DatabaseError(x)
+        })
 }
 
 /// # `POST /api/users/auth/login?using=<method>`

@@ -20,7 +20,7 @@ pub type EncryptedToken = String;
 pub type ExpiresIn = i64;
 
 /// Represents a JWT's payload. Visit <https://jwt.io> to learn more about JWT
-#[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialOrd, PartialEq, Ord)]
 pub struct TokenClaims {
     sub: Alias,
     exp: i64,

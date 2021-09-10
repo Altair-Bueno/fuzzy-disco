@@ -6,9 +6,11 @@ use crate::api::result::{ApiError, ApiResult};
 use crate::mongo::session::Session;
 use crate::mongo::user::Alias;
 use crate::api::SESSION_USER_ALIAS;
-
+/// Data Structures used on this module
 mod data;
+/// GET /api/sessions/
 pub mod get;
+/// POST /api/sessions/
 pub mod post;
 
 pub async fn delete_all_sessions_from(

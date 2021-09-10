@@ -72,7 +72,7 @@ pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiR
         "id": post.id().unwrap().to_string(),
         "title": to_bson(post.title()).unwrap(),
         "caption": to_bson(post.caption()).unwrap(),
-        "author": to_bson(post.author()).unwrap(), // TODO Author
+        "author": to_bson(post.author()).unwrap(),
         "audio": post.audio().to_string(),
         "photo": post.photo().to_string(),
     });
