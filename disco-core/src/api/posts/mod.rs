@@ -4,3 +4,5 @@ pub mod get;
 pub mod post;
 /// Data structures used on this module
 mod data;
+/// DELETE /api/posts
+pub mod delete;
