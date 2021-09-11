@@ -126,6 +126,6 @@ pub async fn new_post(
 
     Ok(Created::new(
         format!("/api/posts/{}",insert_result.inserted_id.to_string()))
-        .body(json!({"status":"Created","message": "Post created", "post_id": insert_result.inserted_id.to_string()}))
+        .body(json!({"status":"Created","message": "Post created", "post_id": insert_result.inserted_id.as_object_id().map(|x| x.to_string())}))
     )
 }

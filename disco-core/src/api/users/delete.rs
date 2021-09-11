@@ -17,7 +17,8 @@ use mongodb::{
     Collection,
 };
 use std::option::Option::Some;
-use crate::api::{USER_ALIAS, SESSION_USER_ALIAS, MEDIA_UPLOADED_BY};
+use crate::api::{USER_ALIAS, SESSION_USER_ALIAS, MEDIA_UPLOADED_BY, POSTS_AUTHOR};
+use crate::mongo::post::Post;
 
 /// # AUTH! `DELETE /api/users`
 /// Deletes the current authenticated user from the database
@@ -50,6 +51,7 @@ pub async fn delete_user(
     user_collection: &State<Collection<User>>,
     media_collection: &State<Collection<Media>>,
     session_collection: &State<Collection<Session>>,
+    post_collection: &State<Collection<Post>>,
     mongo_client: &State<Client>,
 ) -> ApiResult<Value> {
     let bearer_token_alias = token.alias();
@@ -73,6 +75,11 @@ pub async fn delete_user(
         let filter = doc! { SESSION_USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
         session_collection
             .delete_many_with_session(filter, None, &mut transaction_session)
+            .await?;
+        // Delete user posts
+        let filter = doc! { POSTS_AUTHOR:mongodb::bson::to_bson(token.alias()).unwrap() };
+        post_collection
+            .delete_many_with_session(filter,None,&mut transaction_session)
             .await?;
         // Delete all media uploaded by user
         let filter = doc! { MEDIA_UPLOADED_BY: mongodb::bson::to_bson(token.alias()).unwrap() };
