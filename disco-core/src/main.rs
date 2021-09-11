@@ -1,9 +1,11 @@
 #[macro_use]
 extern crate rocket;
 
-use rocket::fs::FileServer;
+use rocket::fs::{FileServer, NamedFile};
 
 use init::*;
+use std::path::PathBuf;
+use rocket::tokio::fs::File;
 
 mod api;
 mod init;
@@ -88,8 +90,16 @@ async fn main() -> Result<(), String> {
         )
         // Static website server
         .mount("/", FileServer::from("static").rank(11))
+        .mount("/", routes![
+            redirect
+        ])
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
         .launch()
         .await
         .map_err(|e| format!("{:?}", e))
+}
+
+#[get("/<_path..>",rank = 12)]
+async fn redirect(_path:PathBuf) -> std::io::Result<NamedFile> {
+    NamedFile::open("static/index.html").await
 }
