@@ -16,7 +16,71 @@ use crate::api::media::{claim_media_filter, claim_media_update};
 use rocket::response::status::Created;
 use rocket::serde::json::serde_json::json;
 
-
+/// #  AUTH! `POST /api/posts/new`
+/// Creates a new post. A post must contain the following fields:
+///
+/// ```json
+/// {
+///     "title": String,
+///     "caption": String,
+///     "audio": String,
+///     "photo": String,
+///     "visibility": Visibility
+/// }
+/// ```
+///
+/// `audio` and `photo` must be two valid files pending to be claimed. Calling
+/// this route with claimed media keys will result on `NotFound`
+///
+/// # Returns
+/// ## Ok (201)
+///
+/// ```json
+/// {
+///     "status": "Created",
+///     "message": "Post created",
+///     "post_id": String
+/// }
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | -----| ----------- |
+/// | 400 | Bad request |
+/// | 404 | Media not found |
+/// | 500 | Couldn't connect to database |
+///
+/// # Example
+///
+/// `POST /api/users/update`
+///
+/// ## Body payload
+///
+/// ```json
+/// {
+///     "title" "Summer",
+///     "caption": "Summer holidays",
+///     "audio": "sd8df8293",
+///     "photo": "90s80<393",
+///     "visibility": "Public"
+/// }
+/// ```
+///
+/// ## Response (201)
+/// ```json
+/// {
+///     "status": "Created",
+///     "message": "Post created",
+///     "post_id": "a89d823nc890"
+/// }
+/// ```
 #[post("/new",format = "json", data="<payload>")]
 pub async fn new_post(
     token: TokenClaims,
@@ -62,6 +126,6 @@ pub async fn new_post(
 
     Ok(Created::new(
         format!("/api/posts/{}",insert_result.inserted_id.to_string()))
-        .body(json!({"status":"Created","message": "Post created"}))
+        .body(json!({"status":"Created","message": "Post created", "post_id": insert_result.inserted_id.to_string()}))
     )
 }
