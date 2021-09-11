@@ -46,12 +46,17 @@ async fn main() -> Result<(), String> {
             "/api/posts",
             routes![
                 api::posts::get::get_post_content,
+                api::posts::get::get_post_content_auth,
                 api::posts::get::get_posts,
             ],
         )
         .mount(
             "/api/media",
-            routes![api::media::post::upload, api::media::get::get_media,],
+            routes![
+                api::media::post::upload,
+                api::media::get::get_media,
+                api::media::get::get_media_auth
+            ],
         )
         .mount(
             "/api/users/auth",

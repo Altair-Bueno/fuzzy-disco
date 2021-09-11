@@ -14,6 +14,13 @@ use crate::api::{MEDIA_ID, MEDIA_STATUS};
 /// # `GET /api/media/<id>`
 /// Returns the requested media by its id
 ///
+/// > Note: Requesting unclaimed media will return `404 Not found`
+///
+/// # Auth behaviour
+/// - If the user is not authenticated, only public media is available
+/// - If the user is authenticated, private media uploaded by them are available
+/// too
+///
 /// # Returns
 /// ## Ok (200)
 ///
@@ -28,13 +35,33 @@ use crate::api::{MEDIA_ID, MEDIA_STATUS};
 /// | Code | Description |
 /// | -----| ----------- |
 /// | 401 | Unauthorised. Private media |
-/// | 404 | Media not found |
+/// | 404 | Media not found or unclaimed |
 /// | 500 | Couldn't connect to database |
 ///
 #[get("/<id>")]
+pub async fn get_media_auth(
+    id: &str,
+    token: TokenClaims,
+    mongo_media: &State<mongodb::Collection<Media>>,
+) -> ApiResult<File> {
+    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+    let filter = doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
+    let media = mongo_media
+        .find_one(filter, None)
+        .await?
+        .ok_or(ApiError::NotFound("Media"))?;
+    let condition = (*media.visibility() == Visibility::Public) ||
+        (token.alias() == media.uploaded_by());
+
+    if condition {
+        Ok(rocket::tokio::fs::File::open(oid_to_path(&oid)).await?)
+    } else {
+        Err(ApiError::Unauthorized("Private media"))
+    }
+}
+#[get("/<id>", rank = 2)]
 pub async fn get_media(
     id: &str,
-    token: Option<TokenClaims>,
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> ApiResult<File> {
     let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
@@ -44,14 +71,9 @@ pub async fn get_media(
         .await?
         .ok_or(ApiError::NotFound("Media"))?;
 
-    let cannot_see = (*media.visibility() == Visibility::Private)
-        && token
-            .map(|x| x.alias() != media.uploaded_by())
-            .unwrap_or(true);
-
-    if cannot_see {
-        Err(ApiError::Unauthorized("Private media"))
-    } else {
+    if *media.visibility() == Visibility::Public {
         Ok(rocket::tokio::fs::File::open(oid_to_path(&oid)).await?)
+    } else {
+        Err(ApiError::Unauthorized("Private media"))
     }
 }

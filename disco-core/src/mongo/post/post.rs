@@ -5,6 +5,7 @@ use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
 use crate::mongo::traits::Document;
 use crate::mongo::user::Alias;
+use crate::mongo::visibility::Visibility;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -27,6 +28,7 @@ pub struct Post {
     author: Alias,
     audio: ObjectId,
     photo: ObjectId,
+    visibility: Visibility
 }
 
 impl Document for Post {}
@@ -39,6 +41,7 @@ impl Post {
         author: Alias,
         audio: ObjectId,
         photo: ObjectId,
+        visibility: Visibility
     ) -> Self {
         Post {
             id: None,
@@ -47,6 +50,7 @@ impl Post {
             author,
             audio,
             photo,
+            visibility
         }
     }
 
@@ -68,5 +72,8 @@ impl Post {
     }
     pub fn photo(&self) -> ObjectId {
         self.photo
+    }
+    pub fn visibility(&self) -> &Visibility {
+        &self.visibility
     }
 }

@@ -23,7 +23,7 @@ const TTL: u64 = 60;
 /// be claimed before the Time To Live expires, otherwise the server will delete
 /// the file. You can claim a file by using it as an *user avatar* or *post*
 ///
-/// The full list of supported file formats is [here](crate::mongo::media::format)
+/// The full list of supported file formats is [here](crate::mongo::media::Format)
 ///
 ///
 /// > Note: The key attribute on the response is the media ID. Don't loose it!!
