@@ -81,5 +81,24 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
     #[cfg(debug_assertions)]
     println!("[MONGO]: Index creation response {:?}", index_response);
 
+    let index_response = db
+        .run_command(
+            doc! {
+                "createIndexes": "Posts",
+                "indexes": [
+                    {
+                        "key": { "caption": 1 , "title": 1},
+                        "name": "search",
+                        "unique": false
+                    },
+                ]
+            },
+            None
+        )
+        .await?;
+
+    #[cfg(debug_assertions)]
+    println!("[MONGO]: Index creation response {:?}", index_response);
+
     Ok((db, client))
 }

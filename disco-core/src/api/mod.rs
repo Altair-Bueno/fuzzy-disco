@@ -9,6 +9,8 @@ pub mod result;
 pub mod sessions;
 /// /api/users
 pub mod users;
+/// /api/search
+pub mod search;
 
 // Api constants
 
@@ -37,3 +39,5 @@ const POSTS_CAPTION:&str = "caption";
 const POSTS_AUTHOR:&str = "author";
 const POSTS_AUDIO:&str = "audio";
 const POSTS_PHOTO:&str = "photo";
+const POSTS_VISIBILITY :&str = "visibility";
+const POSTS_CREATION_DATE:&str = "creation_date";
