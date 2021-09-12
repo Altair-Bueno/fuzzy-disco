@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
+/// Marks posts and media as `Public` or `Private`
 #[derive(Ord, PartialOrd, PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
 pub enum Visibility {
     Private,

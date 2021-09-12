@@ -7,13 +7,23 @@ use rocket::serde::json::Value;
 use rocket::serde::json::{serde_json::json, Json};
 use rocket::State;
 
-use crate::api::posts::data::Id;
-use crate::api::result::ApiResult;
+use crate::api::result::{ApiResult, ApiError};
 use crate::mongo::post::Post;
+use std::str::FromStr;
+use crate::api::POSTS_ID;
+use mongodb::bson::to_bson;
+use crate::api::users::auth::claims::TokenClaims;
+use crate::mongo::visibility::Visibility;
 
 /// # `GET /api/posts/<id>`
 /// Returns information for a given post. It expects a well formated string
-/// that identifies a post
+/// that identifies a post.
+///
+///
+/// # Auth behaviour
+/// - If the user is not authenticated, only public post are available
+/// - If the user is authenticated, private posts uploaded by them are available
+/// too
 ///
 /// # Returns
 /// ## Ok (200)
@@ -26,6 +36,7 @@ use crate::mongo::post::Post;
 ///     "author": String.
 ///     "audio": String,
 ///     "photo": String,
+///     "visibility": Visibility
 /// }
 /// ```
 ///
@@ -54,43 +65,55 @@ use crate::mongo::post::Post;
 ///  "author": "Altair-Bueno",
 ///  "id": "6132137e6c2cc66344ef2a88",
 ///  "caption": "Hisoka wants gon booty",
-///  "title": "Hunter x Hunter"
+///  "title": "Hunter x Hunter",
+///  "visibility": "Public"
 ///}
 /// ```
+#[get("/<id>", format = "json" , rank = 2)]
+pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Json<Value>> {
+    let post = get_post(id,mongo).await?;
+    if *post.visibility() == Visibility::Public {
+        Ok(Json(generate_response(&post)))
+    } else {
+        Err(ApiError::Unauthorized("Private post"))
+    }
+}
+
 #[get("/<id>", format = "json")]
-pub async fn get_post_content(id: Result<Id, Value>, mongo: &State<Collection<Post>>) -> ApiResult {
-    let oid = match id {
-        Ok(x) => x.extract(),
-        Err(x) => return status::Custom(Status::BadRequest, x),
-    };
-    let filter = doc! { "_id": oid };
+pub async fn get_post_content_auth(
+    token:TokenClaims,
+    id: &str,
+    mongo: &State<Collection<Post>>
+) -> ApiResult<Json<Value>> {
+    let post = get_post(id,mongo).await?;
+    let condition = (*post.visibility() == Visibility::Public) ||
+        (token.alias() == post.author());
 
-    let post = match mongo.find_one(Some(filter), None).await {
-        Ok(Some(x)) => x,
-        Ok(None) => {
-            return status::Custom(
-                Status::NotFound,
-                json!({"status":"Not Found","message":"Post doesn't exist"}),
-            );
-        }
-        Err(_) => {
-            return status::Custom(
-                Status::InternalServerError,
-                json!({"status":"Internal Error","message": "Couldn't connect to database"}),
-            );
-        }
-    };
+    if condition {
+        Ok(Json(generate_response(&post)))
+    } else {
+        Err(ApiError::Unauthorized("Private post"))
+    }
+}
 
-    let response = json!({
+async fn get_post(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Post> {
+    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+    let filter = doc! {POSTS_ID:oid};
+    mongo.find_one(Some(filter),None)
+        .await?
+        .ok_or(ApiError::NotFound("Post"))
+}
+fn generate_response(post:&Post) -> Value {
+    json!({
         // `unwrap` here is safe, represents _id from db
         "id": post.id().unwrap().to_string(),
-        "title": post.title(),
-        "caption": post.caption(),
-        "author": post.author().to_string(), // TODO Author
-        "audio": post.audio_path().to_string(),
-        "photo": post.photo_path().to_string(),
-    });
-    status::Custom(Status::Ok, response)
+        "title": to_bson(post.title()).unwrap(),
+        "caption": to_bson(post.caption()).unwrap(),
+        "author": to_bson(post.author()).unwrap(),
+        "audio": post.audio().to_string(),
+        "photo": post.photo().to_string(),
+        "visibility": to_bson(post.visibility()).unwrap()
+    })
 }
 
 /// #!DEBUG

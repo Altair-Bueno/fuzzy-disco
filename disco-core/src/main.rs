@@ -1,12 +1,55 @@
+//! This crate contains the source code for `disco-core`, the main component on
+//! `fuzzy-disco`. The program mainly focuses on two tasks
+//!
+//! - Providing a fast and reliable JSON API
+//! - Serving a website written in [Vue.js](../disco-vue)
+//!
+//! # API
+//!
+//! You can find the whole documentation for the API under the [`api`](crate::api)
+//! module
+//!
+//! # Build and run
+//!
+//! 1. Install the rust toolchain from the [official website](https://www.rust-lang.org)
+//! 2. Start a Mongodb database. You can either use a Docker container
+//! (recommended) or install mongo on your local machine
+//! 2. Clone this repo and cd to disco-core
+//!
+//! ```bash
+//! git clone https://github.com/Altair-Bueno/fuzzy-disco
+//! cd disco-core
+//! ```
+//!
+//! 3. Set up the following environment variables:
+//!
+//! ```bash
+//! export MONGODB_URI="mongodb://<username>:<password>@<ip>:<port>/"
+//! ```
+//!
+//! 4. Copy your static website to `static/`
+//! ```bash
+//! cp <static> static/
+//! ```
+//!
+//! 5. Build and run
+//!
+//! ```bash
+//! # Run on release mode
+//! cargo run --release
+//! # Run on debug mode
+//! cargo run
+//! ```
 #[macro_use]
 extern crate rocket;
 
-use rocket::fairing::AdHoc;
-use rocket::fs::FileServer;
+use rocket::fs::{FileServer, NamedFile};
 
 use init::*;
+use std::path::PathBuf;
+use rocket::tokio::fs::File;
 
-mod api;
+pub mod api;
 mod init;
 mod mongo;
 
@@ -29,8 +72,6 @@ async fn main() -> Result<(), String> {
     // Setting up Redis connection
     // todo https://docs.rs/redis/0.21.1/redis/
 
-    // Create Hashmap for temporal files
-    // TODO use redis instead
     if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
         #[cfg(debug_assertions)]
         println!("{}", x)
@@ -49,12 +90,19 @@ async fn main() -> Result<(), String> {
             "/api/posts",
             routes![
                 api::posts::get::get_post_content,
+                api::posts::get::get_post_content_auth,
                 api::posts::get::get_posts,
+                api::posts::post::new_post,
+                api::posts::delete::delete_post,
             ],
         )
         .mount(
             "/api/media",
-            routes![api::media::post::upload, api::media::get::get_media,],
+            routes![
+                api::media::post::upload,
+                api::media::get::get_media,
+                api::media::get::get_media_auth
+            ],
         )
         .mount(
             "/api/users/auth",
@@ -83,11 +131,18 @@ async fn main() -> Result<(), String> {
                 api::sessions::post::delete_all_sessions,
             ],
         )
-        //.mount("/api/media", FileServer::from("media")) // TODO Auth media
         // Static website server
         .mount("/", FileServer::from("static").rank(11))
+        .mount("/", routes![
+            redirect
+        ])
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
         .launch()
         .await
         .map_err(|e| format!("{:?}", e))
+}
+
+#[get("/<_path..>",rank = 12)]
+async fn redirect(_path:PathBuf) -> std::io::Result<NamedFile> {
+    NamedFile::open("static/index.html").await
 }

@@ -1,15 +1,15 @@
 use std::io::Cursor;
 
 use rocket::http::{ContentType, Status};
-use rocket::response::status::Custom;
 use rocket::response::Responder;
 use rocket::serde::json::serde_json::json;
-use rocket::serde::json::Value;
 use rocket::{response, Request, Response};
 use thiserror::Error;
 
-pub type ApiResult = Custom<Value>;
+pub type ApiResult<T> = Result<T,ApiError>;
 
+
+/// Contains all kinds of errors that may occurr on fuzzy-disco's API
 #[derive(Error, Debug)]
 pub enum ApiError {
     /// http 500

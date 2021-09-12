@@ -5,6 +5,7 @@ use crate::mongo::post::caption::Caption;
 use crate::mongo::post::title::Title;
 use crate::mongo::traits::Document;
 use crate::mongo::user::Alias;
+use crate::mongo::visibility::Visibility;
 
 /// Represents a stored document on a document based database such as MongoDB.
 /// Althought JSON does not enforce any kind of schema, Rust type safety allows
@@ -27,6 +28,7 @@ pub struct Post {
     author: Alias,
     audio: ObjectId,
     photo: ObjectId,
+    visibility: Visibility
 }
 
 impl Document for Post {}
@@ -39,6 +41,7 @@ impl Post {
         author: Alias,
         audio: ObjectId,
         photo: ObjectId,
+        visibility: Visibility
     ) -> Self {
         Post {
             id: None,
@@ -47,8 +50,10 @@ impl Post {
             author,
             audio,
             photo,
+            visibility
         }
     }
+
 
     pub fn id(&self) -> Option<ObjectId> {
         self.id
@@ -62,28 +67,13 @@ impl Post {
     pub fn author(&self) -> &Alias {
         &self.author
     }
-    pub fn audio_path(&self) -> &ObjectId {
-        &self.audio
+    pub fn audio(&self) -> ObjectId {
+        self.audio
     }
-    pub fn photo_path(&self) -> &ObjectId {
-        &self.photo
+    pub fn photo(&self) -> ObjectId {
+        self.photo
     }
-    pub fn set_id(&mut self, id: Option<ObjectId>) {
-        self.id = id;
-    }
-    pub fn set_title(&mut self, title: Title) {
-        self.title = title;
-    }
-    pub fn set_caption(&mut self, caption: Caption) {
-        self.caption = caption;
-    }
-    pub fn set_author_id(&mut self, author_id: Alias) {
-        self.author = author_id;
-    }
-    pub fn set_audio_path(&mut self, audio_path: ObjectId) {
-        self.audio = audio_path;
-    }
-    pub fn set_photo_path(&mut self, photo_path: ObjectId) {
-        self.photo = photo_path;
+    pub fn visibility(&self) -> &Visibility {
+        &self.visibility
     }
 }

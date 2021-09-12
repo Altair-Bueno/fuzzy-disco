@@ -2,11 +2,13 @@ use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::State;
 
-use crate::api::result::ApiError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::mongo::user::{Alias, User};
+use crate::api::USER_ALIAS;
 
 /// /api/users/auth
 pub mod auth;
+/// Data Structures used on this module
 mod data;
 /// DELETE /api/users
 pub mod delete;
@@ -17,10 +19,10 @@ pub mod post;
 
 // helper functions
 
-async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> Result<User, ApiError> {
+async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> ApiResult<User> {
     let result = mongo
         .find_one(
-            doc! {"alias": mongodb::bson::to_bson(alias).unwrap() },
+            doc! {USER_ALIAS: mongodb::bson::to_bson(alias).unwrap() },
             None,
         )
         .await?;

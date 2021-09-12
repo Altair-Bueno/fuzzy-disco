@@ -1,5 +1,9 @@
 [release]
 address = "0.0.0.0"
 
+# [release.tls]
+# certs = "ca-cert.pem"
+# key = "ca-key.pem"
+
 [debug]
 address = "0.0.0.0"

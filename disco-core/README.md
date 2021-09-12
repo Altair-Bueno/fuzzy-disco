@@ -1,21 +1,45 @@
-# Creating a dev enviroment
+# `disco-core`
+<!-- cargo-sync-readme start -->
 
-## Creating a MongoDB docker container
+This crate contains the source code for `disco-core`, the main component on
+`fuzzy-disco`. The program mainly focuses on two tasks
+
+- Providing a fast and reliable JSON API
+- Serving a website written in [Vue.js](../disco-vue)
+
+# API
+
+You can find the whole documentation for the API under the [`api`](src/api/)
+module
+
+# Build and run
+
+1. Install the rust toolchain from the [official website](https://www.rust-lang.org)
+2. Start a Mongodb database. You can either use a Docker container
+(recommended) or install mongo on your local machine
+2. Clone this repo and cd to disco-core
 
 ```bash
-docker run -dp "27017:27017"  mongo
-
-# Set this enviroment variables for the rust client
-MONGO_PASSWORD=""
-MONGO_USERNAME=""
+git clone https://github.com/Altair-Bueno/fuzzy-disco
+cd disco-core
 ```
 
-You can connect using Mongo compass. Use this URL `mongodb://127.0.0.1:27017`
-
-## Creating a redis docker container
+3. Set up the following environment variables:
 
 ```bash
-docker run -dp "6379:6379" redis
+export MONGODB_URI="mongodb://<username>:<password>@<ip>:<port>/"
 ```
 
-redis ready on `127.0.0.1:6379`
+4. Copy your static website to `static/`
+```bash
+cp <static> static/
+```
+
+5. Build and run
+
+```bash
+cargo run --release
+cargo run
+```
+
+<!-- cargo-sync-readme end -->

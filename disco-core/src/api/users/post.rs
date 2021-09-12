@@ -3,22 +3,22 @@ use std::str::FromStr;
 
 use mongodb::Client;
 use mongodb::{
-    bson::{doc, Document},
+    bson::doc,
     options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
-use rocket::response::status::NoContent;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::media::{claim_media_filter, claim_media_update};
-use crate::api::result::ApiError;
+use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::result::ApiError::InternalServerError;
 use crate::api::sessions::delete_all_sessions_from;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::api::users::data::{AvatarPictureID, UpdatePassword, UpdateUser};
 use crate::mongo::media::{Format, Media};
 use crate::mongo::user::{Description, Email, Password, Session, User};
+use crate::api::{USER_ALIAS, USER_PASSWORD, USER_AVATAR, MEDIA_ID};
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -31,7 +31,7 @@ use crate::mongo::user::{Description, Email, Password, Session, User};
 /// ```
 ///
 /// # Returns
-/// ## Ok (204)
+/// ## Ok (200)
 ///
 /// ## Err
 /// ```json
@@ -61,24 +61,24 @@ use crate::mongo::user::{Description, Email, Password, Session, User};
 /// }
 /// ```
 ///
-/// ## Response (204)
+/// ## Response (200)
 #[post("/update/password", format = "json", data = "<updated>")]
 pub async fn update_user_password(
     updated: Json<UpdatePassword<'_>>,
     user_collection: &State<Collection<User>>,
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
-) -> Result<rocket::response::status::NoContent, ApiError> {
+) -> ApiResult<()> {
     let validated_document = updated.new_password.parse::<Password>()?;
     let user = crate::api::users::locate_user(token.alias(), user_collection).await?;
 
     match user.password().validate(updated.password) {
         Ok(true) => {
-            let filter = doc! { "alias": mongodb::bson::to_bson(user.alias()).unwrap() };
-            let update_op = doc! {"$set": { "password": validated_document.password() }};
+            let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(user.alias()).unwrap() };
+            let update_op = doc! {"$set": { USER_PASSWORD: validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
             delete_all_sessions_from(user.alias(), session_collection).await?;
-            Ok(rocket::response::status::NoContent)
+            Ok(())
         }
         Ok(false) => Err(ApiError::Unauthorized("Invalid password")),
         Err(_) => Err(InternalServerError("Couldn't hash password")),
@@ -98,7 +98,7 @@ pub async fn update_user_password(
 /// ```
 ///
 /// # Returns
-/// ## Ok (204)
+/// ## Ok (200)
 ///
 /// ## Err
 /// ```json
@@ -118,7 +118,7 @@ pub async fn update_user_password(
 ///
 /// `POST /api/users/update/avatar`
 ///
-/// ## Response (204)
+/// ## Response (200)
 #[post("/update/avatar", format = "json", data = "<updated>")]
 pub async fn update_user_avatar(
     token: TokenClaims,
@@ -126,32 +126,54 @@ pub async fn update_user_avatar(
     user_collection: &State<Collection<User>>,
     media_collection: &State<Collection<Media>>,
     mongo_client: &State<Client>,
-) -> Result<rocket::response::status::NoContent, ApiError> {
-    // TODO if avatar picture id has already a photo
-    let oid = mongodb::bson::oid::ObjectId::from_str(updated.mediaid)?;
+) -> ApiResult<()> {
     let mut transaction_session = mongo_client.start_session(None).await?;
     let options = TransactionOptions::builder()
         .read_concern(ReadConcern::majority())
         .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
         .build();
     transaction_session.start_transaction(options).await?;
-    // Claim media
-    let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
-    let update = claim_media_update().await;
-    let media = media_collection
-        .find_one_and_update(filter, update, None)
+    // Delete old profile picture
+    let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
+    let user = user_collection
+        .find_one_with_session(filter, None, &mut transaction_session)
         .await?
-        .ok_or(ApiError::BadRequest("Media file not found"))?;
-    // Update user
-    let filter = doc! {"alias": mongodb::bson::to_bson(token.alias()).unwrap() };
-    let update = doc! {"$set": {"avatar": media.id() }};
-    let result = user_collection.update_one(filter, update, None).await?;
+        .ok_or(ApiError::NotFound("User"))?;
+    let filter = doc! {MEDIA_ID: user.avatar() };
+    let deleted = media_collection
+        .find_one_and_delete_with_session(filter, None, &mut transaction_session)
+        .await?;
 
-    if result.modified_count == 1 {
-        transaction_session.commit_transaction().await?;
-        Ok(NoContent)
+    if let Some(media) = deleted {
+        delete_media(&media.id().unwrap()).await?;
+    }
+
+    if let Some(x) = updated.mediaid {
+        let oid = mongodb::bson::oid::ObjectId::from_str(x)?;
+
+        // Claim media
+        let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
+        let update = claim_media_update().await;
+        let media = media_collection
+            .find_one_and_update_with_session(filter, update, None, &mut transaction_session)
+            .await?
+            .ok_or(ApiError::BadRequest("Media file not found"))?;
+        // Update user
+        let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
+        let update = doc! {"$set": {USER_AVATAR: media.id() }};
+        let result = user_collection
+            .update_one_with_session(filter, update, None, &mut transaction_session)
+            .await?;
+
+        if result.modified_count == 1 {
+            transaction_session.commit_transaction().await?;
+            Ok(())
+        } else {
+            Err(ApiError::NotFound("User"))
+        }
     } else {
-        Err(ApiError::NotFound("User"))
+        transaction_session.commit_transaction().await?;
+        Ok(())
     }
 }
 
@@ -167,7 +189,7 @@ pub async fn update_user_avatar(
 /// ```
 ///
 /// # Returns
-/// ## Ok (204)
+/// ## Ok (200)
 ///
 /// ## Err
 /// ```json
@@ -195,13 +217,13 @@ pub async fn update_user_avatar(
 /// }
 /// ```
 ///
-/// ## Response (204)
+/// ## Response (200)
 #[post("/update", format = "json", data = "<updated>")]
 pub async fn update_user_info(
     updated: Json<UpdateUser<'_>>,
     user_collection: &State<Collection<User>>,
     token: TokenClaims,
-) -> Result<rocket::response::status::NoContent, ApiError> {
+) -> ApiResult<()> {
     let mut dic = HashMap::new();
     if let Some(s) = updated.email {
         let _ = s.parse::<Email>()?;
@@ -218,11 +240,11 @@ pub async fn update_user_info(
         "$set": mongodb::bson::to_bson(&dic).unwrap()
     };
 
-    let filter = doc! { "alias": mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
     let res = user_collection.update_one(filter, update_doc, None).await?;
 
     if res.modified_count == 1 {
-        Ok(rocket::response::status::NoContent)
+        Ok(())
     } else {
         Err(ApiError::NotFound("User"))
     }

@@ -6,9 +6,10 @@ use rocket::serde::json::{Json, Value};
 use rocket::State;
 
 use crate::api::media::oid_to_folder;
-use crate::api::result::ApiError;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::result::{ApiError, ApiResult};
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::media::{Format, Media};
+use crate::api::MEDIA_ID;
 
 #[cfg(debug_assertions)]
 const TTL: u64 = 3600;
@@ -22,13 +23,10 @@ const TTL: u64 = 60;
 /// be claimed before the Time To Live expires, otherwise the server will delete
 /// the file. You can claim a file by using it as an *user avatar* or *post*
 ///
+/// The full list of supported file formats is [here](crate::mongo::media::Format)
+///
+///
 /// > Note: The key attribute on the response is the media ID. Don't loose it!!
-///
-/// # Supported files:
-///
-/// ## Image
-/// - jpeg
-/// - png
 ///
 /// ## Audio
 /// - mp3
@@ -72,13 +70,12 @@ pub async fn upload(
     token: TokenClaims,
     mut file: TempFile<'_>,
     mongo: &State<Collection<Media>>,
-) -> Result<Json<Value>, ApiError> {
-    // TODO More variants
+) -> ApiResult<Json<Value>> {
     // inspect file
     let file_type: Format = file
         .path()
         .ok_or(ApiError::InternalServerError("Couldn't inspect file"))
-        .map(|x| infer::get_from_path(x))??
+        .map(infer::get_from_path)??
         .ok_or(ApiError::BadRequest("Unknown file format"))
         .map(|x| x.mime_type().parse())??;
 
@@ -111,7 +108,7 @@ async fn timed_gc_routine(
 ) {
     rocket::tokio::spawn(async move {
         rocket::tokio::time::sleep(rocket::tokio::time::Duration::new(TTL, 0)).await;
-        let result = collection.delete_one(doc! {"_id": oid}, None).await;
+        let result = collection.delete_one(doc! {MEDIA_ID: oid}, None).await;
         match result {
             Ok(x) if x.deleted_count == 1 => {
                 #[cfg(debug_assertions)]

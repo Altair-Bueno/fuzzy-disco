@@ -1,28 +1,13 @@
-use std::str::FromStr;
+use serde::{Serialize,Deserialize};
+use crate::mongo::IntoDocument;
+use crate::mongo::post::Post;
+use crate::api::result::ApiError;
 
-use mongodb::bson::oid::ObjectId;
-use rocket::request::FromParam;
-use rocket::serde::json::serde_json::json;
-use serde::Deserialize;
-use serde::Serialize;
-
-/// Wrapper for [`ObjectId`](mongodb::bson::oid::ObjectId). Implements the
-/// [`FromParam`](rocket::request::FromParam) trait.
-#[derive(Serialize, Deserialize, Debug, PartialOrd, PartialEq)]
-pub struct Id(ObjectId);
-
-impl FromParam<'_> for Id {
-    type Error = rocket::serde::json::Value;
-
-    fn from_param(param: &str) -> Result<Self, Self::Error> {
-        ObjectId::from_str(param)
-            .map(Id)
-            .map_err(|_| json!({"Error": "Invalid ID"}))
-    }
-}
-
-impl Id {
-    pub fn extract(self) -> ObjectId {
-        self.0
-    }
+#[derive(Serialize,Deserialize,Debug)]
+pub struct NewPostPayload <'a> {
+    pub(crate) title: &'a str,
+    pub(crate) caption : &'a str,
+    pub(crate) audio: &'a str,
+    pub(crate) photo: &'a str,
+    pub(crate) visibility: &'a str,
 }
