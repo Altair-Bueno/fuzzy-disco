@@ -50,8 +50,8 @@ export default {
           body: JSON.stringify(user)
         });
 
-        let result = await response.json();
-        let status_code = await response.status;
+        let server_payload = await response.json();
+        let status_code = response.status;
         if(status_code >= 400 && status_code <= 499) {
           this.emailOk = false;
           this.usernameOk = false;
@@ -59,9 +59,9 @@ export default {
           alert(`${loginMethod} or password incorrect`);
 
         } else if(status_code >= 200 && status_code <= 299) {
-          const server_payload = result;
-          document.cookie = "refresh_token=" + server_payload.refresh_token + "; SameSite=Lax";
-          sessionStorage.setItem("access_token", server_payload.access_token);
+          let ttl = server_payload.expires_in * 1000;
+          document.cookie = "refresh_token=" + server_payload.refresh_token + "; SameSite=Lax; expires=" + new Date(9999, 1, 1) + ";";
+          document.cookie = "access_token=" + server_payload.access_token + "; SameSite=Lax; expires=" + (new Date(Date.now() + ttl)).toUTCString() + ";";
           await this.$router.push({name: 'home'});
 
         } else {

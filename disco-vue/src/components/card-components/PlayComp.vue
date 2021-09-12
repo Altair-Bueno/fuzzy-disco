@@ -29,7 +29,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #444444;
+    color: whitesmoke;
     cursor: pointer;
     transition: 350ms;
   }
@@ -38,7 +38,7 @@ export default {
     position: absolute;
     font-size: 80px;
     border-radius: 50%;
-    box-shadow: rgba(0, 0, 0, 0.66) 0 30px 60px 0, inset #333 0 0 0 5px;
+    box-shadow: rgba(0, 0, 0, 0.66) 0 30px 60px 0, inset #ccc 0 0 0 5px;
     animation: play-reverse 200ms ease-out;
     animation-fill-mode: forwards;
   }

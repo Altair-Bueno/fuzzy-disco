@@ -25,7 +25,7 @@
         <li class="nav-item">
           <button class="drop-btn">User</button>
           <div class="drop-content">
-            <a href="#">Profile</a>
+            <RouterLink to="/user/sample-user">Profile</RouterLink>
             <a href="#">Settings</a>
           </div>
         </li>
@@ -48,7 +48,6 @@ export default {
   .navbar {
     position: relative;
     display: flex;
-    top: 0;
     height: 4rem;
     width: 100vw;
     background-color: var(--navbar-color);

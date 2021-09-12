@@ -40,8 +40,7 @@ export default {
     height: 320px;
     width: 240px;
     overflow: hidden;
-    outline: 1px solid rgba(3, 3, 3, 0.4);
-    outline-offset: -10px;
+    box-shadow: 0 0 3px 0 #ddd;
     transition: 350ms;
   }
 
@@ -65,7 +64,7 @@ export default {
     opacity: 1;
     position: relative;
     margin: 10px;
-    color: #444444;
+    color: #eeeeee;
     cursor: default;
     transition: 200ms;
   }
@@ -76,7 +75,7 @@ export default {
   }
 
   .card:hover {
-    box-shadow: rgba(0, 0, 0, 0.66) 0 30px 60px 0, inset #333 0 0 0 5px;
+    box-shadow: rgba(100, 100, 100, 0.66) 0 30px 60px -10px, inset whitesmoke 0 0 0 5px;
     outline-offset: 0;
   }
 

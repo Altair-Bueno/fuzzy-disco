@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <RouterView name="navbar"></RouterView>
     <RouterView></RouterView>
   </div>
 </template>
@@ -30,6 +29,9 @@ export default {
 <style>
   html {
     background-color: rgb(40, 42, 53);
+  }
+  body {
+    margin: 0;
   }
   #app {
     font-family: Avenir, Helvetica, Arial, sans-serif;
