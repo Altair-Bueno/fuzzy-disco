@@ -5,7 +5,7 @@ use rocket::serde::json::Value;
 use rocket::State;
 
 use crate::api::result::{ApiError, ApiResult};
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::media::Media;
 use crate::mongo::session::Session;
 use crate::mongo::user::User;

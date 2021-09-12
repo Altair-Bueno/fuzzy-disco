@@ -11,8 +11,8 @@ use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::data::{
     IpAdd, RefreshJWT, UserLogInAlias, UserLogInEmail, UserSingUp,
 };
-use crate::api::users::auth::token::claims::TokenClaims;
-use crate::api::users::auth::token::response::TokenResponse;
+use crate::api::users::auth::claims::TokenClaims;
+use crate::api::users::auth::response::TokenResponse;
 use crate::mongo::session::Session;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;

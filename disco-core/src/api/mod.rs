@@ -10,6 +10,7 @@ pub mod sessions;
 /// /api/users
 pub mod users;
 
+// Api constants
 
 const USER_ALIAS: &str = "alias";
 const USER_ID:&str = "_id";

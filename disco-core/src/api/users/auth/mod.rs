@@ -2,5 +2,7 @@
 mod data;
 /// POST /api/users/auth
 pub mod post;
-/// Data structures used for token generation
-pub mod token;
+/// Response for auth API
+pub mod response;
+/// JWT claims
+pub mod claims;

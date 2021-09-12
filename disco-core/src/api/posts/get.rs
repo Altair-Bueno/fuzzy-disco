@@ -12,7 +12,7 @@ use crate::mongo::post::Post;
 use std::str::FromStr;
 use crate::api::POSTS_ID;
 use mongodb::bson::to_bson;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::visibility::Visibility;
 
 /// # `GET /api/posts/<id>`

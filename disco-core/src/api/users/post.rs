@@ -14,7 +14,7 @@ use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::result::ApiError::InternalServerError;
 use crate::api::sessions::delete_all_sessions_from;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::api::users::data::{AvatarPictureID, UpdatePassword, UpdateUser};
 use crate::mongo::media::{Format, Media};
 use crate::mongo::user::{Description, Email, Password, Session, User};

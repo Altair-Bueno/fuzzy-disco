@@ -3,7 +3,7 @@ use rocket::State;
 
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::sessions::delete_all_sessions_from;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::session::Session;
 
 /// # AUTH! `POST /api/sessions/delete`

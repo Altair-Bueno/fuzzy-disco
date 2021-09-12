@@ -6,7 +6,7 @@ use rocket::State;
 
 use crate::api::result::{ApiResult};
 use crate::api::sessions::data::PublicsessionData;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::user::Session;
 use crate::api::SESSION_USER_ALIAS;
 

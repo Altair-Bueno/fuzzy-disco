@@ -1,6 +1,6 @@
 use crate::api::result::ApiResult;
 use mongodb::bson::oid::ObjectId;
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use rocket::State;
 use crate::mongo::post::Post;
 use crate::mongo::media::Media;

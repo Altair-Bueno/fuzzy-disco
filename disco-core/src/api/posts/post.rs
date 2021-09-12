@@ -1,4 +1,4 @@
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::api::result::{ApiResult, ApiError};
 use rocket::serde::json::{Json, Value};
 use crate::api::posts::data::NewPostPayload;

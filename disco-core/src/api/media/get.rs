@@ -6,7 +6,7 @@ use rocket::State;
 
 use crate::api::media::oid_to_path;
 use crate::api::result::{ApiError, ApiResult};
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::media::{Media, Status};
 use crate::mongo::visibility::Visibility;
 use crate::api::{MEDIA_ID, MEDIA_STATUS};

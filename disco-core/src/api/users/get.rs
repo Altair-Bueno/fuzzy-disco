@@ -5,7 +5,7 @@ use rocket::serde::json::Value;
 use rocket::State;
 
 use crate::api::result::{ApiResult};
-use crate::api::users::auth::token::claims::TokenClaims;
+use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
 
 /// # `GET /api/users/<alias>`

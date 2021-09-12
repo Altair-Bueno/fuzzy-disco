@@ -8,6 +8,8 @@ use thiserror::Error;
 
 pub type ApiResult<T> = Result<T,ApiError>;
 
+
+/// Contains all kinds of errors that may occurr on fuzzy-disco's API
 #[derive(Error, Debug)]
 pub enum ApiError {
     /// http 500
