@@ -4,6 +4,11 @@
 //! - Providing a fast and reliable JSON API
 //! - Serving a website written in [Vue.js](../disco-vue)
 //!
+//! # API
+//!
+//! You can find the whole documentation for the API under the [`api`](crate::api)
+//! module
+//!
 //! # Build and run
 //!
 //! 1. Install the rust toolchain from the [official website](https://www.rust-lang.org)
@@ -44,7 +49,7 @@ use init::*;
 use std::path::PathBuf;
 use rocket::tokio::fs::File;
 
-mod api;
+pub mod api;
 mod init;
 mod mongo;
 

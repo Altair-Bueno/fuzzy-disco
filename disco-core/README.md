@@ -7,6 +7,11 @@ This crate contains the source code for `disco-core`, the main component on
 - Providing a fast and reliable JSON API
 - Serving a website written in [Vue.js](../disco-vue)
 
+# API
+
+You can find the whole documentation for the API under the [`api`](src/api/)
+module
+
 # Build and run
 
 1. Install the rust toolchain from the [official website](https://www.rust-lang.org)
