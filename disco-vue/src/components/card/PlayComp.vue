@@ -8,14 +8,34 @@
 <script>
 export default {
   name: "PlayComp",
+  props: ['audio'],
   data() {
     return {
-      audio_url: "https://example.org/",
+      isPlaying: false,
+      isCreated: false,
+      audio_player: new Audio()
     }
   },
   methods: {
     playAudio() {
-
+      if(this.isCreated) {
+        if(this.isPlaying) {
+          this.audio_player.pause();
+          this.isPlaying = false;
+        } else {
+          this.audio_player.loop;
+          this.audio_player.play();
+          this.isPlaying = true;
+        }
+      } else {
+        if(this.audio) {
+          this.audio_player = new Audio(this.audio);
+          this.audio_player.volume = 0.5;
+          this.audio_player.play();
+          this.isCreated = true;
+          this.isPlaying = true;
+        }
+      }
     }
   }
 }
