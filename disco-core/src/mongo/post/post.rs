@@ -1,3 +1,4 @@
+use mongodb::bson::DateTime;
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +29,9 @@ pub struct Post {
     author: Alias,
     audio: ObjectId,
     photo: ObjectId,
-    visibility: Visibility
+    visibility: Visibility,
+    // FIXME add get time on API
+    creation_date: DateTime
 }
 
 impl Document for Post {}
@@ -50,7 +53,8 @@ impl Post {
             author,
             audio,
             photo,
-            visibility
+            visibility,
+            creation_date: DateTime::now()
         }
     }
 
@@ -75,5 +79,8 @@ impl Post {
     }
     pub fn visibility(&self) -> &Visibility {
         &self.visibility
+    }
+    pub fn creation_date(&self) -> DateTime {
+        self.creation_date
     }
 }

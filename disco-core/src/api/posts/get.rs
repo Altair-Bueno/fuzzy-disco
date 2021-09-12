@@ -36,7 +36,8 @@ use crate::mongo::visibility::Visibility;
 ///     "author": String.
 ///     "audio": String,
 ///     "photo": String,
-///     "visibility": Visibility
+///     "visibility": Visibility,
+///     "creation_date": String
 /// }
 /// ```
 ///
@@ -66,7 +67,8 @@ use crate::mongo::visibility::Visibility;
 ///  "id": "6132137e6c2cc66344ef2a88",
 ///  "caption": "Hisoka wants gon booty",
 ///  "title": "Hunter x Hunter",
-///  "visibility": "Public"
+///  "visibility": "Public",
+///  "creation_date": "2021-09-06 16:13:02.797 UTC"
 ///}
 /// ```
 #[get("/<id>", format = "json" , rank = 2)]
@@ -112,7 +114,8 @@ fn generate_response(post:&Post) -> Value {
         "author": to_bson(post.author()).unwrap(),
         "audio": post.audio().to_string(),
         "photo": post.photo().to_string(),
-        "visibility": to_bson(post.visibility()).unwrap()
+        "visibility": to_bson(post.visibility()).unwrap(),
+        "creation_date": post.creation_date().to_string()
     })
 }
 
