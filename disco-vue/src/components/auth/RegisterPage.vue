@@ -2,47 +2,50 @@
   <div class="object-cont">
     <div class="form-cont">
       <form class="login-form">
-        <h1>Login</h1>
-        <FormInput @input-update="getEmailUsername" identifier="email" field="Email or Username" :input-ok="(emailOk || usernameOk)"></FormInput>
+        <h1>Sign Up</h1>
+        <FormInput @input-update="getEmail" identifier="email" field="Email" :input-ok="emailOk"></FormInput>
+        <FormInput @input-update="getUsername" inputType="email" identifier="alias" field="Username" :input-ok="usernameOk"></FormInput>
         <FormInput @input-update="getPasswd" inputType="password" identifier="pwd" field="Password" :input-ok="passwdOk"></FormInput>
+        <FormInput @input-update="getRepeatPasswd" inputType="password" identifier="repeat-pwd" field="Repeat Password" :input-ok="repeatPasswdOk"></FormInput>
       </form>
-      <button @click="submit" class="submit-btn">Login</button>
-      <br>
-      <div class="login-text">
-        <p>Dont have an account yet? <RouterLink class="login-link" to="/signup">Register now</RouterLink></p>
+      <button @click="submit" class="submit-btn">Register</button>
+      <div class="register-text">
+        <p>Already have an account? <RouterLink class="register-link" to="/login">Login here</RouterLink></p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import FormInput from "@/components/auth-components/FormInput";
-
+import FormInput from "@/components/auth/FormInput";
 export default {
-  name: "LoginPage",
+  name: "RegisterPage",
   components: {FormInput},
   data() {
     return {
-      emailUsername: String,
+      email: String,
+      username: String,
       passwd: String,
+      repeatPasswd: String,
 
       emailOk: true,
       usernameOk: true,
-      passwdOk: true
+      passwdOk: true,
+      repeatPasswdOk: true
     }
   },
   methods: {
     async submit() {
-      let loginMethod = this.validateUser();
-      if(loginMethod === "") {
+      if(!this.validateUser()) {
         console.log("repeat");
       } else {
 
         let user = {
-          [loginMethod]: this.emailUsername,
+          alias: this.username,
+          email: this.email,
           password: this.passwd
         }
-        let response = await fetch(`/api/users/auth/login?using=${loginMethod}`, {
+        let response = await fetch('http://localhost:8000/api/users/auth/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -50,45 +53,39 @@ export default {
           body: JSON.stringify(user)
         });
 
-        let server_payload = await response.json();
-        let status_code = response.status;
-        if(status_code >= 400 && status_code <= 499) {
-          this.emailOk = false;
+        let status_code = await response.status;
+        if(status_code === 409) {
           this.usernameOk = false;
-          this.passwdOk = false;
-          alert(`${loginMethod} or password incorrect`);
+          alert("Username is already in use");
 
-        } else if(status_code >= 200 && status_code <= 299) {
-          let ttl = server_payload.expires_in * 1000;
-          document.cookie = "refresh_token=" + server_payload.refresh_token + "; SameSite=Lax; expires=" + new Date(9999, 1, 1) + ";";
-          document.cookie = "access_token=" + server_payload.access_token + "; SameSite=Lax; expires=" + (new Date(Date.now() + ttl)).toUTCString() + ";";
-          await this.$router.push({name: 'home'});
+        } else if(status_code >= 200 && status_code <=299) {
+          await this.$router.push({name: 'login'});
 
         } else {
-          alert("Server error. Try later.")
+          alert("Server error. Try later.");
         }
       }
     },
 
     validateUser() {
-      let loginMethod = this.validateEmailUsername(this.emailUsername);
-      if(loginMethod === "email") {
-        this.emailOk = true;
-      } else if(loginMethod === "alias") {
-        this.usernameOk = true;
-      } else {
-        this.emailOk = false;
-        this.usernameOk = false;
-      }
+      this.emailOk = this.validateEmail(this.email);
+      this.usernameOk = this.validateUsername(this.username);
       this.passwdOk = this.validatePasswd(this.passwd);
-      return loginMethod;
+      this.repeatPasswdOk = this.validateRepeatPasswd(this.repeatPasswd);
+      return (this.emailOk && this.usernameOk && this.passwdOk && this.repeatPasswdOk);
     },
 
-    getEmailUsername(emailUsername) {
-      this.emailUsername = emailUsername.update;
+    getEmail(email) {
+      this.email = email.update;
+    },
+    getUsername(username) {
+      this.username = username.update;
     },
     getPasswd(passwd) {
       this.passwd = passwd.update;
+    },
+    getRepeatPasswd(repeatPasswd) {
+      this.repeatPasswd = repeatPasswd.update;
     },
 
     validateEmail(email) {
@@ -102,17 +99,10 @@ export default {
     validatePasswd(passwd) {
       return passwd.length >= 8;
     },
-    validateEmailUsername(emailUsername) {
-      let res = "";
-      if(this.validateEmail(emailUsername)) {
-        res = "email"
-      } else if(this.validateUsername(emailUsername)) {
-        res = "alias";
-      }
-      return res;
+    validateRepeatPasswd(repeatPasswd) {
+      return repeatPasswd === this.passwd;
     }
   }
-
 }
 </script>
 
@@ -135,7 +125,7 @@ export default {
     color: whitesmoke;
     border: 1px solid var(--login-border);
     padding: 5rem;
-    height: 25rem;
+    height: 30rem;
     width: 20rem;
     box-shadow: 5px 5px 25px 10px rgba(0, 0, 0, 0.5);
   }
@@ -146,8 +136,8 @@ export default {
     font-weight: bold;
     font-size: 1rem;
     border: none;
-    width: 5rem;
     height: 2rem;
+    width: 9rem;
     cursor: pointer;
     background-color: whitesmoke;
     border-radius: 25px;
@@ -156,19 +146,18 @@ export default {
 
   .submit-btn:hover {
     background-color: var(--login-border);
-    width: 10rem;
+    width: 15rem;
   }
 
   h1:hover {
     cursor: default;
   }
 
-  .login-text {
+  .register-text {
     margin-top: 6rem;
   }
 
-  .login-link {
+  .register-link {
     color: var(--login-border);
   }
-
 </style>

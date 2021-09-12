@@ -1,14 +1,14 @@
 <template>
   <div>
+    <Navbar></Navbar>
     <div class="card-list">
-      <Navbar></Navbar>
       <CardItem v-bind:card="card" :key="card.id" v-for="card in cardlist"></CardItem>
     </div>
   </div>
 </template>
 
 <script>
-import CardItem from "@/components/card-components/CardItem";
+import CardItem from "@/components/card/CardItem";
 import Navbar from "@/components/Navbar";
 export default {
   name: "CardList",

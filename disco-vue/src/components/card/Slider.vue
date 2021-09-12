@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import CardInfo from "@/components/card-components/CardInfo";
+import CardInfo from "@/components/card/CardInfo";
 export default {
   name: "Slider",
   components: {CardInfo},

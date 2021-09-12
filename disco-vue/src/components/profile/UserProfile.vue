@@ -10,7 +10,7 @@
 <script>
 
 import Navbar from "@/components/Navbar";
-import ProfileHeader from "@/components/profile-components/ProfileHeader";
+import ProfileHeader from "@/components/profile/ProfileHeader";
 
 export default {
   name: "UserProfile",

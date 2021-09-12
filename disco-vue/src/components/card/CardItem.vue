@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import Slider from "@/components/card-components/Slider";
-import PlayComp from "@/components/card-components/PlayComp";
+import Slider from "@/components/card/Slider";
+import PlayComp from "@/components/card/PlayComp";
 
 export default {
   name: "CardItem",

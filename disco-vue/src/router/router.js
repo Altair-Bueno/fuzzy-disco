@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import LoginPage from "@/components/auth-components/LoginPage";
-import RegisterPage from "@/components/auth-components/RegisterPage";
+import LoginPage from "@/components/auth/LoginPage";
+import RegisterPage from "@/components/auth/RegisterPage";
 import CardList from "@/components/CardList";
-import UserProfile from "@/components/profile-components/UserProfile";
+import UserProfile from "@/components/profile/UserProfile";
+import NewPost from "@/components/NewPost";
 
 Vue.use(VueRouter)
 
@@ -34,6 +35,17 @@ const routes = [
         path: '/user/:user',
         name: 'user',
         component: UserProfile,
+        meta: {
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/new-post',
+        name: 'new-post',
+        component: NewPost,
+        meta: {
+            requiresAuth: true
+        }
     }
 ]
 
@@ -60,6 +72,7 @@ async function isAuthenticated() {
             let payload = {
                 refresh_token: getCookieValue(refreshToken)
             }
+            //Fixme: Localhost
             let response = await fetch("/api/users/auth/login?using=refresh_token", {
                 method: "POST",
                 headers: {

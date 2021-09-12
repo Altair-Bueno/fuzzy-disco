@@ -8,14 +8,14 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link">
+          <RouterLink to="/home" class="nav-link">
             Home
-          </a>
+          </RouterLink>
         </li>
         <li class="nav-item">
-          <a class="nav-link">
-            Explore
-          </a>
+          <RouterLink to="/new-post" class="nav-link">
+            New Post
+          </RouterLink>
         </li>
         <li class="nav-item">
           <div class="search-cont">
@@ -66,6 +66,7 @@ export default {
 
   .nav-link {
     display: flex;
+    color: whitesmoke;
     align-items: center;
     justify-content: center;
     height: 4rem;
