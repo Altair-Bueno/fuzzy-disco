@@ -11,6 +11,8 @@ pub mod sessions;
 pub mod users;
 /// /api/search
 pub mod search;
+/// Common datastructures
+mod data;
 
 // Api constants
 

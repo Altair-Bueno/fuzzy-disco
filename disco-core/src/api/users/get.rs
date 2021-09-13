@@ -1,12 +1,13 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::serde_json::json;
-use rocket::serde::json::Value;
+use rocket::serde::json::{Value, Json};
 use rocket::State;
 
 use crate::api::result::{ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
+use crate::api::data::ApiUserResponse;
 
 /// # `GET /api/users/<alias>`
 /// Returns the public information avaliable for the given user
@@ -51,14 +52,10 @@ use crate::mongo::user::{Alias, User};
 pub async fn get_user_info(
     alias: &str,
     mongo: &State<Collection<User>>,
-) -> ApiResult<Value> {
+) -> ApiResult<Json<ApiUserResponse>> {
     let alias = alias.parse::<Alias>()?;
     let user = crate::api::users::locate_user(&alias, mongo).await?;
-    Ok(json!({
-        "alias": user.alias(),
-        "description": user.description(),
-        "avatar": user.avatar().map(|x| x.to_string())
-    }))
+    Ok(Json(ApiUserResponse::from(user)))
 }
 
 /// # AUTH! `GET /api/users`

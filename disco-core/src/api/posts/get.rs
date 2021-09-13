@@ -11,6 +11,7 @@ use crate::api::POSTS_ID;
 use mongodb::bson::to_bson;
 use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::visibility::Visibility;
+use crate::api::data::ApiPostResponse;
 
 /// # `GET /api/posts/<id>`
 /// Returns information for a given post. It expects a well formated string
@@ -69,10 +70,10 @@ use crate::mongo::visibility::Visibility;
 ///}
 /// ```
 #[get("/<id>", format = "json" , rank = 2)]
-pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Json<Value>> {
+pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Json<ApiPostResponse>> {
     let post = get_post(id,mongo).await?;
     if *post.visibility() == Visibility::Public {
-        Ok(Json(generate_response(&post)))
+        Ok(Json(ApiPostResponse::from(post)))
     } else {
         Err(ApiError::Unauthorized("Private post"))
     }
@@ -83,13 +84,13 @@ pub async fn get_post_content_auth(
     token:TokenClaims,
     id: &str,
     mongo: &State<Collection<Post>>
-) -> ApiResult<Json<Value>> {
+) -> ApiResult<Json<ApiPostResponse>> {
     let post = get_post(id,mongo).await?;
     let condition = (*post.visibility() == Visibility::Public) ||
         (token.alias() == post.author());
 
     if condition {
-        Ok(Json(generate_response(&post)))
+        Ok(Json(ApiPostResponse::from(post)))
     } else {
         Err(ApiError::Unauthorized("Private post"))
     }
@@ -101,17 +102,4 @@ async fn get_post(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Post> 
     mongo.find_one(Some(filter),None)
         .await?
         .ok_or(ApiError::NotFound("Post"))
-}
-fn generate_response(post:&Post) -> Value {
-    json!({
-        // `unwrap` here is safe, represents _id from db
-        "id": post.id().unwrap().to_string(),
-        "title": to_bson(post.title()).unwrap(),
-        "caption": to_bson(post.caption()).unwrap(),
-        "author": to_bson(post.author()).unwrap(),
-        "audio": post.audio().to_string(),
-        "photo": post.photo().to_string(),
-        "visibility": to_bson(post.visibility()).unwrap(),
-        "creation_date": post.creation_date().to_string()
-    })
 }
