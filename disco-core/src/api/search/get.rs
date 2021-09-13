@@ -16,6 +16,9 @@ use rocket::futures::StreamExt;
 use mongodb::bson::oid::ObjectId;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
+use crate::api::data::{ApiUserResponse, ApiPostResponse};
+use serde::Deserialize;
+use rocket::serde::DeserializeOwned;
 
 // TODO check if it works and add documentation
 #[get("/?<s>&<drop>&<get>&<date>")]
@@ -37,8 +40,6 @@ pub async fn search(
         doc! { "$sort": { "score": { "$meta": "textScore" } } },
         doc! { "$skip": to_bson(&drop).unwrap() },
         doc! { "$limit": to_bson(&get).unwrap() },
-        // Remove all fields except for the ObjectID
-        doc! { "$project": { "_id": 1 } }
     ];
     let filter_posts = vec![
         doc! { "$match": {
@@ -48,32 +49,30 @@ pub async fn search(
         doc! { "$sort": { "score": { "$meta": "textScore" } } },
         doc! { "$skip": to_bson(&drop).unwrap() },
         doc! { "$limit": to_bson(&get).unwrap() },
-        // Remove all fields except for the ObjectID
-        doc! { "$project": { "_id": 1 } }
     ];
-    let mut response_posts = Vec::with_capacity(get as usize);
-    let mut posts_cursor = posts_collection.aggregate(filter_posts,None).await?;
-    while let Some (r) = posts_cursor.next().await{
-        let id = from_document::<Payload>(r?).unwrap().id;
-        response_posts.push(id.to_string());
-    }
-    let mut response_users = Vec::with_capacity(get as usize);
-    let mut user_cursor = user_collection.aggregate(filter_users,None).await?;
-    while let Some (r) = user_cursor.next().await{
-        let id = from_document::<Payload>(r?).unwrap().id;
-        response_users.push(id.to_string());
-    }
-    Ok(Json(json! ({
-            "posts": response_posts,
-            "users": response_users
-        })
-    ))
+    let users: Vec<ApiUserResponse> = search_on_collection(filter_users,user_collection).await?;
+    let posts: Vec<ApiPostResponse> = search_on_collection(filter_posts,posts_collection).await?;
+    Ok(
+        Json(
+            json!({"users":users,"posts":posts})
+        )
+    )
 }
 
-use serde::{Serialize,Deserialize};
-
-#[derive(Serialize,Deserialize)]
-pub struct Payload {
-    #[serde(rename="_id")]
-    id: ObjectId
+async fn search_on_collection <'de,C,T> (
+    query:Vec<mongodb::bson::Document>,
+    user_collection:&State<Collection<C>>
+) -> ApiResult<Vec<T>>
+    where
+        T: From<C>,
+        C: Send + Sync + for<'a> Deserialize<'a>,
+{
+    let mut out = Vec::new();
+    let mut cursor = user_collection.aggregate(query, None).await?;
+    while let Some (r) = cursor.next().await{
+        let extracted : C = from_document(r?).unwrap();
+        let response = T::from(extracted);
+        out.push(response)
+    }
+    Ok(out)
 }
