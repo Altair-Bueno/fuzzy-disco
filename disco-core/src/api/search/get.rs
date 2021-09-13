@@ -84,6 +84,7 @@ pub async fn search(
     ];
     // TODO multi thread async query
     // TODO retrieve private posts
+    // TODO title regex does not allow `a`
     let users: Vec<ApiUserResponse> = search_on_collection(filter_users,user_collection).await?;
     let posts: Vec<ApiPostResponse> = search_on_collection(filter_posts,posts_collection).await?;
     Ok(

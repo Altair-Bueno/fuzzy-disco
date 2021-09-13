@@ -124,6 +124,7 @@ async fn main() -> Result<(), String> {
                 api::users::get::get_full_user_info,
                 api::users::get::get_user_info,
                 api::users::posts::get::get_posts_from,
+                api::users::posts::get::get_private_posts_from,
                 api::users::post::update_user_password,
                 api::users::post::update_user_info,
                 api::users::post::update_user_avatar,
