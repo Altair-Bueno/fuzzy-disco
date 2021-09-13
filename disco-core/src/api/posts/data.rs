@@ -1,7 +1,4 @@
 use serde::{Serialize,Deserialize};
-use crate::mongo::IntoDocument;
-use crate::mongo::post::Post;
-use crate::api::result::ApiError;
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct NewPostPayload <'a> {

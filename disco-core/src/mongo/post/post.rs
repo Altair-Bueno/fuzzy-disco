@@ -30,7 +30,6 @@ pub struct Post {
     audio: ObjectId,
     photo: ObjectId,
     visibility: Visibility,
-    // FIXME add get time on API
     creation_date: DateTime
 }
 

@@ -5,7 +5,7 @@ use rocket::State;
 use crate::mongo::post::Post;
 use crate::mongo::media::Media;
 use crate::api::{POSTS_ID, POSTS_PHOTO, POSTS_AUDIO, POSTS_AUTHOR};
-use crate::api::result::ApiError::{NotFound, Unauthorized, BadRequest};
+use crate::api::result::ApiError::{BadRequest};
 use crate::api::media::oid_to_path;
 use mongodb::bson::to_bson;
 

@@ -11,7 +11,6 @@ use mongodb::{
     options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
-use crate::mongo::IntoDocument;
 use crate::api::media::{claim_media_filter, claim_media_update};
 use rocket::response::status::Created;
 use rocket::serde::json::serde_json::json;

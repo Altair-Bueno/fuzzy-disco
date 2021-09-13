@@ -1,8 +1,5 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
-use rocket::futures::StreamExt;
-use rocket::http::Status;
-use rocket::response::status;
 use rocket::serde::json::Value;
 use rocket::serde::json::{serde_json::json, Json};
 use rocket::State;
@@ -117,49 +114,4 @@ fn generate_response(post:&Post) -> Value {
         "visibility": to_bson(post.visibility()).unwrap(),
         "creation_date": post.creation_date().to_string()
     })
-}
-
-/// #!DEBUG
-/// # `GET /api/posts`
-///
-/// Returns all postID on the database as a single vector of strings
-///
-/// ```json
-/// [
-///     String,
-///     ...
-/// ]
-/// ```
-///
-/// # Example
-///
-/// `GET /api/posts`
-///
-/// ```json
-/// [
-///  "6131f8946c2cc66344ef2a86",
-///  "6132137e6c2cc66344ef2a88",
-///  "613213e26c2cc66344ef2a89",
-///  "613214076c2cc66344ef2a8a"
-///]
-/// ```
-#[get("/", format = "json")]
-pub async fn get_posts(
-    mongo: &State<Collection<Post>>,
-) -> Result<Json<Vec<String>>, status::Custom<Value>> {
-    let mut cursor = match mongo.find(None, None).await {
-        Ok(cursor) => cursor,
-        Err(_) => {
-            return Err(status::Custom(
-                Status::InternalServerError,
-                json!({"status":"InternalError","message": "Couldn't connect to database"}),
-            ));
-        }
-    };
-    let mut vec = Vec::new();
-    while let Some(Ok(post)) = cursor.next().await {
-        let id = post.id().unwrap().to_string();
-        vec.push(id);
-    }
-    Ok(Json(vec))
 }

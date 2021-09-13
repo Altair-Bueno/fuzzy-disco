@@ -1,5 +1,4 @@
 use rocket::FromForm;
-use chrono::{Date, Utc};
 
 #[derive(FromForm)]
 pub struct SearchQuery <'a> {

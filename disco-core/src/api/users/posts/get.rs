@@ -13,7 +13,6 @@ use mongodb::bson::to_bson;
 use mongodb::bson::from_document;
 use mongodb::bson::DateTime as MongoDateTime;
 use crate::mongo::visibility::Visibility;
-use mongodb::bson::oid::ObjectId;
 use crate::api::users::posts::data::Payload;
 
 /// # `GET /api/users/<id>/posts?drop=<usize>&get=<u8>&date=<string>`
