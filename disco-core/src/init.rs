@@ -32,6 +32,10 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
                         "unique": true
                     },
                     {
+                        "key": { "alias": "text" },
+                        "name": "search",
+                    },
+                    {
                         "key": { "email": 1 },
                         "name": "email",
                         "unique": false
@@ -87,7 +91,7 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
                 "createIndexes": "Posts",
                 "indexes": [
                     {
-                        "key": { "caption": 1 , "title": 1},
+                        "key": { "caption": "text" , "title": "text" },
                         "name": "search",
                         "unique": false
                     },
