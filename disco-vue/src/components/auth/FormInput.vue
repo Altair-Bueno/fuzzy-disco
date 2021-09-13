@@ -38,6 +38,9 @@ export default {
 </script>
 
 <style scoped>
+  div {
+    font-family: "Open Sans", sans-serif;
+  }
   .input-text {
     margin: 0 1.5rem;
     border: none;
@@ -47,7 +50,6 @@ export default {
     background-color: var(--navbar-color);
     color: whitesmoke;
     transition: 300ms;
-    font-family: "Open Sans", sans-serif;
     font-size: 16px;
     opacity: 0.9;
     font-weight: lighter;
@@ -56,13 +58,13 @@ export default {
   .input-text:hover {
     outline: none;
     width: 15rem;
-    border-color: var(--login-border);
+    border-color: rgba(0, 250, 154, 1);
   }
 
   .input-text:focus {
     outline: none;
     width: 15rem;
-    border-color: var(--login-border);
+    border-color: rgba(0, 250, 154, 1);
   }
 
   .filled-input {

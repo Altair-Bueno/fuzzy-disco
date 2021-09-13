@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="general">
     <Navbar></Navbar>
     <div class="card-edit">
       <h1>Drop or select both image and audio files</h1>
@@ -12,24 +12,42 @@
         <PlayComp :audio="audio_url"></PlayComp>
       </div>
       <br>
-      <input v-model="title" class="input-title" type="text" placeholder="Title here">
+      <FormInput field="Title" input-type="text" :input-ok=true identifier="title"></FormInput>
+      <textarea v-model="caption" :class="[caption ? 'caption-box-open' : 'caption-box']"></textarea>
+      <br>
+      <div class="radio">
+        <div>
+          <input type="radio" name="visibility" value="public" id="public"
+                 v-model="visibility">
+          <label for="public">Public</label>
+        </div>
+        <div>
+          <input type="radio" name="visibility" value="private" id="private"
+                 v-model="visibility">
+          <label for="private">Private</label>
+        </div>
+      </div>
+      <br>
+      <button @click="uploadCard" class="submit-btn">Upload Card</button>
     </div>
-
   </div>
 </template>
 
 <script>
 import Navbar from "@/components/Navbar";
 import PlayComp from "@/components/card/PlayComp";
+import FormInput from "@/components/auth/FormInput";
 
 export default {
   name: "NewPost",
-  components: {PlayComp, Navbar},
+  components: {FormInput, PlayComp, Navbar},
   data() {
     return {
       title: "",
+      caption: "",
       image: File,
       audio: File,
+      visibility: "",
       audio_url: ""
     }
   },
@@ -60,11 +78,17 @@ export default {
         reader.readAsDataURL(file);
       }
     },
+    async uploadCard() {
+      console.log(this.visibility);
+    }
   }
 }
 </script>
 
 <style scoped>
+  .general {
+    font-family: "Open Sans", sans-serif;
+  }
   .card-edit {
     display: flex;
     flex-direction: column;
@@ -116,30 +140,61 @@ export default {
     background: none;
     outline: none;
   }
-  .input-title {
-    margin: 0 1.5rem;
-    border: none;
-    border-bottom: 1px solid #ccc;
+
+  .caption-box {
+    resize: none;
     height: 1.5rem;
-    width: 5rem;
-    background-color: var(--navbar-color);
-    color: whitesmoke;
-    transition: 300ms;
+    width: 20rem;
+    outline: none;
+    overflow: auto;
     font-family: "Open Sans", sans-serif;
     font-size: 16px;
-    opacity: 0.9;
-    font-weight: lighter;
+    border-radius: 10px;
+    padding: 10px;
+    transition: 300ms;
+  }
+  .caption-box:focus {
+    height: 10rem;
+  }
+  .caption-box-open {
+    resize: none;
+    height: 10rem;
+    width: 20rem;
+    outline: none;
+    overflow: auto;
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+    border-radius: 10px;
+    padding: 10px;
+    transition: 300ms;
   }
 
-  .input-title:hover {
-    outline: none;
-    width: 15rem;
-    border-color: var(--login-border);
+  ::-webkit-scrollbar {
+    width: 0;
   }
 
-  .input-title:focus {
-    outline: none;
+  .radio {
+    width: 10rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .submit-btn {
+    font-family: "Open Sans", sans-serif;
+    color: #444444;
+    font-weight: bold;
+    font-size: 1rem;
+    border: none;
+    width: 7rem;
+    height: 2rem;
+    cursor: pointer;
+    background-color: whitesmoke;
+    border-radius: 25px;
+    transition: 300ms;
+  }
+
+  .submit-btn:hover {
+    background-color: rgba(0, 250, 154, 1);
     width: 15rem;
-    border-color: var(--login-border);
   }
 </style>
