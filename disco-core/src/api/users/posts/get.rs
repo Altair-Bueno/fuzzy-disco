@@ -62,8 +62,6 @@ pub async fn get_posts_from(
     let date : DateTime<Utc> = date.parse()?;
     let date = MongoDateTime::from_chrono(date);
     let query =vec![
-        // Sort descending
-        doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
         // Look for posts from this author before eq the given date that are
         // public
         doc! { "$match": {
@@ -71,6 +69,8 @@ pub async fn get_posts_from(
             POSTS_CREATION_DATE: { "$lte": date },
             POSTS_VISIBILITY: to_bson(&Visibility::Public).unwrap()
         }},
+        // Sort descending
+        doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
         doc! { "$skip": to_bson(&drop).unwrap() },
         doc! { "$limit": to_bson(&get).unwrap() },
         // Remove all fields except for the ObjectID
