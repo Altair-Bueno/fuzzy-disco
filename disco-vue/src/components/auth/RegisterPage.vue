@@ -52,13 +52,11 @@ export default {
           },
           body: JSON.stringify(user)
         });
-
-        let status_code = await response.status;
-        if(status_code === 409) {
+        if(response.status === 409) {
           this.usernameOk = false;
           alert("Username is already in use");
 
-        } else if(status_code >= 200 && status_code <=299) {
+        } else if(response.ok) {
           await this.$router.push({name: 'login'});
 
         } else {
@@ -66,7 +64,6 @@ export default {
         }
       }
     },
-
     validateUser() {
       this.emailOk = this.validateEmail(this.email);
       this.usernameOk = this.validateUsername(this.username);
