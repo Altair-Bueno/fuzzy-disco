@@ -14,6 +14,7 @@ use mongodb::bson::from_document;
 use mongodb::bson::DateTime as MongoDateTime;
 use crate::mongo::visibility::Visibility;
 use crate::api::users::posts::data::Payload;
+use crate::api::data::ApiPostResponse;
 
 /// # `GET /api/users/<id>/posts?drop=<usize>&get=<u8>&date=<string>`
 /// Returns a list of public posts from the given user. The method receives the
@@ -30,8 +31,8 @@ use crate::api::users::posts::data::Payload;
 ///
 /// ```json
 /// [
-///     String,
-///     String,
+///     Post,
+///     Post,
 ///     ...
 /// ]
 /// ```
@@ -56,7 +57,7 @@ pub async fn get_posts_from(
     get:u8,
     date:&str,
     posts_collection: &State<Collection<Post>>
-) -> ApiResult<Json<Vec<String>>> {
+) -> ApiResult<Json<Vec<ApiPostResponse>>> {
     // TODO test me
     let alias : Alias = alias.parse()?;
     let date : DateTime<Utc> = date.parse()?;
@@ -73,16 +74,15 @@ pub async fn get_posts_from(
         doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
         doc! { "$skip": to_bson(&drop).unwrap() },
         doc! { "$limit": to_bson(&get).unwrap() },
-        // Remove all fields except for the ObjectID
-        doc! { "$project": { "_id": 1 } }
     ];
 
     let mut posts_cursor = posts_collection.aggregate(query, None).await?;
     let mut response = Vec::with_capacity(get as usize);
 
     while let Some(r) = posts_cursor.next().await {
-        let id = from_document::<Payload>(r?).unwrap().id;
-        response.push(id.to_string())
+        let post: Post = from_document(r?).unwrap();
+        let post_response = ApiPostResponse::from(post);
+        response.push(post_response)
     }
     Ok(Json(response))
 }
