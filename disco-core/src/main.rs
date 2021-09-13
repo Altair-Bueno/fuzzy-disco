@@ -98,6 +98,7 @@ async fn main() -> Result<(), String> {
                 api::posts::get::get_post_content_auth,
                 api::posts::post::new_post,
                 api::posts::delete::delete_post,
+                api::posts::patch::edit_post
             ],
         )
         .mount(

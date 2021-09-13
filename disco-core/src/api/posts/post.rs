@@ -1,7 +1,7 @@
 use crate::api::users::auth::claims::TokenClaims;
 use crate::api::result::{ApiResult, ApiError};
 use rocket::serde::json::{Json, Value};
-use crate::api::posts::data::NewPostPayload;
+use crate::api::posts::data::{NewPostPayload, EditPostPayload};
 use rocket::State;
 use crate::mongo::post::Post;
 use crate::mongo::media::{Media, Format};

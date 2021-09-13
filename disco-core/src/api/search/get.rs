@@ -20,7 +20,39 @@ use crate::api::data::{ApiUserResponse, ApiPostResponse};
 use serde::Deserialize;
 use rocket::serde::DeserializeOwned;
 
-// TODO check if it works and add documentation
+/// # `GET /api/search?s=<string>&drop=<usize>&get=<u8>&date=<string>`
+/// Returns matches for the given search string. The method receives the
+/// following query parameters
+///
+/// - `s`: Search string
+/// - `drop`: Number of posts/users we want to skip. This avoids repetition on
+/// future queries
+/// - `get`: Number of posts we want to retrieve. The max is 255 posts
+/// - `date`: JSON formatted date, from where to start the query
+///
+/// # Returns
+/// ## Ok(200)
+///
+/// ```json
+/// {
+///     "users": [Users],
+///     "posts": [Posts],
+/// }
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | ---- | ----------- |
+/// | 400 | Bad request |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database |
 #[get("/?<s>&<drop>&<get>&<date>")]
 pub async fn search(
     s:&str,
@@ -50,6 +82,8 @@ pub async fn search(
         doc! { "$skip": to_bson(&drop).unwrap() },
         doc! { "$limit": to_bson(&get).unwrap() },
     ];
+    // TODO multi thread async query
+    // TODO retrieve private posts
     let users: Vec<ApiUserResponse> = search_on_collection(filter_users,user_collection).await?;
     let posts: Vec<ApiPostResponse> = search_on_collection(filter_posts,posts_collection).await?;
     Ok(

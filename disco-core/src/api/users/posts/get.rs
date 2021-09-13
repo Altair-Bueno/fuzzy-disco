@@ -13,7 +13,6 @@ use mongodb::bson::to_bson;
 use mongodb::bson::from_document;
 use mongodb::bson::DateTime as MongoDateTime;
 use crate::mongo::visibility::Visibility;
-use crate::api::users::posts::data::Payload;
 use crate::api::data::ApiPostResponse;
 
 /// # `GET /api/users/<id>/posts?drop=<usize>&get=<u8>&date=<string>`
@@ -23,7 +22,7 @@ use crate::api::data::ApiPostResponse;
 /// - `drop`: Number of posts we want to skip. This avoids repetition on future
 /// queries
 /// - `get`: Number of posts we want to retrieve. The max is 255 posts
-/// - `date`: JSON formatted date, from where we start the query
+/// - `date`: JSON formatted date, from where to start the query
 ///
 /// # Returns
 ///

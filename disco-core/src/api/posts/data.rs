@@ -1,4 +1,11 @@
 use serde::{Serialize,Deserialize};
+use crate::mongo::visibility::Visibility;
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct EditPostPayload{
+    visibility: Visibility
+}
+
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct NewPostPayload <'a> {

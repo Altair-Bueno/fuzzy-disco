@@ -6,3 +6,5 @@ pub mod post;
 mod data;
 /// DELETE /api/posts
 pub mod delete;
+/// PATCH /api/posts/
+pub mod patch;
