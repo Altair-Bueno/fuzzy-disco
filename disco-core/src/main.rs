@@ -86,6 +86,12 @@ async fn main() -> Result<(), String> {
         .manage(mongo_client)
         // Mounted routes
         .mount(
+            "/api/search",
+            routes![
+                api::search::get::search
+            ]
+        )
+        .mount(
             "/api/posts",
             routes![
                 api::posts::get::get_post_content,

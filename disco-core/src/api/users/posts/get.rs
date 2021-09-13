@@ -14,16 +14,51 @@ use mongodb::bson::from_document;
 use mongodb::bson::DateTime as MongoDateTime;
 use crate::mongo::visibility::Visibility;
 use mongodb::bson::oid::ObjectId;
+use crate::api::users::posts::data::Payload;
 
-// TODO check if it works and add documentation
+/// # `GET /api/users/<id>/posts?drop=<usize>&get=<u8>&date=<string>`
+/// Returns a list of public posts from the given user. The method receives the
+/// following query parameters:
+///
+/// - `drop`: Number of posts we want to skip. This avoids repetition on future
+/// queries
+/// - `get`: Number of posts we want to retrieve. The max is 255 posts
+/// - `date`: JSON formatted date, from where we start the query
+///
+/// # Returns
+///
+/// ## Ok(200)
+///
+/// ```json
+/// [
+///     String,
+///     String,
+///     ...
+/// ]
+/// ```
+///
+/// ## Err
+/// ```json
+/// {
+///     "status": String,
+///     "message": String
+/// }
+/// ```
+///
+/// | Code | Description |
+/// | ---- | ----------- |
+/// | 400 | Bad request |
+/// | 404 | User doesn't exist |
+/// | 500 | Couldn't connect to database |
 #[get("/<alias>/posts?<drop>&<get>&<date>")]
 pub async fn get_posts_from(
     alias: &str,
     drop:usize,
-    get:usize,
+    get:u8,
     date:&str,
     posts_collection: &State<Collection<Post>>
 ) -> ApiResult<Json<Vec<String>>> {
+    // TODO test me
     let alias : Alias = alias.parse()?;
     let date : DateTime<Utc> = date.parse()?;
     let date = MongoDateTime::from_chrono(date);
@@ -47,16 +82,8 @@ pub async fn get_posts_from(
     let mut response = Vec::with_capacity(get as usize);
 
     while let Some(r) = posts_cursor.next().await {
-        println!("{:?}",r);
-        let id = from_document::<Payload>(r?).unwrap()._id;
+        let id = from_document::<Payload>(r?).unwrap().id;
         response.push(id.to_string())
     }
     Ok(Json(response))
-}
-
-use serde::Serialize;
-use serde::Deserialize;
-#[derive(Serialize,Deserialize)]
-pub struct Payload{
-    _id: ObjectId
 }
