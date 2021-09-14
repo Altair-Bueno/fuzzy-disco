@@ -34,9 +34,9 @@ def login_refresh_token(refresh_token:str):
     """
 
 
-def auth_header(bearer_token:str):
+def auth_header(access_token:str):
     return {
-        "Authorization": ("Bearer " + bearer_token),
+        "Authorization": ("Bearer " + access_token),
         "Content-Type": "application/json; charset=utf-8"
     }
 

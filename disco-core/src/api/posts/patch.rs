@@ -19,7 +19,7 @@ pub async fn edit_post(
 ) -> ApiResult<()> {
     let oid: ObjectId = id.parse()?;
     let filter = doc! {POSTS_AUTHOR:to_bson(token.alias()).unwrap(),POSTS_ID:oid};
-    let update = doc! {POSTS_VISIBILITY: to_bson(&payload.0).unwrap()};
+    let update = doc! {"$set": to_bson(&payload.0).unwrap()};
     let update_result = post_collection.update_one(filter,update, None).await?;
 
     if update_result.matched_count == 1 {
