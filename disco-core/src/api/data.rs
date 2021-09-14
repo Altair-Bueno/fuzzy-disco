@@ -1,13 +1,14 @@
-use serde::{Deserialize,Serialize};
-use crate::mongo::user::User;
+use serde::{Deserialize, Serialize};
+
 use crate::mongo::post::Post;
+use crate::mongo::user::User;
 use crate::mongo::visibility::Visibility;
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ApiUserResponse {
     pub alias: String,
     pub description: Option<String>,
-    pub avatar: Option<String>
+    pub avatar: Option<String>,
 }
 
 impl From<User> for ApiUserResponse {
@@ -15,12 +16,12 @@ impl From<User> for ApiUserResponse {
         ApiUserResponse {
             alias: u.alias().to_string(),
             description: u.description().clone().map(|x| x.to_string()),
-            avatar: u.avatar().map(|x| x.to_string())
+            avatar: u.avatar().map(|x| x.to_string()),
         }
     }
 }
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ApiPostResponse {
     id: Option<String>,
     title: String,
@@ -29,7 +30,7 @@ pub struct ApiPostResponse {
     audio: String,
     photo: String,
     visibility: Visibility,
-    creation_date: String
+    creation_date: String,
 }
 
 impl From<Post> for ApiPostResponse {
@@ -42,7 +43,7 @@ impl From<Post> for ApiPostResponse {
             audio: p.audio().to_string(),
             photo: p.photo().to_string(),
             visibility: p.visibility().clone(),
-            creation_date: p.creation_date().to_string()
+            creation_date: p.creation_date().to_string(),
         }
     }
 }

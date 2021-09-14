@@ -1,4 +1,5 @@
 # `disco-core`
+
 <!-- cargo-sync-readme start -->
 
 This crate contains the source code for `disco-core`, the main component on
@@ -14,9 +15,10 @@ module
 
 # Build and run
 
-1. Install the rust toolchain from the [official website](https://www.rust-lang.org)
+1. Install the rust toolchain from
+   the [official website](https://www.rust-lang.org)
 2. Start a Mongodb database. You can either use a Docker container
-(recommended) or install mongo on your local machine
+   (recommended) or install mongo on your local machine
 2. Clone this repo and cd to disco-core
 
 ```bash
@@ -31,6 +33,7 @@ export MONGODB_URI="mongodb://<username>:<password>@<ip>:<port>/"
 ```
 
 4. Copy your static website to `static/`
+
 ```bash
 cp <static> static/
 ```

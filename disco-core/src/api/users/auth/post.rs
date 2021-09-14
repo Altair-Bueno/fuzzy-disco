@@ -1,6 +1,7 @@
 use std::net::IpAddr;
 
 use mongodb::bson::doc;
+use mongodb::error::ErrorKind;
 use mongodb::Collection;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
@@ -8,16 +9,15 @@ use rocket::serde::json::Value;
 use rocket::State;
 
 use crate::api::result::{ApiError, ApiResult};
+use crate::api::users::auth::claims::TokenClaims;
 use crate::api::users::auth::data::{
     IpAdd, RefreshJWT, UserLogInAlias, UserLogInEmail, UserSingUp,
 };
-use crate::api::users::auth::claims::TokenClaims;
 use crate::api::users::auth::response::TokenResponse;
+use crate::api::{SESSION_ID, USER_ALIAS, USER_EMAIL};
 use crate::mongo::session::Session;
 use crate::mongo::user::{Alias, Email, User};
 use crate::mongo::IntoDocument;
-use crate::api::{USER_EMAIL, USER_ALIAS, SESSION_ID};
-use mongodb::error::ErrorKind;
 
 /// # `POST /api/users/auth/signup`
 /// Creates a new user with the recived information. The body for the request
@@ -93,10 +93,12 @@ pub async fn signup(
             rocket::response::status::Created::new(format!("/api/user/{}", user.0.alias))
                 .body(json!({"status":"Created","message": "User created"}))
         })
-        .map_err(|x| if let ErrorKind::Write(_)  = *x.kind{
-            ApiError::Conflict("User Alias")
-        } else {
-            ApiError::DatabaseError(x)
+        .map_err(|x| {
+            if let ErrorKind::Write(_) = *x.kind {
+                ApiError::Conflict("User Alias")
+            } else {
+                ApiError::DatabaseError(x)
+            }
         })
 }
 

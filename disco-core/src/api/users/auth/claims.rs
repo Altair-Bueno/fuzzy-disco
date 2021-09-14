@@ -45,7 +45,7 @@ impl<'r> FromRequest<'r> for TokenClaims {
                 }
             }
         } else {
-            return Outcome::Forward(())
+            return Outcome::Forward(());
         }
 
         Outcome::Failure((

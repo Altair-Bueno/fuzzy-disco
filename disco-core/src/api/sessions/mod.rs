@@ -3,9 +3,10 @@ use mongodb::Collection;
 use rocket::State;
 
 use crate::api::result::{ApiError, ApiResult};
+use crate::api::SESSION_USER_ALIAS;
 use crate::mongo::session::Session;
 use crate::mongo::user::Alias;
-use crate::api::SESSION_USER_ALIAS;
+
 /// Data Structures used on this module
 mod data;
 /// GET /api/sessions/

@@ -97,7 +97,7 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
                     },
                 ]
             },
-            None
+            None,
         )
         .await?;
 

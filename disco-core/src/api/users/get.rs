@@ -1,13 +1,13 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::serde_json::json;
-use rocket::serde::json::{Value, Json};
+use rocket::serde::json::{Json, Value};
 use rocket::State;
 
-use crate::api::result::{ApiResult};
+use crate::api::data::ApiUserResponse;
+use crate::api::result::ApiResult;
 use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
-use crate::api::data::ApiUserResponse;
 
 /// # `GET /api/users/<alias>`
 /// Returns the public information avaliable for the given user

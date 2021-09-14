@@ -2,9 +2,10 @@ use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 
 use crate::api::result::{ApiError, ApiResult};
+use crate::api::{MEDIA_FORMAT, MEDIA_ID, MEDIA_STATUS, MEDIA_UPLOADED_BY};
 use crate::mongo::media::{Format, Status};
 use crate::mongo::user::Alias;
-use crate::api::{MEDIA_STATUS, MEDIA_UPLOADED_BY, MEDIA_ID, MEDIA_FORMAT};
+
 /// Data Structures used on this module
 mod data;
 /// GET /api/media

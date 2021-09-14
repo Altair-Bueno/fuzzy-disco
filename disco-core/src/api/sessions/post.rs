@@ -1,7 +1,7 @@
 use mongodb::Collection;
 use rocket::State;
 
-use crate::api::result::{ApiError, ApiResult};
+use crate::api::result::ApiResult;
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::session::Session;
@@ -11,7 +11,7 @@ use crate::mongo::session::Session;
 /// Deletes all sessions from the current user, included the current one. Can be
 /// used to log out on all browsers, for example
 ///
-/// > Note: This is a no body post request, with no body response
+/// > Note: This is a no body post request, with no body response.
 ///
 /// # Returns
 /// ## Ok (200)
@@ -33,16 +33,10 @@ use crate::mongo::session::Session;
 /// # Example
 ///
 /// `POST /api/sessions/delete`
-#[post("/delete", data = "<body>")]
+#[post("/delete")]
 pub async fn delete_all_sessions(
-    session_collection: &State<Collection<Session>>,
     token: TokenClaims,
-    body: &str,
+    session_collection: &State<Collection<Session>>,
 ) -> ApiResult<()> {
-    if !body.is_empty() {
-        Err(ApiError::BadRequest("Body must be empty"))
-    } else {
-        delete_all_sessions_from(token.alias(), session_collection)
-            .await
-    }
+    delete_all_sessions_from(token.alias(), session_collection).await
 }

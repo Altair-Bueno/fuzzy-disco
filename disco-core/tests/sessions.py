@@ -1,6 +1,6 @@
 import requests
-import payloads
 
+import payloads
 from users import alias_log_in
 from users import create_user
 from users import delete_user

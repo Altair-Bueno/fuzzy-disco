@@ -1,15 +1,16 @@
+use std::str::FromStr;
+
 use mongodb::bson::doc;
 use mongodb::Collection;
-use rocket::serde::json::{Json};
+use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::result::{ApiResult, ApiError};
-use crate::mongo::post::Post;
-use std::str::FromStr;
-use crate::api::POSTS_ID;
-use crate::api::users::auth::claims::TokenClaims;
-use crate::mongo::visibility::Visibility;
 use crate::api::data::ApiPostResponse;
+use crate::api::result::{ApiError, ApiResult};
+use crate::api::users::auth::claims::TokenClaims;
+use crate::api::POSTS_ID;
+use crate::mongo::post::Post;
+use crate::mongo::visibility::Visibility;
 
 /// # `GET /api/posts/<id>`
 /// Returns information for a given post. It expects a well formated string
@@ -67,9 +68,12 @@ use crate::api::data::ApiPostResponse;
 ///  "creation_date": "2021-09-06 16:13:02.797 UTC"
 ///}
 /// ```
-#[get("/<id>", format = "json" , rank = 2)]
-pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Json<ApiPostResponse>> {
-    let post = get_post(id,mongo).await?;
+#[get("/<id>", format = "json", rank = 2)]
+pub async fn get_post_content(
+    id: &str,
+    mongo: &State<Collection<Post>>,
+) -> ApiResult<Json<ApiPostResponse>> {
+    let post = get_post(id, mongo).await?;
     if *post.visibility() == Visibility::Public {
         Ok(Json(ApiPostResponse::from(post)))
     } else {
@@ -79,13 +83,12 @@ pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiR
 
 #[get("/<id>", format = "json")]
 pub async fn get_post_content_auth(
-    token:TokenClaims,
+    token: TokenClaims,
     id: &str,
-    mongo: &State<Collection<Post>>
+    mongo: &State<Collection<Post>>,
 ) -> ApiResult<Json<ApiPostResponse>> {
-    let post = get_post(id,mongo).await?;
-    let condition = (*post.visibility() == Visibility::Public) ||
-        (token.alias() == post.author());
+    let post = get_post(id, mongo).await?;
+    let condition = (*post.visibility() == Visibility::Public) || (token.alias() == post.author());
 
     if condition {
         Ok(Json(ApiPostResponse::from(post)))
@@ -97,7 +100,8 @@ pub async fn get_post_content_auth(
 async fn get_post(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Post> {
     let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
     let filter = doc! {POSTS_ID:oid};
-    mongo.find_one(Some(filter),None)
+    mongo
+        .find_one(Some(filter), None)
         .await?
         .ok_or(ApiError::NotFound("Post"))
 }

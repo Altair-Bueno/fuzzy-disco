@@ -2,22 +2,19 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use mongodb::Client;
-use mongodb::{
-    bson::doc,
-    Collection,
-};
+use mongodb::{bson::doc, Collection};
 use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
-use crate::api::result::{ApiError, ApiResult};
 use crate::api::result::ApiError::InternalServerError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::claims::TokenClaims;
 use crate::api::users::data::{AvatarPictureID, UpdatePassword, UpdateUser};
+use crate::api::{MEDIA_ID, USER_ALIAS, USER_AVATAR, USER_PASSWORD};
 use crate::mongo::media::{Format, Media};
 use crate::mongo::user::{Description, Email, Password, Session, User};
-use crate::api::{USER_ALIAS, USER_PASSWORD, USER_AVATAR, MEDIA_ID};
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -141,9 +138,7 @@ pub async fn update_user_avatar(
         .await?
         .ok_or(ApiError::NotFound("User"))?;
     let filter = doc! {MEDIA_ID: user.avatar() };
-    let deleted = media_collection
-        .find_one_and_delete(filter, None)
-        .await?;
+    let deleted = media_collection.find_one_and_delete(filter, None).await?;
 
     if let Some(media) = deleted {
         delete_media(&media.id().unwrap()).await?;
@@ -162,9 +157,7 @@ pub async fn update_user_avatar(
         // Update user
         let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
         let update = doc! {"$set": {USER_AVATAR: media.id() }};
-        let result = user_collection
-            .update_one(filter, update, None)
-            .await?;
+        let result = user_collection.update_one(filter, update, None).await?;
 
         if result.modified_count == 1 {
             Ok(())

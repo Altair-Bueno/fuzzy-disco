@@ -1,19 +1,15 @@
-use crate::api::result::ApiResult;
 use mongodb::bson::oid::ObjectId;
-use crate::api::users::auth::claims::TokenClaims;
-use rocket::State;
-use crate::mongo::post::Post;
-use crate::mongo::media::Media;
-use crate::api::{POSTS_ID, POSTS_PHOTO, POSTS_AUDIO, POSTS_AUTHOR};
-use crate::api::result::ApiError::{BadRequest};
-use crate::api::media::oid_to_path;
 use mongodb::bson::to_bson;
+use mongodb::{bson::doc, Client, Collection};
+use rocket::State;
 
-use mongodb::{
-    Client,
-    bson::doc,
-    Collection,
-};
+use crate::api::media::oid_to_path;
+use crate::api::result::ApiError::BadRequest;
+use crate::api::result::ApiResult;
+use crate::api::users::auth::claims::TokenClaims;
+use crate::api::{POSTS_AUDIO, POSTS_AUTHOR, POSTS_ID, POSTS_PHOTO};
+use crate::mongo::media::Media;
+use crate::mongo::post::Post;
 
 /// #  AUTH! `DELETE /api/posts/<id>`
 /// Deletes the post. If the user is not the author of the post, a `BadRequest`
@@ -41,11 +37,11 @@ use mongodb::{
 /// `DELETE /api/posts/<id>`
 #[delete("/<id>")]
 pub async fn delete_post(
-    id:&str,
+    id: &str,
     token: TokenClaims,
     post_collection: &State<Collection<Post>>,
     media_collection: &State<Collection<Media>>,
-    mongo_client: &State<Client>
+    mongo_client: &State<Client>,
 ) -> ApiResult<()> {
     let oid = id.parse::<ObjectId>()?;
 
@@ -58,18 +54,19 @@ pub async fn delete_post(
     transaction_session.start_transaction(options).await?;*/
     // Delete post
     let filter = doc! {POSTS_ID:oid, POSTS_AUTHOR:to_bson(token.alias()).unwrap()};
-    let post = post_collection.find_one_and_delete(filter,None)
+    let post = post_collection
+        .find_one_and_delete(filter, None)
         .await?
         .ok_or(BadRequest("Couldn't found the associated post"))?;
     // Delete photo
     let filter = doc! {POSTS_PHOTO:post.photo()};
-    let photo = media_collection.find_one_and_delete(filter,None).await?;
+    let photo = media_collection.find_one_and_delete(filter, None).await?;
     if let Some(media) = photo {
         rocket::tokio::fs::remove_file(oid_to_path(&media.id().unwrap())).await?;
     }
     // Delete audio
     let filter = doc! {POSTS_AUDIO:post.audio()};
-    let audio = media_collection.find_one_and_delete(filter,None).await?;
+    let audio = media_collection.find_one_and_delete(filter, None).await?;
     if let Some(media) = audio {
         rocket::tokio::fs::remove_file(oid_to_path(&media.id().unwrap())).await?;
     }

@@ -1,20 +1,22 @@
-use crate::api::result::{ApiResult, ApiError};
-use rocket::State;
-use mongodb::Collection;
-use crate::mongo::post::Post;
-use mongodb::bson::doc;
 use std::option::Option::Some;
-use rocket::serde::json::Json;
-use rocket::futures::StreamExt;
-use chrono::{Utc, DateTime};
-use crate::api::{POSTS_CREATION_DATE, POSTS_AUTHOR, POSTS_VISIBILITY};
-use crate::mongo::user::Alias;
-use mongodb::bson::to_bson;
+
+use chrono::{DateTime, Utc};
+use mongodb::bson::doc;
 use mongodb::bson::from_document;
+use mongodb::bson::to_bson;
 use mongodb::bson::DateTime as MongoDateTime;
-use crate::mongo::visibility::Visibility;
+use mongodb::Collection;
+use rocket::futures::StreamExt;
+use rocket::serde::json::Json;
+use rocket::State;
+
 use crate::api::data::ApiPostResponse;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
+use crate::api::{POSTS_AUTHOR, POSTS_CREATION_DATE, POSTS_VISIBILITY};
+use crate::mongo::post::Post;
+use crate::mongo::user::Alias;
+use crate::mongo::visibility::Visibility;
 
 /// # `GET /api/users/<id>/posts?drop=<usize>&get=<u8>&date=<string>`
 /// Returns a list of public posts from the given user. The method receives the
@@ -53,16 +55,16 @@ use crate::api::users::auth::claims::TokenClaims;
 #[get("/<alias>/posts?<drop>&<get>&<date>", rank = 2)]
 pub async fn get_posts_from(
     alias: &str,
-    drop:usize,
-    get:u8,
-    date:&str,
-    posts_collection: &State<Collection<Post>>
+    drop: usize,
+    get: u8,
+    date: &str,
+    posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Vec<ApiPostResponse>>> {
     // TODO test me
-    let alias : Alias = alias.parse()?;
-    let date : DateTime<Utc> = date.parse()?;
+    let alias: Alias = alias.parse()?;
+    let date: DateTime<Utc> = date.parse()?;
     let date = MongoDateTime::from_chrono(date);
-    let query =vec![
+    let query = vec![
         // Look for posts from this author before eq the given date that are
         // public
         doc! { "$match": {
@@ -86,6 +88,7 @@ pub async fn get_posts_from(
     }
     Ok(Json(response))
 }
+
 /// # AUTH! `GET /api/users/<id>/posts?private&drop=<usize>&get=<u8>&date=<string>`
 /// Returns a list of private posts from the given user. The user must be the
 /// same user that is authenticated. The method receives the following query
@@ -122,25 +125,24 @@ pub async fn get_posts_from(
 /// | 401 | Unauthorised |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
-
 #[get("/<alias>/posts?private&<drop>&<get>&<date>")]
 pub async fn get_private_posts_from(
-    token:TokenClaims,
+    token: TokenClaims,
     alias: &str,
-    drop:usize,
-    get:u8,
-    date:&str,
-    posts_collection: &State<Collection<Post>>
+    drop: usize,
+    get: u8,
+    date: &str,
+    posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Vec<ApiPostResponse>>> {
     // TODO test me
-    let alias : Alias = alias.parse()?;
+    let alias: Alias = alias.parse()?;
     if alias != *token.alias() {
         return Err(ApiError::Unauthorized("You are not the owner"));
     }
 
-    let date : DateTime<Utc> = date.parse()?;
+    let date: DateTime<Utc> = date.parse()?;
     let date = MongoDateTime::from_chrono(date);
-    let query =vec![
+    let query = vec![
         // Look for posts from this author before eq the given date that are
         // public
         doc! { "$match": {

@@ -1,4 +1,4 @@
-def new_user(alias:str,email:str,password:str):
+def new_user(alias: str, email: str, password: str):
     return f"""
     {{
         "alias": "{alias}",
@@ -8,7 +8,7 @@ def new_user(alias:str,email:str,password:str):
     """
 
 
-def login_email(email:str,password:str):
+def login_email(email: str, password: str):
     return f"""
     {{
         "email": "{email}",
@@ -17,7 +17,7 @@ def login_email(email:str,password:str):
     """
 
 
-def login_alias(alias:str,password:str):
+def login_alias(alias: str, password: str):
     return f"""
     {{
         "alias": "{alias}",
@@ -26,7 +26,7 @@ def login_alias(alias:str,password:str):
     """
 
 
-def login_refresh_token(refresh_token:str):
+def login_refresh_token(refresh_token: str):
     return f"""
     {{
         "refresh_token":"{refresh_token}"
@@ -34,7 +34,7 @@ def login_refresh_token(refresh_token:str):
     """
 
 
-def auth_header(access_token:str):
+def auth_header(access_token: str):
     return {
         "Authorization": ("Bearer " + access_token),
         "Content-Type": "application/json; charset=utf-8"
@@ -47,7 +47,7 @@ def basic_header():
     }
 
 
-def change_password(old:str,new:str):
+def change_password(old: str, new: str):
     return f"""
     {{
         "password": "{old}",
@@ -56,7 +56,7 @@ def change_password(old:str,new:str):
     """
 
 
-def change_user_info(email:str):
+def change_user_info(email: str):
     return f"""
     {{
         "email": "{email}"
@@ -64,7 +64,7 @@ def change_user_info(email:str):
     """
 
 
-def new_post(title:str,caption:str,photo:str,audio:str,visibility:str):
+def new_post(title: str, caption: str, photo: str, audio: str, visibility: str):
     return f"""
     {{
         "title": "{title}",
@@ -76,7 +76,7 @@ def new_post(title:str,caption:str,photo:str,audio:str,visibility:str):
     """
 
 
-def edit_post(visibility:str):
+def edit_post(visibility: str):
     return f"""
     {{
         "visibility": "{visibility}"

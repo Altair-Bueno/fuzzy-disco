@@ -1,7 +1,7 @@
 import requests
 
-import users
 import payloads
+import users
 
 _URL = 'http://127.0.0.1:8000/api/media/'
 
@@ -17,9 +17,9 @@ def download_media(id: str, headers: dict[str, str]):
 
 def test_media_upload():
     print('Create user and log in')
-    body = payloads.new_user('cool','a@a.com','12341234')
+    body = payloads.new_user('cool', 'a@a.com', '12341234')
     users.create_user(body)
-    body = payloads.login_alias('cool','12341234')
+    body = payloads.login_alias('cool', '12341234')
     r = users.alias_log_in(body)
     auth_header = payloads.auth_header(r.json()['access_token'])
 

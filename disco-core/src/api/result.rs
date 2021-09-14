@@ -6,8 +6,7 @@ use rocket::serde::json::serde_json::json;
 use rocket::{response, Request, Response};
 use thiserror::Error;
 
-pub type ApiResult<T> = Result<T,ApiError>;
-
+pub type ApiResult<T> = Result<T, ApiError>;
 
 /// Contains all kinds of errors that may occurr on fuzzy-disco's API
 #[derive(Error, Debug)]
