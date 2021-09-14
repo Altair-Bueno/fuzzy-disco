@@ -1,6 +1,8 @@
 import requests
 
 import media
+import urllib.parse
+import payloads
 
 _basic_header = {
     "Content-Type": "application/json; charset=utf-8"
@@ -53,135 +55,95 @@ def change_user_avatar(image_id: str, auth_header: dict[str, str]):
                          headers=auth_header)
 
 
+def get_public_posts(id:str,drop:int,get:int,date:str):
+    return requests.get(_URL + f'{id}/posts?drop={drop}&get={get}&date={urllib.parse.quote(date)}',headers=_basic_header)
+
+
+def get_private_posts(id:str,drop:int,get:int,date:str,auth_header):
+    return requests.get(_URL + f'{id}/posts?private&drop={drop}&get={get}&date={urllib.parse.quote(date)}',headers=auth_header)
+
+
+def easy_refresh_login(refresh_token:str):
+    p = payloads.login_refresh_token(refresh_token)
+    access_token = refresh_token_log_in(p).json()['access_token']
+    header = payloads.auth_header(access_token)
+    return header
+
+
 def test_api_users():
-    print('create test user:')
-    body = """
-    {
-        "alias": "somecoolalias",
-        "password": "somecoolpassword",
-        "email": "some@cool.email"
-    }
-    """
+    # Create a user
+    body = payloads.new_user('hello','a@gmail.com','12341234')
     r = create_user(body)
-    print(r.json())
+    print(f'Created user: {r.json()}')
 
-    print('Check if the user has been created:')
-    r = get_basic_user_data("somecoolalias")
-    print(r.json())
+    # Get back the user data
+    r = get_basic_user_data("hello")
+    print(f'Get basic data: {r.json()}')
 
-    print('using email for log in:')
-    body = """
-    {
-        "password": "somecoolpassword",
-        "email": "some@cool.email"
-    }
-    """
+    body = payloads.login_email('a@gmail.com','12341234')
     r = email_log_in(body)
-    print(r.json())
+    if not r.ok:
+        print('Email log in failed')
 
     # alias log in
-    print('using alias for log in:')
-    old_user_login = """
-    {
-        "alias": "somecoolalias",
-        "password": "somecoolpassword"
-    }
-    """
+    old_user_login = payloads.login_alias('hello','12341234')
     r = alias_log_in(old_user_login)
-    print(r.json())
-
-    print('starting auth queries:')
-    bearer_token = r.json()['access_token']
+    if not r.ok:
+        print('Alias log in failed')
+    # Auth queries
     refresh_token = r.json()['refresh_token']
-    auth_header = {
-        "Authorization": ("Bearer " + bearer_token),
-        "Content-Type": "application/json; charset=utf-8"
-    }
-    print(auth_header)
+    auth_header = easy_refresh_login(refresh_token)
 
     # get full user info
-    print('get the full user info:')
     r = get_full_user_data(auth_header)
-    print(r.json())
+    print(f'Full user info: {r.json()}')
 
-    print('refresh token log in. Refresh token: ' + refresh_token)
-    r = refresh_token_log_in('{"refresh_token": "' + refresh_token + '" }')
-    print(r.json())
-
-    auth_header = {
-        "Authorization": ("Bearer " + r.json()['access_token']),
-        "Content-Type": "application/json; charset=utf-8"
-    }
-
-    # update password
-    # NOTE: althought the session has been closed, we can still log in using
-    # the token
-    print("change user's password:")
-    body = """
-    {
-        "password": "somecoolpassword",
-        "new_password": "newpassworddd"
-    }
-    """
+    body = payloads.change_password('12341234','123412344')
     r = change_password(body, auth_header)
-    print(r.status_code)
+    if not r.ok:
+        print('password change failed')
 
     # old login should fail
-    print('old login info should fail with 4xx code:')
     r = alias_log_in(old_user_login)
-    print(f'4xx: {r.status_code}')
+    if r.ok:
+        print(f'Alias log in did not fail. Expected 4xx code: {r.text}')
 
-    print('Old refresh token should fail:')
-    r = refresh_token_log_in('{"refresh_token": "' + refresh_token + '" }')
-    print(r)
+    r = refresh_token_log_in(payloads.login_refresh_token(refresh_token))
+    if r.ok:
+        print(f'Refresh token should have failed: {r.text}')
 
-    print('change user email:')
-    body = """
-    {
-        "email": "the@email.com"
-    }
-    """
-    r = change_user_info(body, auth_header)
-    print(r)
+    # First stage completed
+
+    r = alias_log_in(payloads.login_alias('hello','123412344'))
+    auth_header = payloads.auth_header(r.json()['access_token'])
+    refresh_token = r.json()['refresh_token']
+
+    r = change_user_info(payloads.change_user_info('cool@gmail.com'), auth_header)
+    if not r.ok:
+        print(f'Failed to change user info: {r.text}')
     r = get_full_user_data(auth_header)
-    print(r.json())
+    if (not r.ok ) or (r.json()['email'] != 'cool@gmail.com'):
+        print(f'Failed to change user data: {r.text}')
 
-    print('change user description')
-    body = """
-    {
-        "description": "The coolest description"
-    }
-    """
-    r = change_user_info(body, auth_header)
-    print(r)
-    r = get_full_user_data(auth_header)
-    print(r.json())
+    auth_header = easy_refresh_login(refresh_token)
 
-    print('re-login')
-    r = alias_log_in("""
-    {
-        "alias": "somecoolalias",
-        "password": "newpassworddd"
-    }
-    """)
-    print(r)
-    auth_header = {
-        "Authorization": ("Bearer " + r.json()['access_token']),
-        "Content-Type": "application/json; charset=utf-8"
-    }
+    # Second stage completed
 
-    print('change user avatar')
 
     r = media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',
                            auth_header)
     r = change_user_avatar(r.json()['key'], auth_header)
-    print(f'Should be a 2xx code: {r}')
-    print(get_full_user_data(auth_header).json())
+    if not r.ok:
+        print(f'Failed to change user avatar: {r.text}')
+
 
     # delete user
     print('delete the test user:')
     r = delete_user(auth_header)
-    print(r.json())
+    if not r.ok:
+        print(f'Failed to delete user: {r.text}')
+
+    print('User test completed')
 
 
 if __name__ == '__main__':

@@ -82,7 +82,6 @@ pub async fn search(
         doc! { "$skip": to_bson(&drop).unwrap() },
         doc! { "$limit": to_bson(&get).unwrap() },
     ];
-    // TODO multi thread async query
     let users: Vec<ApiUserResponse> = search_on_collection(filter_users,user_collection).await?;
     let posts: Vec<ApiPostResponse> = search_on_collection(filter_posts,posts_collection).await?;
     Ok(
