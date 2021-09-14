@@ -12,7 +12,7 @@ lazy_static! {
     static ref RE: Regex = Regex::new(r"^(\S+.*\S)|\S$").unwrap();
 }
 /// Max title legth
-const MAX_TITLE_LENGTH: usize = 24;
+const MAX_TITLE_LENGTH: usize = 40;
 
 /// A title represents a non empty string of text that is trimmed and matches the
 /// r"^(\S+.*\S)|\S$" regex with length <= [MAX_TITLE_LENGTH]
