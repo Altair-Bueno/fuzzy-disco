@@ -5,7 +5,6 @@ use crate::mongo::user::User;
 use crate::mongo::post::Post;
 use rocket::serde::json::Json;
 use mongodb::bson::doc;
-use mongodb::bson::bson;
 use chrono::{Utc, DateTime};
 use mongodb::bson::DateTime as MongoDateTime;
 use crate::api::{USER_CREATION_DATE, POSTS_CREATION_DATE};
@@ -13,12 +12,10 @@ use mongodb::bson::to_bson;
 use std::option::Option::Some;
 use mongodb::bson::from_document;
 use rocket::futures::StreamExt;
-use mongodb::bson::oid::ObjectId;
 use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Value;
 use crate::api::data::{ApiUserResponse, ApiPostResponse};
 use serde::Deserialize;
-use rocket::serde::DeserializeOwned;
 
 /// # `GET /api/search?s=<string>&drop=<usize>&get=<u8>&date=<string>`
 /// Returns matches for the given search string. The method receives the

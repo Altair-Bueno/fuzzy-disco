@@ -13,7 +13,6 @@ use crate::mongo::user::User;
 use crate::api::media::delete_media;
 use mongodb::{
     bson::doc,
-    options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
 use std::option::Option::Some;

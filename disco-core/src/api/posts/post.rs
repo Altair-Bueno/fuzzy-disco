@@ -1,14 +1,12 @@
 use crate::api::users::auth::claims::TokenClaims;
 use crate::api::result::{ApiResult, ApiError};
 use rocket::serde::json::{Json, Value};
-use crate::api::posts::data::{NewPostPayload, EditPostPayload};
+use crate::api::posts::data::{NewPostPayload};
 use rocket::State;
 use crate::mongo::post::Post;
 use crate::mongo::media::{Media, Format};
 use mongodb::{
-    Client,
     bson::doc,
-    options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
 use crate::api::media::{claim_media_filter, claim_media_update};

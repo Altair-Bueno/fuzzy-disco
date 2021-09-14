@@ -12,7 +12,6 @@ use mongodb::bson::to_bson;
 use mongodb::{
     Client,
     bson::doc,
-    options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
 

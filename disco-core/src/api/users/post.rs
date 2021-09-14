@@ -4,7 +4,6 @@ use std::str::FromStr;
 use mongodb::Client;
 use mongodb::{
     bson::doc,
-    options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
     Collection,
 };
 use rocket::serde::json::Json;

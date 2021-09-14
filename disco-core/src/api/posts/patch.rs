@@ -7,7 +7,7 @@ use rocket::serde::json::{Json};
 use crate::api::result::{ApiResult, ApiError};
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
-use crate::api::{POSTS_AUTHOR, POSTS_ID, POSTS_VISIBILITY};
+use crate::api::{POSTS_AUTHOR, POSTS_ID};
 use mongodb::bson::to_bson;
 
 #[patch("/<id>",format = "json", data="<payload>")]
