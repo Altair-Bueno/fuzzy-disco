@@ -50,10 +50,9 @@ use crate::mongo::user::{Alias, User};
 /// ```
 #[get("/<alias>")]
 pub async fn get_user_info(
-    alias: &str,
+    alias: Alias,
     mongo: &State<Collection<User>>,
 ) -> ApiResult<Json<ApiUserResponse>> {
-    let alias = alias.parse::<Alias>()?;
     let user = crate::api::users::locate_user(&alias, mongo).await?;
     Ok(Json(ApiUserResponse::from(user)))
 }

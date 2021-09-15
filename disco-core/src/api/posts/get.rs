@@ -5,7 +5,7 @@ use mongodb::Collection;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::data::ApiPostResponse;
+use crate::api::data::{ApiPostResponse, ObjectIdWrapper};
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
 use crate::api::POSTS_ID;
@@ -70,10 +70,10 @@ use crate::mongo::visibility::Visibility;
 /// ```
 #[get("/<id>", format = "json", rank = 2)]
 pub async fn get_post_content(
-    id: &str,
+    id: ObjectIdWrapper,
     mongo: &State<Collection<Post>>,
 ) -> ApiResult<Json<ApiPostResponse>> {
-    let post = get_post(id, mongo).await?;
+    let post = get_post(id.extract(), mongo).await?;
     if *post.visibility() == Visibility::Public {
         Ok(Json(ApiPostResponse::from(post)))
     } else {
@@ -84,10 +84,10 @@ pub async fn get_post_content(
 #[get("/<id>", format = "json")]
 pub async fn get_post_content_auth(
     token: TokenClaims,
-    id: &str,
+    id: ObjectIdWrapper,
     mongo: &State<Collection<Post>>,
 ) -> ApiResult<Json<ApiPostResponse>> {
-    let post = get_post(id, mongo).await?;
+    let post = get_post(id.extract(), mongo).await?;
     let condition = (*post.visibility() == Visibility::Public) || (token.alias() == post.author());
 
     if condition {
@@ -97,8 +97,7 @@ pub async fn get_post_content_auth(
     }
 }
 
-async fn get_post(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Post> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+async fn get_post(oid: mongodb::bson::oid::ObjectId, mongo: &State<Collection<Post>>) -> ApiResult<Post> {
     let filter = doc! {POSTS_ID:oid};
     mongo
         .find_one(Some(filter), None)

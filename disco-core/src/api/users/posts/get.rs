@@ -10,7 +10,7 @@ use rocket::futures::StreamExt;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::data::ApiPostResponse;
+use crate::api::data::{ApiPostResponse, ApiDate};
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
 use crate::api::{POSTS_AUTHOR, POSTS_CREATION_DATE, POSTS_VISIBILITY};
@@ -54,16 +54,13 @@ use crate::mongo::visibility::Visibility;
 /// | 500 | Couldn't connect to database |
 #[get("/<alias>/posts?<drop>&<get>&<date>", rank = 2)]
 pub async fn get_posts_from(
-    alias: &str,
+    alias: Alias,
     drop: usize,
     get: u8,
-    date: &str,
+    date: ApiDate,
     posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Vec<ApiPostResponse>>> {
-    // TODO test me
-    let alias: Alias = alias.parse()?;
-    let date: DateTime<Utc> = date.parse()?;
-    let date = MongoDateTime::from_chrono(date);
+    let date = date.extract();
     let query = vec![
         // Look for posts from this author before eq the given date that are
         // public
@@ -128,20 +125,16 @@ pub async fn get_posts_from(
 #[get("/<alias>/posts?private&<drop>&<get>&<date>")]
 pub async fn get_private_posts_from(
     token: TokenClaims,
-    alias: &str,
+    alias: Alias,
     drop: usize,
     get: u8,
-    date: &str,
+    date: ApiDate,
     posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Vec<ApiPostResponse>>> {
-    // TODO test me
-    let alias: Alias = alias.parse()?;
     if alias != *token.alias() {
         return Err(ApiError::Unauthorized("You are not the owner"));
     }
-
-    let date: DateTime<Utc> = date.parse()?;
-    let date = MongoDateTime::from_chrono(date);
+    let date = date.extract();
     let query = vec![
         // Look for posts from this author before eq the given date that are
         // public

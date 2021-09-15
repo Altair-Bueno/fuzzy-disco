@@ -65,6 +65,7 @@ pub async fn update_user_password(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> ApiResult<()> {
+    // TODO acid transaction
     let validated_document = updated.new_password.parse::<Password>()?;
     let user = crate::api::users::locate_user(token.alias(), user_collection).await?;
 

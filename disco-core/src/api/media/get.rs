@@ -10,6 +10,7 @@ use crate::api::users::auth::claims::TokenClaims;
 use crate::api::{MEDIA_ID, MEDIA_STATUS};
 use crate::mongo::media::{Media, Status};
 use crate::mongo::visibility::Visibility;
+use crate::api::data::ObjectIdWrapper;
 
 /// # `GET /api/media/<id>`
 /// Returns the requested media by its id
@@ -40,11 +41,11 @@ use crate::mongo::visibility::Visibility;
 ///
 #[get("/<id>")]
 pub async fn get_media_auth(
-    id: &str,
+    id: ObjectIdWrapper,
     token: TokenClaims,
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> ApiResult<File> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+    let oid = id.extract();
     let filter =
         doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
     let media = mongo_media
@@ -63,10 +64,10 @@ pub async fn get_media_auth(
 
 #[get("/<id>", rank = 2)]
 pub async fn get_media(
-    id: &str,
+    id: ObjectIdWrapper,
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> ApiResult<File> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+    let oid = id.extract();
     let filter =
         doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
     let media = mongo_media
