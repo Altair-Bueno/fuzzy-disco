@@ -7,9 +7,10 @@ use rocket::State;
 use crate::api::media::oid_to_path;
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
+use crate::api::{MEDIA_ID, MEDIA_STATUS};
 use crate::mongo::media::{Media, Status};
 use crate::mongo::visibility::Visibility;
-use crate::api::{MEDIA_ID, MEDIA_STATUS};
+use crate::api::data::ObjectIdWrapper;
 
 /// # `GET /api/media/<id>`
 /// Returns the requested media by its id
@@ -40,18 +41,19 @@ use crate::api::{MEDIA_ID, MEDIA_STATUS};
 ///
 #[get("/<id>")]
 pub async fn get_media_auth(
-    id: &str,
+    id: ObjectIdWrapper,
     token: TokenClaims,
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> ApiResult<File> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
-    let filter = doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
+    let oid = id.extract();
+    let filter =
+        doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
     let media = mongo_media
         .find_one(filter, None)
         .await?
         .ok_or(ApiError::NotFound("Media"))?;
-    let condition = (*media.visibility() == Visibility::Public) ||
-        (token.alias() == media.uploaded_by());
+    let condition =
+        (*media.visibility() == Visibility::Public) || (token.alias() == media.uploaded_by());
 
     if condition {
         Ok(rocket::tokio::fs::File::open(oid_to_path(&oid)).await?)
@@ -59,13 +61,15 @@ pub async fn get_media_auth(
         Err(ApiError::Unauthorized("Private media"))
     }
 }
+
 #[get("/<id>", rank = 2)]
 pub async fn get_media(
-    id: &str,
+    id: ObjectIdWrapper,
     mongo_media: &State<mongodb::Collection<Media>>,
 ) -> ApiResult<File> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
-    let filter = doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
+    let oid = id.extract();
+    let filter =
+        doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
     let media = mongo_media
         .find_one(filter, None)
         .await?

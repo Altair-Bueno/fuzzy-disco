@@ -1,4 +1,5 @@
 use mongodb::bson::oid::ObjectId;
+use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::mongo::post::caption::Caption;
@@ -28,7 +29,8 @@ pub struct Post {
     author: Alias,
     audio: ObjectId,
     photo: ObjectId,
-    visibility: Visibility
+    visibility: Visibility,
+    creation_date: DateTime,
 }
 
 impl Document for Post {}
@@ -41,7 +43,7 @@ impl Post {
         author: Alias,
         audio: ObjectId,
         photo: ObjectId,
-        visibility: Visibility
+        visibility: Visibility,
     ) -> Self {
         Post {
             id: None,
@@ -50,10 +52,10 @@ impl Post {
             author,
             audio,
             photo,
-            visibility
+            visibility,
+            creation_date: DateTime::now(),
         }
     }
-
 
     pub fn id(&self) -> Option<ObjectId> {
         self.id
@@ -75,5 +77,8 @@ impl Post {
     }
     pub fn visibility(&self) -> &Visibility {
         &self.visibility
+    }
+    pub fn creation_date(&self) -> DateTime {
+        self.creation_date
     }
 }

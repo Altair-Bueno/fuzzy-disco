@@ -2,23 +2,19 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use mongodb::Client;
-use mongodb::{
-    bson::doc,
-    options::{Acknowledgment, ReadConcern, TransactionOptions, WriteConcern},
-    Collection,
-};
+use mongodb::{bson::doc, Collection};
 use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
-use crate::api::result::{ApiError, ApiResult};
 use crate::api::result::ApiError::InternalServerError;
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::sessions::delete_all_sessions_from;
 use crate::api::users::auth::claims::TokenClaims;
 use crate::api::users::data::{AvatarPictureID, UpdatePassword, UpdateUser};
+use crate::api::{MEDIA_ID, USER_ALIAS, USER_AVATAR, USER_PASSWORD};
 use crate::mongo::media::{Format, Media};
 use crate::mongo::user::{Description, Email, Password, Session, User};
-use crate::api::{USER_ALIAS, USER_PASSWORD, USER_AVATAR, MEDIA_ID};
 
 /// # AUTH! `POST /api/users/update/password`
 /// Changes the user password to another one
@@ -69,6 +65,7 @@ pub async fn update_user_password(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> ApiResult<()> {
+    // TODO acid transaction
     let validated_document = updated.new_password.parse::<Password>()?;
     let user = crate::api::users::locate_user(token.alias(), user_collection).await?;
 
@@ -127,22 +124,22 @@ pub async fn update_user_avatar(
     media_collection: &State<Collection<Media>>,
     mongo_client: &State<Client>,
 ) -> ApiResult<()> {
+    /* todo acid operation
     let mut transaction_session = mongo_client.start_session(None).await?;
     let options = TransactionOptions::builder()
         .read_concern(ReadConcern::majority())
         .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
         .build();
     transaction_session.start_transaction(options).await?;
+    */
     // Delete old profile picture
     let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
     let user = user_collection
-        .find_one_with_session(filter, None, &mut transaction_session)
+        .find_one(filter, None)
         .await?
         .ok_or(ApiError::NotFound("User"))?;
     let filter = doc! {MEDIA_ID: user.avatar() };
-    let deleted = media_collection
-        .find_one_and_delete_with_session(filter, None, &mut transaction_session)
-        .await?;
+    let deleted = media_collection.find_one_and_delete(filter, None).await?;
 
     if let Some(media) = deleted {
         delete_media(&media.id().unwrap()).await?;
@@ -155,24 +152,20 @@ pub async fn update_user_avatar(
         let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
         let update = claim_media_update().await;
         let media = media_collection
-            .find_one_and_update_with_session(filter, update, None, &mut transaction_session)
+            .find_one_and_update(filter, update, None)
             .await?
             .ok_or(ApiError::BadRequest("Media file not found"))?;
         // Update user
         let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
         let update = doc! {"$set": {USER_AVATAR: media.id() }};
-        let result = user_collection
-            .update_one_with_session(filter, update, None, &mut transaction_session)
-            .await?;
+        let result = user_collection.update_one(filter, update, None).await?;
 
         if result.modified_count == 1 {
-            transaction_session.commit_transaction().await?;
             Ok(())
         } else {
             Err(ApiError::NotFound("User"))
         }
     } else {
-        transaction_session.commit_transaction().await?;
         Ok(())
     }
 }

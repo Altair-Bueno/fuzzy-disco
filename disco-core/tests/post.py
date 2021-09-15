@@ -1,72 +1,63 @@
 import requests
-import users
+
 import media
+import payloads
+import users
 
 _URL = 'http://127.0.0.1:8000/api/posts/'
 
 
-def create_post(body:str,auth_headers:dict[str,str]):
-    return requests.post(_URL + 'new',body, headers=auth_headers)
+def create_post(body: str, auth_headers: dict[str, str]):
+    return requests.post(_URL + 'new', body, headers=auth_headers)
 
 
-def get_post(id:str,headers:dict[str,str]):
+def get_post(id: str, headers: dict[str, str]):
     return requests.get(_URL + id, headers=headers)
 
 
-def delete_post(id:str,auth_headers:dict[str,str]):
-    return requests.delete(_URL + id,headers=auth_headers)
+def delete_post(id: str, auth_headers: dict[str, str]):
+    return requests.delete(_URL + id, headers=auth_headers)
+
+
+def edit_post(id: str, body: str, auth_headers: dict[str, str]):
+    return requests.patch(_URL + f'{id}', body, headers=auth_headers)
 
 
 def test_posts_api():
-    print('creating user')
-    body = """
-    {
-        "email": "cool@email.com",
-        "alias": "aliasss",
-        "password": "12345678"
-    }
-    """
+    # start
+    print('Create user and log in')
+    body = payloads.new_user('hello', 'a@a.com', '12341234')
     users.create_user(body)
-    body = """
-    {
-        "alias": "aliasss",
-        "password": "12345678"
-    }
-    """
+    body = payloads.login_alias('hello', '12341234')
     r = users.alias_log_in(body)
-    bearer_token = r.json()['access_token']
-    refresh_token = r.json()['refresh_token']
-    auth_header = {
-        "Authorization": ("Bearer " + bearer_token),
-        "Content-Type": "application/json; charset=utf-8"
-    }
+    auth_header = payloads.auth_header(r.json()['access_token'])
 
+    # Upload media
+    image = \
+    media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',
+                       auth_header).json()['key']
+    audio = media.upload_media('resources/file_example_MP3_700KB.mp3',
+                               auth_header).json()['key']
+    # Create post
+    body = payloads.new_post('New post', 'This is a post', image, audio,
+                             payloads.VISIBILITY_PUBLIC)
+    r = create_post(body, auth_header)
+    if not r.ok:
+        print(f"Post creation went wrong: {r.text}")
 
-    image = media.upload_media('resources/photo-1491604612772-6853927639ef.jpeg',auth_header).json()['key']
-    audio = media.upload_media('resources/file_example_MP3_700KB.mp3',auth_header).json()['key']
-
-    body = f"""
-    {{
-        "title": "Title",
-        "caption": "Cool caption",
-        "photo": "{image}",
-        "audio": "{audio}",
-        "visibility": "Public"
-    }}
-    """
-    print('creating post')
-    r = create_post(body,auth_header)
-    print(f'Should be 2xx: {r}')
-    print(r.json())
-
+    # Get the post
     print('Get the post')
-    postid = r.json()['post_id']
-    r = get_post(postid,auth_header)
-    print(r.json())
+    post_id = r.json()['post_id']
+    r = get_post(post_id, auth_header)
+    if r.ok:
+        print(r.json())
+    else:
+        print(f"Failed to retrieve post: {r.text}")
 
-    print('delete post')
-    print(f'Should be 2xx code: {delete_post(postid,auth_header)}')
-
+    body = payloads.edit_post(payloads.VISIBILITY_PRIVATE)
+    r = edit_post(post_id, body, auth_header)
+    if not r.ok:
+        print(f"Failed to edit post: {r.text}")
     users.delete_user(auth_header)
 
 

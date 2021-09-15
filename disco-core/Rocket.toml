@@ -1,5 +1,6 @@
 [release]
 address = "0.0.0.0"
+limits = { file = "5MB" }
 
 # [release.tls]
 # certs = "ca-cert.pem"
@@ -7,3 +8,5 @@ address = "0.0.0.0"
 
 [debug]
 address = "0.0.0.0"
+limits = { file = "5MB" }
+

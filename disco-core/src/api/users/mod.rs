@@ -3,8 +3,8 @@ use mongodb::Collection;
 use rocket::State;
 
 use crate::api::result::{ApiError, ApiResult};
-use crate::mongo::user::{Alias, User};
 use crate::api::USER_ALIAS;
+use crate::mongo::user::{Alias, User};
 
 /// /api/users/auth
 pub mod auth;
@@ -16,6 +16,8 @@ pub mod delete;
 pub mod get;
 /// PUT /api/users
 pub mod post;
+/// /api/users/<alias>/posts
+pub mod posts;
 
 // helper functions
 

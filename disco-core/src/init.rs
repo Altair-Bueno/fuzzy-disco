@@ -32,6 +32,10 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
                         "unique": true
                     },
                     {
+                        "key": { "alias": "text" },
+                        "name": "search",
+                    },
+                    {
                         "key": { "email": 1 },
                         "name": "email",
                         "unique": false
@@ -70,6 +74,25 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
                     {
                         "key": { "status": 1 },
                         "name": "status",
+                        "unique": false
+                    },
+                ]
+            },
+            None,
+        )
+        .await?;
+
+    #[cfg(debug_assertions)]
+    println!("[MONGO]: Index creation response {:?}", index_response);
+
+    let index_response = db
+        .run_command(
+            doc! {
+                "createIndexes": "Posts",
+                "indexes": [
+                    {
+                        "key": { "caption": "text" , "title": "text" },
+                        "name": "search",
                         "unique": false
                     },
                 ]

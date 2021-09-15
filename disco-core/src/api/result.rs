@@ -6,8 +6,7 @@ use rocket::serde::json::serde_json::json;
 use rocket::{response, Request, Response};
 use thiserror::Error;
 
-pub type ApiResult<T> = Result<T,ApiError>;
-
+pub type ApiResult<T> = Result<T, ApiError>;
 
 /// Contains all kinds of errors that may occurr on fuzzy-disco's API
 #[derive(Error, Debug)]
@@ -30,6 +29,9 @@ pub enum ApiError {
     #[error("{0}")]
     /// http 400
     InvalidFormat(#[from] crate::mongo::media::MediaError),
+    #[error("{0}")]
+    /// http 400
+    InvalidDate(#[from] chrono::ParseError),
     #[error("{0} taken")]
     /// http 409
     Conflict(&'static str),
@@ -56,7 +58,8 @@ impl<'r> Responder<'r, 'static> for ApiError {
             | ApiError::InvalidPost(_)
             | ApiError::BadRequest(_)
             | ApiError::InvalidID(_)
-            | ApiError::InvalidFormat(_) => Status::BadRequest,
+            | ApiError::InvalidFormat(_)
+            | ApiError::InvalidDate(_) => Status::BadRequest,
 
             ApiError::DatabaseError(_)
             | ApiError::InternalServerError(_)

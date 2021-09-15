@@ -1,5 +1,6 @@
 import requests
 
+import payloads
 from users import alias_log_in
 from users import create_user
 from users import delete_user
@@ -16,38 +17,22 @@ def delete_all_sessions(auth_headers: dict[str, str]):
 
 
 def test_api_sessions():
-    print('test start')
-
-    body = """
-    {
-        "email":"some@email.com",
-        "alias": "other-alias",
-        "password": "otherpassword"
-    }
-    """
-    print(create_user(body))
-
+    # Start
+    print('Creating sessions')
+    body = payloads.new_user('cool', 'a@a.com', '12341234')
+    create_user(body)
+    body = payloads.login_alias('cool', '12341234')
     r = None
-    for i in range(0, 5):
-        body = """
-        {
-            "alias": "other-alias",
-            "password": "otherpassword"
-        }
-        """
+    for _ in range(0, 5):
         r = alias_log_in(body)
-
-    print('generated 5 sessions')
-    bearer_token = r.json()['access_token']
-    auth_header = {
-        "Authorization": ("Bearer " + bearer_token),
-        "Content-Type": "application/json; charset=utf-8"
-    }
-    print('get all sessions:')
-    print(get_sessions(auth_header).json())
-
-    print('Delete sessions:')
-    print(delete_all_sessions(auth_header))
+        if not r.ok:
+            print(f'Failed to log in: {r.text}')
+    auth_header = payloads.auth_header(r.json()['access_token'])
+    print(f'Get all user sessions: {get_sessions(auth_header).json()}')
+    r = delete_all_sessions(auth_header)
+    if not r.ok:
+        print(f'Failed to delete sessions: {r.text}')
+    print(f'Should be an empty list: {get_sessions(auth_header).json()}')
 
     delete_user(auth_header)
 

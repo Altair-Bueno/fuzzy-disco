@@ -1,5 +1,6 @@
 import requests
 
+import payloads
 import users
 
 _URL = 'http://127.0.0.1:8000/api/media/'
@@ -10,45 +11,33 @@ def upload_media(file: str, auth_headers: dict[str, str]):
         return requests.post(_URL + 'upload', data=f, headers=auth_headers)
 
 
-def download_media(id: str, auth_headers: dict[str, str]):
-    return requests.get(_URL + id, headers=auth_headers)
+def download_media(id: str, headers: dict[str, str]):
+    return requests.get(_URL + id, headers=headers)
 
 
 def test_media_upload():
-    body = """
-    {
-        "alias": "cooool",
-        "email": "random@email.com",
-        "password": "passwordddd"
-    }
-    """
+    print('Create user and log in')
+    body = payloads.new_user('cool', 'a@a.com', '12341234')
     users.create_user(body)
-    r = users.alias_log_in('{"alias": "cooool", "password": "passwordddd"}')
-    auth_header = {
-        "Authorization": ("Bearer " + r.json()['access_token']),
-        "Content-Type": "application/json; charset=utf-8"
-    }
+    body = payloads.login_alias('cool', '12341234')
+    r = users.alias_log_in(body)
+    auth_header = payloads.auth_header(r.json()['access_token'])
 
     print("Uploading media...")
     r = upload_media(
         'resources/dog-puppy-on-garden-royalty-free-image-1586966191.jpg',
         auth_header)
-    print(r.json())
+    print(f'Uploaded file: {r.json()}')
 
-    r = upload_media('resources/photo-1491604612772-6853927639ef.jpeg',
-                     auth_header)
-    print(r.json())
-
-    r = upload_media(
-        'resources/png-transparent-logo-online-and-offline-e-online-design-text-logo-online-and-offline.png',
-        auth_header)
-    print(r.json())
-
-    print('should fail:')
+    r = download_media(r.json()['key'], auth_header)
+    if r.ok:
+        print(f"File download without claiming shouldn't be allowed: {r.text}")
     r = upload_media('test.py', auth_header)
-    print(r)
-
+    if r.ok:
+        print(f"Text file shouldn't be allowed: {r.json()}")
     users.delete_user(auth_header)
+
+    print('Media test completed')
 
 
 if __name__ == '__main__':

@@ -1,18 +1,15 @@
+use std::str::FromStr;
+
 use mongodb::bson::doc;
 use mongodb::Collection;
-use rocket::futures::StreamExt;
-use rocket::http::Status;
-use rocket::response::status;
-use rocket::serde::json::Value;
-use rocket::serde::json::{serde_json::json, Json};
+use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::result::{ApiResult, ApiError};
-use crate::mongo::post::Post;
-use std::str::FromStr;
-use crate::api::POSTS_ID;
-use mongodb::bson::to_bson;
+use crate::api::data::{ApiPostResponse, ObjectIdWrapper};
+use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
+use crate::api::POSTS_ID;
+use crate::mongo::post::Post;
 use crate::mongo::visibility::Visibility;
 
 /// # `GET /api/posts/<id>`
@@ -36,7 +33,8 @@ use crate::mongo::visibility::Visibility;
 ///     "author": String.
 ///     "audio": String,
 ///     "photo": String,
-///     "visibility": Visibility
+///     "visibility": Visibility,
+///     "creation_date": String
 /// }
 /// ```
 ///
@@ -66,14 +64,18 @@ use crate::mongo::visibility::Visibility;
 ///  "id": "6132137e6c2cc66344ef2a88",
 ///  "caption": "Hisoka wants gon booty",
 ///  "title": "Hunter x Hunter",
-///  "visibility": "Public"
+///  "visibility": "Public",
+///  "creation_date": "2021-09-06 16:13:02.797 UTC"
 ///}
 /// ```
-#[get("/<id>", format = "json" , rank = 2)]
-pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Json<Value>> {
-    let post = get_post(id,mongo).await?;
+#[get("/<id>", format = "json", rank = 2)]
+pub async fn get_post_content(
+    id: ObjectIdWrapper,
+    mongo: &State<Collection<Post>>,
+) -> ApiResult<Json<ApiPostResponse>> {
+    let post = get_post(id.extract(), mongo).await?;
     if *post.visibility() == Visibility::Public {
-        Ok(Json(generate_response(&post)))
+        Ok(Json(ApiPostResponse::from(post)))
     } else {
         Err(ApiError::Unauthorized("Private post"))
     }
@@ -81,82 +83,24 @@ pub async fn get_post_content(id: &str, mongo: &State<Collection<Post>>) -> ApiR
 
 #[get("/<id>", format = "json")]
 pub async fn get_post_content_auth(
-    token:TokenClaims,
-    id: &str,
-    mongo: &State<Collection<Post>>
-) -> ApiResult<Json<Value>> {
-    let post = get_post(id,mongo).await?;
-    let condition = (*post.visibility() == Visibility::Public) ||
-        (token.alias() == post.author());
+    token: TokenClaims,
+    id: ObjectIdWrapper,
+    mongo: &State<Collection<Post>>,
+) -> ApiResult<Json<ApiPostResponse>> {
+    let post = get_post(id.extract(), mongo).await?;
+    let condition = (*post.visibility() == Visibility::Public) || (token.alias() == post.author());
 
     if condition {
-        Ok(Json(generate_response(&post)))
+        Ok(Json(ApiPostResponse::from(post)))
     } else {
         Err(ApiError::Unauthorized("Private post"))
     }
 }
 
-async fn get_post(id: &str, mongo: &State<Collection<Post>>) -> ApiResult<Post> {
-    let oid = mongodb::bson::oid::ObjectId::from_str(id)?;
+async fn get_post(oid: mongodb::bson::oid::ObjectId, mongo: &State<Collection<Post>>) -> ApiResult<Post> {
     let filter = doc! {POSTS_ID:oid};
-    mongo.find_one(Some(filter),None)
+    mongo
+        .find_one(Some(filter), None)
         .await?
         .ok_or(ApiError::NotFound("Post"))
-}
-fn generate_response(post:&Post) -> Value {
-    json!({
-        // `unwrap` here is safe, represents _id from db
-        "id": post.id().unwrap().to_string(),
-        "title": to_bson(post.title()).unwrap(),
-        "caption": to_bson(post.caption()).unwrap(),
-        "author": to_bson(post.author()).unwrap(),
-        "audio": post.audio().to_string(),
-        "photo": post.photo().to_string(),
-        "visibility": to_bson(post.visibility()).unwrap()
-    })
-}
-
-/// #!DEBUG
-/// # `GET /api/posts`
-///
-/// Returns all postID on the database as a single vector of strings
-///
-/// ```json
-/// [
-///     String,
-///     ...
-/// ]
-/// ```
-///
-/// # Example
-///
-/// `GET /api/posts`
-///
-/// ```json
-/// [
-///  "6131f8946c2cc66344ef2a86",
-///  "6132137e6c2cc66344ef2a88",
-///  "613213e26c2cc66344ef2a89",
-///  "613214076c2cc66344ef2a8a"
-///]
-/// ```
-#[get("/", format = "json")]
-pub async fn get_posts(
-    mongo: &State<Collection<Post>>,
-) -> Result<Json<Vec<String>>, status::Custom<Value>> {
-    let mut cursor = match mongo.find(None, None).await {
-        Ok(cursor) => cursor,
-        Err(_) => {
-            return Err(status::Custom(
-                Status::InternalServerError,
-                json!({"status":"InternalError","message": "Couldn't connect to database"}),
-            ));
-        }
-    };
-    let mut vec = Vec::new();
-    while let Some(Ok(post)) = cursor.next().await {
-        let id = post.id().unwrap().to_string();
-        vec.push(id);
-    }
-    Ok(Json(vec))
 }

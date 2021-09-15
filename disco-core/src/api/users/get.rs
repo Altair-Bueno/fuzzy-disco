@@ -1,10 +1,11 @@
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::serde_json::json;
-use rocket::serde::json::Value;
+use rocket::serde::json::{Json, Value};
 use rocket::State;
 
-use crate::api::result::{ApiResult};
+use crate::api::data::ApiUserResponse;
+use crate::api::result::ApiResult;
 use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::user::{Alias, User};
 
@@ -49,16 +50,11 @@ use crate::mongo::user::{Alias, User};
 /// ```
 #[get("/<alias>")]
 pub async fn get_user_info(
-    alias: &str,
+    alias: Alias,
     mongo: &State<Collection<User>>,
-) -> ApiResult<Value> {
-    let alias = alias.parse::<Alias>()?;
+) -> ApiResult<Json<ApiUserResponse>> {
     let user = crate::api::users::locate_user(&alias, mongo).await?;
-    Ok(json!({
-        "alias": user.alias(),
-        "description": user.description(),
-        "avatar": user.avatar().map(|x| x.to_string())
-    }))
+    Ok(Json(ApiUserResponse::from(user)))
 }
 
 /// # AUTH! `GET /api/users`
