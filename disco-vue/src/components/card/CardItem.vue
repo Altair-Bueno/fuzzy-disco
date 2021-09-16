@@ -20,7 +20,7 @@ export default {
   computed: {
     cssVars() {
       return  {
-        '--card-background': "url(" + this.card.photo_path + ")",
+        '--card-background': "url(" + this.card.photo + ")",
       }
     }
   }

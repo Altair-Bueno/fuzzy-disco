@@ -2,9 +2,10 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import LoginPage from "@/components/auth/LoginPage";
 import RegisterPage from "@/components/auth/RegisterPage";
-import CardList from "@/components/CardList";
-import UserProfile from "@/components/profile/UserProfile";
+import UserProfile from "@/components/user/UserProfile";
 import NewPost from "@/components/NewPost";
+import UserSettings from "@/components/user/UserSettings";
+import HomePage from "@/components/HomePage";
 
 Vue.use(VueRouter)
 
@@ -26,7 +27,7 @@ const routes = [
     {
         path: '/home',
         name: 'home',
-        component: CardList,
+        component: HomePage,
         meta: {
             requiresAuth: true
         }
@@ -35,6 +36,22 @@ const routes = [
         path: '/user/:user',
         name: 'user',
         component: UserProfile,
+        meta: {
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/user/:user/profile',
+        name: 'profile',
+        component: UserProfile,
+        meta: {
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/user/:user/settings',
+        name: 'settings',
+        component: UserSettings,
         meta: {
             requiresAuth: true
         }

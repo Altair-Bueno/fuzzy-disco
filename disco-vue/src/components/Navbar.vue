@@ -25,8 +25,8 @@
         <li class="nav-item">
           <button class="drop-btn">User</button>
           <div class="drop-content">
-            <RouterLink to="/user/sample-user">Profile</RouterLink>
-            <a href="#">Settings</a>
+            <RouterLink to="/user/sample-user/profile">Profile</RouterLink>
+            <RouterLink to="/user/sample-user/settings">Settings</RouterLink>
           </div>
         </li>
       </ul>

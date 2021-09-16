@@ -4,7 +4,7 @@
       <button :class="{'card-slide-reverse-open': isOpen, 'card-slide-reverse': !isOpen}">
         <i class="fas fa-angle-double-up"></i>
       </button>
-      <CardInfo :author="card.author_id" :caption="card.caption" :class="{'reverse-open': isOpen, 'reverse': !isOpen}"></CardInfo>
+      <CardInfo :author="card.author" :caption="card.caption" :class="{'reverse-open': isOpen, 'reverse': !isOpen}"></CardInfo>
     </button>
   </div>
 </template>

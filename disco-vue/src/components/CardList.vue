@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Navbar></Navbar>
     <div class="card-list">
       <CardItem v-bind:card="card" :key="card.id" v-for="card in cardlist"></CardItem>
     </div>
@@ -9,61 +8,26 @@
 
 <script>
 import CardItem from "@/components/card/CardItem";
-import Navbar from "@/components/Navbar";
+
 export default {
   name: "CardList",
-  components: {Navbar, CardItem},
+  components: {CardItem},
   data() {
     return {
-      cardlist: [{
-        id: 0,
-        title: "Killua and Gon",
-        caption: "Daichi wo fumishimete kimi wa mezameteiku Tenshi no hohoemi de tsuredashite!",
-        author_id: "Carlos",
-        photo_path: require("../assets/sample-image.png"),
-        audio_path: ""
-      },
-      {
-        id: 1,
-        title: "Only Killua",
-        caption: "aaaaaaaaaaa sisisisisisiis siisi sisi",
-        author_id: "Altair",
-        photo_path: require("../assets/sample-image-2.png"),
-        audio_path: ""
-      },
-      {
-        id: 2,
-        title: "Wing te amo",
-        caption: "te amo",
-        author_id: "Pito",
-        photo_path: require("../assets/sample-image-3.jpg"),
-        audio_path: ""
-      },
-      {
-        id: 3,
-        title: "Killua and Gon",
-        caption: "Daichi wo fumishimete kimi wa mezameteiku Tenshi no hohoemi de tsuredashite!",
-        author_id: "Carlos",
-        photo_path: require("../assets/sample-image.png"),
-        audio_path: ""
-      },
-      {
-        id: 4,
-        title: "Only Killua",
-        caption: "aaaaaaaaaaa sisisisisisiis siisi sisi",
-        author_id: "Altair",
-        photo_path: require("../assets/sample-image-2.png"),
-        audio_path: ""
-      },
-      {
-        id: 5,
-        title: "Wing te amo",
-        caption: "te amo",
-        author_id: "Pito",
-        photo_path: require("../assets/sample-image-3.jpg"),
-        audio_path: ""
-      }]
+      cardlist: []
     }
+  },
+  methods: {
+    async getIndividualPost(id) {
+      let response = await fetch(`/api/posts/${id}`);
+      if(response.ok) {
+        let server_payload = response.json();
+        this.cardlist.push(server_payload);
+      }
+    }
+  },
+  async beforeRouteEnter(to, from, next) {
+    next(vm => vm.getIndividualPost("614091f5f79c92b0de5ec555"));
   }
 }
 </script>

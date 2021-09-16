@@ -45,7 +45,7 @@ export default {
           email: this.email,
           password: this.passwd
         }
-        let response = await fetch('http://localhost:8000/api/users/auth/signup', {
+        let response = await fetch('/api/users/auth/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -17,12 +17,8 @@ export default {
     identifier: String,
     inputType: String,
     field: String,
-    inputOk: Boolean
-  },
-  data() {
-    return {
-      input: ""
-    }
+    inputOk: Boolean,
+    input: String
   },
   emit: {
     'input-update': null
