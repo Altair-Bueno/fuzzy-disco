@@ -5,3 +5,9 @@ pub enum Status {
     Waiting,
     Assigned,
 }
+
+impl From<Status> for mongodb::bson::Bson{
+    fn from(s: Status) -> Self {
+        mongodb::bson::to_bson(&s).unwrap()
+    }
+}

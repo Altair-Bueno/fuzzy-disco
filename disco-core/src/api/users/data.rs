@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::api::data::ObjectIdWrapper;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdatePassword<'a> {
@@ -13,6 +14,6 @@ pub struct UpdateUser<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AvatarPictureID<'a> {
-    pub mediaid: Option<&'a str>,
+pub struct AvatarPictureID {
+    pub media_id: Option<ObjectIdWrapper>,
 }

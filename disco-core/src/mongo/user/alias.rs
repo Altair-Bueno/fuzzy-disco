@@ -59,6 +59,12 @@ impl Alias {
     }
 }
 
+impl From<Alias> for mongodb::bson::Bson {
+    fn from(a: Alias) -> Self {
+        mongodb::bson::to_bson(&a).unwrap()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::mongo::user::alias::Alias;

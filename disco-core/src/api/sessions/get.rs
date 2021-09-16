@@ -52,7 +52,7 @@ pub async fn get_user_sessions(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> ApiResult<Json<Vec<PublicSessionData>>> {
-    let filter = doc! { SESSION_USER_ALIAS : mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { SESSION_USER_ALIAS : token.alias() };
     let mut cursor = session_collection.find(filter, None).await?;
 
     let mut vec = Vec::new();

@@ -12,10 +12,10 @@ use crate::api::MEDIA_ID;
 use crate::mongo::media::{Format, Media};
 
 #[cfg(debug_assertions)]
-const TTL: u64 = 3600;
+pub const FILE_TTL: u64 = 3600;
 
 #[cfg(not(debug_assertions))]
-const TTL: u64 = 60;
+pub const FILE_TTL: u64 = 60;
 
 /// # AUTH! `POST /api/media/upload`
 ///
@@ -89,7 +89,7 @@ pub async fn upload(
     let path = format!("{}/{}.blob", folder, oid);
     let _ = rocket::tokio::fs::create_dir_all(&folder).await;
     file.copy_to(&path).await?;
-    let response = json!({ "key" : oid.to_string(), "TTL" : TTL });
+    let response = json!({ "key" : oid.to_string(), "TTL" : FILE_TTL });
     timed_gc_routine(oid, path, (*mongo).clone()).await;
 
     Ok(Json(response))
@@ -107,7 +107,9 @@ async fn timed_gc_routine(
     collection: Collection<Media>,
 ) {
     rocket::tokio::spawn(async move {
-        rocket::tokio::time::sleep(rocket::tokio::time::Duration::new(TTL, 0)).await;
+        // We wait the double to avoid race conditions. This keeps the server
+        // fast by avoiding synchronization
+        rocket::tokio::time::sleep(rocket::tokio::time::Duration::new(FILE_TTL * 2, 0)).await;
         let result = collection.delete_one(doc! {MEDIA_ID: oid}, None).await;
         match result {
             Ok(x) if x.deleted_count == 1 => {

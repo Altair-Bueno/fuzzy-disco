@@ -1,5 +1,4 @@
 use mongodb::bson::doc;
-use mongodb::bson::oid::ObjectId;
 use mongodb::bson::to_bson;
 use mongodb::Collection;
 use rocket::serde::json::Json;
@@ -20,7 +19,7 @@ pub async fn edit_post(
     post_collection: &State<Collection<Post>>,
 ) -> ApiResult<()> {
     let oid = id.extract();
-    let filter = doc! {POSTS_AUTHOR:to_bson(token.alias()).unwrap(),POSTS_ID:oid};
+    let filter = doc! {POSTS_AUTHOR:token.alias(),POSTS_ID:oid};
     let update = doc! {"$set": to_bson(&payload.0).unwrap()};
     let update_result = post_collection.update_one(filter, update, None).await?;
 

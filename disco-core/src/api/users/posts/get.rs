@@ -1,10 +1,8 @@
 use std::option::Option::Some;
 
-use chrono::{DateTime, Utc};
 use mongodb::bson::doc;
 use mongodb::bson::from_document;
 use mongodb::bson::to_bson;
-use mongodb::bson::DateTime as MongoDateTime;
 use mongodb::Collection;
 use rocket::futures::StreamExt;
 use rocket::serde::json::Json;
@@ -65,9 +63,9 @@ pub async fn get_posts_from(
         // Look for posts from this author before eq the given date that are
         // public
         doc! { "$match": {
-            POSTS_AUTHOR: to_bson(&alias).unwrap(),
+            POSTS_AUTHOR: alias,
             POSTS_CREATION_DATE: { "$lte": date },
-            POSTS_VISIBILITY: to_bson(&Visibility::Public).unwrap()
+            POSTS_VISIBILITY: Visibility::Public
         }},
         // Sort descending
         doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
@@ -139,9 +137,9 @@ pub async fn get_private_posts_from(
         // Look for posts from this author before eq the given date that are
         // public
         doc! { "$match": {
-            POSTS_AUTHOR: to_bson(&alias).unwrap(),
+            POSTS_AUTHOR: alias,
             POSTS_CREATION_DATE: { "$lte": date },
-            POSTS_VISIBILITY: to_bson(&Visibility::Private).unwrap()
+            POSTS_VISIBILITY: Visibility::Private
         }},
         // Sort descending
         doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
