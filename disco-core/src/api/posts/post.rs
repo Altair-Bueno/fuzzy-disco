@@ -4,12 +4,13 @@ use rocket::serde::json::serde_json::json;
 use rocket::serde::json::{Json, Value};
 use rocket::State;
 
-use crate::api::media::{claim_media_filter, claim_media_update};
+use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
 use crate::api::posts::data::NewPostPayload;
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::users::auth::claims::TokenClaims;
 use crate::mongo::media::{Format, Media};
 use crate::mongo::post::Post;
+use crate::api::POSTS_ID;
 
 /// #  AUTH! `POST /api/posts/new`
 /// Creates a new post. A post must contain the following fields:
@@ -94,16 +95,6 @@ pub async fn new_post(
         .parse()
         .map_err(|_| ApiError::BadRequest("Invalid visibility"))?;
     let post = Post::new(title, caption, author, audio, photo, visibility);
-    /*  Transactions are not supported on single instances of mongodb
-        TODO: Acid operations
-        // Init transaction
-        let mut transaction_session = mongo_client.start_session(None).await?;
-        let options = TransactionOptions::builder()
-            .read_concern(ReadConcern::majority())
-            .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
-            .build();
-        transaction_session.start_transaction(options).await?;
-    */
     // Claim image
     let claim_image = claim_media_filter(&post.photo(), &Format::Image, post.author()).await;
     let update = claim_media_update().await;
@@ -120,6 +111,9 @@ pub async fn new_post(
         .update_one(claim_audio, update, None)
         .await?;
     if update_result.modified_count != 1 {
+        // delete the already claimed media
+        let _ = delete_media(&post.photo()).await;
+        let _ = media_collection.delete_one(doc! {POSTS_ID:post.photo()},None).await;
         return Err(ApiError::NotFound("Audio"));
     }
     // Insert post

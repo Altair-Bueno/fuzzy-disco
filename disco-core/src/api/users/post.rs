@@ -26,6 +26,13 @@ use crate::mongo::user::{Description, Email, Password, Session, User};
 /// }
 /// ```
 ///
+/// # Race conditions
+/// This API method does not provide protection against race conditions, meaning
+/// that if the same user changes the password at the same time on multiple
+/// sessions only one of them will succeed but none of them will receive any
+/// kind of warning. This is due to mongodb ACID transactions limitations and
+/// the intentional desire to make this server fast
+///
 /// # Returns
 /// ## Ok (200)
 ///
@@ -65,7 +72,6 @@ pub async fn update_user_password(
     session_collection: &State<Collection<Session>>,
     token: TokenClaims,
 ) -> ApiResult<()> {
-    // TODO acid transaction
     let validated_document = updated.new_password.parse::<Password>()?;
     let user = crate::api::users::locate_user(token.alias(), user_collection).await?;
 
@@ -119,55 +125,38 @@ pub async fn update_user_password(
 #[post("/update/avatar", format = "json", data = "<updated>")]
 pub async fn update_user_avatar(
     token: TokenClaims,
-    updated: Json<AvatarPictureID<'_>>,
+    updated: Json<AvatarPictureID>,
     user_collection: &State<Collection<User>>,
     media_collection: &State<Collection<Media>>,
-    mongo_client: &State<Client>,
 ) -> ApiResult<()> {
-    /* todo acid operation
-    let mut transaction_session = mongo_client.start_session(None).await?;
-    let options = TransactionOptions::builder()
-        .read_concern(ReadConcern::majority())
-        .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
-        .build();
-    transaction_session.start_transaction(options).await?;
-    */
-    // Delete old profile picture
+    let avatar_id = {
+        if let Some(id) = updated.0.media_id {
+            let oid = id.extract();
+            // Claim media
+            let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
+            let update = claim_media_update().await;
+            let media = media_collection
+                .find_one_and_update(filter, update, None)
+                .await?
+                .ok_or(ApiError::BadRequest("Media file not found"))?;
+            media.id()
+        } else {
+            None
+        }
+    };
     let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
-    let user = user_collection
-        .find_one(filter, None)
+    let update = doc! {"$set": { USER_AVATAR: avatar_id }};
+    let user_before = user_collection
+        .find_one_and_update(filter, update ,None)
         .await?
         .ok_or(ApiError::NotFound("User"))?;
-    let filter = doc! {MEDIA_ID: user.avatar() };
-    let deleted = media_collection.find_one_and_delete(filter, None).await?;
-
-    if let Some(media) = deleted {
-        delete_media(&media.id().unwrap()).await?;
+    // Delete the old media file
+    let filter = doc! {MEDIA_ID: user_before.avatar() };
+    let _ = media_collection.delete_one(filter,None).await?;
+    if let Some(id) = user_before.avatar() {
+        let _ = delete_media(&id).await;
     }
-
-    if let Some(x) = updated.mediaid {
-        let oid = mongodb::bson::oid::ObjectId::from_str(x)?;
-
-        // Claim media
-        let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
-        let update = claim_media_update().await;
-        let media = media_collection
-            .find_one_and_update(filter, update, None)
-            .await?
-            .ok_or(ApiError::BadRequest("Media file not found"))?;
-        // Update user
-        let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
-        let update = doc! {"$set": {USER_AVATAR: media.id() }};
-        let result = user_collection.update_one(filter, update, None).await?;
-
-        if result.modified_count == 1 {
-            Ok(())
-        } else {
-            Err(ApiError::NotFound("User"))
-        }
-    } else {
-        Ok(())
-    }
+    Ok(())
 }
 
 /// # AUTH! `POST /api/users/update/`

@@ -41,17 +41,8 @@ pub async fn delete_post(
     token: TokenClaims,
     post_collection: &State<Collection<Post>>,
     media_collection: &State<Collection<Media>>,
-    mongo_client: &State<Client>,
 ) -> ApiResult<()> {
     let oid = id.parse::<ObjectId>()?;
-
-    /* TODO acid
-    let mut transaction_session = mongo_client.start_session(None).await?;
-    let options = TransactionOptions::builder()
-        .read_concern(ReadConcern::majority())
-        .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
-        .build();
-    transaction_session.start_transaction(options).await?;*/
     // Delete post
     let filter = doc! {POSTS_ID:oid, POSTS_AUTHOR:to_bson(token.alias()).unwrap()};
     let post = post_collection
@@ -60,15 +51,15 @@ pub async fn delete_post(
         .ok_or(BadRequest("Couldn't found the associated post"))?;
     // Delete photo
     let filter = doc! {POSTS_PHOTO:post.photo()};
-    let photo = media_collection.find_one_and_delete(filter, None).await?;
-    if let Some(media) = photo {
-        rocket::tokio::fs::remove_file(oid_to_path(&media.id().unwrap())).await?;
+    let photo = media_collection.find_one_and_delete(filter, None).await;
+    if let Ok(Some(media)) = photo {
+        let _ = rocket::tokio::fs::remove_file(oid_to_path(&media.id().unwrap())).await;
     }
     // Delete audio
     let filter = doc! {POSTS_AUDIO:post.audio()};
-    let audio = media_collection.find_one_and_delete(filter, None).await?;
-    if let Some(media) = audio {
-        rocket::tokio::fs::remove_file(oid_to_path(&media.id().unwrap())).await?;
+    let audio = media_collection.find_one_and_delete(filter, None).await;
+    if let Ok(Some(media)) = audio {
+        let _ = rocket::tokio::fs::remove_file(oid_to_path(&media.id().unwrap())).await;
     }
     Ok(())
 }

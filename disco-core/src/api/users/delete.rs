@@ -52,14 +52,6 @@ pub async fn delete_user(
     mongo_client: &State<Client>,
 ) -> ApiResult<Value> {
     let bearer_token_alias = token.alias();
-    /* TODO removed ACID
-        let mut transaction_session = mongo_client.start_session(None).await?;
-        let options = TransactionOptions::builder()
-            .read_concern(ReadConcern::majority())
-            .write_concern(WriteConcern::builder().w(Acknowledgment::Majority).build())
-            .build();
-        transaction_session.start_transaction(options).await?;
-    */
     // Delete the user
     let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(bearer_token_alias).unwrap() };
     let count = user_collection.delete_one(filter, None).await?;
@@ -77,7 +69,7 @@ pub async fn delete_user(
         let mut remove_list = media_collection.find(Some(filter.clone()), None).await?;
 
         while let Some(next) = remove_list.next().await {
-            delete_media(&next?.id().unwrap()).await?
+            let _ = delete_media(&next?.id().unwrap()).await;
         }
         media_collection.delete_many(filter, None).await?;
 

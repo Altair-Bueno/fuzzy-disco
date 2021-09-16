@@ -13,7 +13,7 @@ use rocket::serde::json::Value;
 use rocket::State;
 use serde::Deserialize;
 
-use crate::api::data::{ApiPostResponse, ApiUserResponse};
+use crate::api::data::{ApiPostResponse, ApiUserResponse, ApiDate};
 use crate::api::result::ApiResult;
 use crate::api::{POSTS_CREATION_DATE, USER_CREATION_DATE};
 use crate::mongo::post::Post;
@@ -57,12 +57,11 @@ pub async fn search(
     s: &str,
     drop: usize,
     get: u8,
-    date: &str,
+    date: ApiDate,
     user_collection: &State<Collection<User>>,
     posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Value>> {
-    let date: DateTime<Utc> = date.parse()?;
-    let date = MongoDateTime::from_chrono(date);
+    let date = date.extract();
     let filter_users = vec![
         doc! { "$match": {
             "$text": {"$search": s},
@@ -82,6 +81,9 @@ pub async fn search(
         doc! { "$limit": to_bson(&get).unwrap() },
     ];
     // TODO async search on parallel using `sope` threads
+    // Note: AsyncDrop does not exist, neither scoped async tasks. It is not
+    // currently possible to perform two separate queries on different tasks
+    // without wrapping the client on `Ark`
     let users: Vec<ApiUserResponse> = search_on_collection(filter_users, user_collection).await?;
     let posts: Vec<ApiPostResponse> = search_on_collection(filter_posts, posts_collection).await?;
     Ok(Json(json!({"users":users,"posts":posts})))
