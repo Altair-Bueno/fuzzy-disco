@@ -128,6 +128,7 @@ pub async fn update_user_avatar(
     media_collection: &State<Collection<Media>>,
 ) -> ApiResult<()> {
     let avatar_id = {
+        // TODO check if file has expired
         if let Some(id) = updated.0.media_id {
             let oid = id.extract();
             // Claim media

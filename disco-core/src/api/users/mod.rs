@@ -16,7 +16,7 @@ pub mod delete;
 pub mod get;
 /// PUT /api/users
 pub mod post;
-/// /api/users/<alias>/posts
+/// /api/users/\<alias>/posts
 pub mod posts;
 
 // helper functions

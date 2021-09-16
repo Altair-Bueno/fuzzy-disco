@@ -11,10 +11,10 @@ use crate::mongo::user::Alias;
 
 /// JWT Time To Live
 #[cfg(debug_assertions)]
-const TTL_AUTH: i64 = 120;
+pub const TTL_AUTH: i64 = 120;
 
 #[cfg(not(debug_assertions))]
-const TTL_AUTH: i64 = 30;
+pub const TTL_AUTH: i64 = 30;
 
 pub type EncryptedToken = String;
 pub type ExpiresIn = i64;

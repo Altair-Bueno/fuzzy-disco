@@ -9,7 +9,7 @@ use rocket::State;
 
 use crate::api::media::delete_media;
 use crate::api::result::{ApiError, ApiResult};
-use crate::api::users::auth::claims::TokenClaims;
+use crate::api::users::auth::claims::{TokenClaims};
 use crate::api::{MEDIA_UPLOADED_BY, POSTS_AUTHOR, SESSION_USER_ALIAS, USER_ALIAS};
 use crate::mongo::media::Media;
 use crate::mongo::post::Post;
@@ -56,6 +56,7 @@ pub async fn delete_user(
     if count.deleted_count == 0 {
         Err(ApiError::NotFound("User"))
     } else {
+        // TODO user may still be able to publish posts. Need a GC for that
         // Delete user sessions
         let filter = doc! { SESSION_USER_ALIAS: token.alias() };
         session_collection.delete_many(filter, None).await?;
