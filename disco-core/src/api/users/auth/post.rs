@@ -199,7 +199,7 @@ pub async fn login_email(
     let email = info.email.parse::<Email>()?;
     let user = user_collection
         .find_one(
-            Some(doc! {USER_EMAIL: mongodb::bson::to_bson(&email).unwrap() }),
+            Some(doc! {USER_EMAIL: email }),
             None,
         )
         .await?;

@@ -1,5 +1,4 @@
 use mongodb::bson::oid::ObjectId;
-use mongodb::bson::to_bson;
 use mongodb::{bson::doc, Collection};
 use rocket::State;
 
@@ -44,7 +43,7 @@ pub async fn delete_post(
 ) -> ApiResult<()> {
     let oid = id.parse::<ObjectId>()?;
     // Delete post
-    let filter = doc! {POSTS_ID:oid, POSTS_AUTHOR:to_bson(token.alias()).unwrap()};
+    let filter = doc! {POSTS_ID:oid, POSTS_AUTHOR:token.alias()};
     let post = post_collection
         .find_one_and_delete(filter, None)
         .await?

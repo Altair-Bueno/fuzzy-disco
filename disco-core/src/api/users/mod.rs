@@ -24,7 +24,7 @@ pub mod posts;
 async fn locate_user(alias: &Alias, mongo: &State<Collection<User>>) -> ApiResult<User> {
     let result = mongo
         .find_one(
-            doc! {USER_ALIAS: mongodb::bson::to_bson(alias).unwrap() },
+            doc! {USER_ALIAS: alias },
             None,
         )
         .await?;

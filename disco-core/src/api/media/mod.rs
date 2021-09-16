@@ -24,9 +24,9 @@ pub async fn claim_media_filter(
 ) -> mongodb::bson::Document {
     doc! {
         MEDIA_ID: oid ,
-        MEDIA_STATUS: mongodb::bson::to_bson(&Status::Waiting).unwrap(),
-        MEDIA_FORMAT: mongodb::bson::to_bson(expected).unwrap(),
-        MEDIA_UPLOADED_BY : mongodb::bson::to_bson(uploaded_by).unwrap()
+        MEDIA_STATUS: Status::Waiting,
+        MEDIA_FORMAT: expected,
+        MEDIA_UPLOADED_BY : uploaded_by
     }
 }
 
@@ -38,10 +38,10 @@ pub async fn delete_media(oid: &ObjectId) -> ApiResult<()> {
 }
 
 pub async fn claim_media_update() -> mongodb::bson::Document {
-    doc! { "$set": { MEDIA_STATUS: mongodb::bson::to_bson(&Status::Assigned).unwrap() } }
+    doc! { "$set": { MEDIA_STATUS: Status::Assigned } }
 }
 pub async fn unclaim_media_update() -> mongodb::bson::Document {
-    doc! { "$set": { MEDIA_STATUS: mongodb::bson::to_bson(&Status::Waiting).unwrap() } }
+    doc! { "$set": { MEDIA_STATUS: Status::Waiting } }
 }
 pub fn is_expired(oid:&ObjectId) -> bool {
     let time:chrono::DateTime<Utc> = oid.timestamp().into();

@@ -75,7 +75,7 @@ pub async fn update_user_password(
 
     match user.password().validate(updated.password) {
         Ok(true) => {
-            let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(user.alias()).unwrap() };
+            let filter = doc! { USER_ALIAS: user.alias() };
             let update_op = doc! {"$set": { USER_PASSWORD: validated_document.password() }};
             let _response = user_collection.update_one(filter, update_op, None).await?;
             delete_all_sessions_from(user.alias(), session_collection).await?;
@@ -142,7 +142,7 @@ pub async fn update_user_avatar(
             None
         }
     };
-    let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { USER_ALIAS: token.alias() };
     let update = doc! {"$set": { USER_AVATAR: avatar_id }};
     let user_before = user_collection
         .find_one_and_update(filter, update ,None)
@@ -222,7 +222,7 @@ pub async fn update_user_info(
         "$set": mongodb::bson::to_bson(&dic).unwrap()
     };
 
-    let filter = doc! { USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
+    let filter = doc! { USER_ALIAS: token.alias() };
     let res = user_collection.update_one(filter, update_doc, None).await?;
 
     if res.modified_count == 1 {

@@ -36,6 +36,12 @@ impl Email {
     }
 }
 
+impl From<Email> for mongodb::bson::Bson {
+    fn from(e: Email) -> Self {
+        mongodb::bson::to_bson(&e).unwrap()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::Email;

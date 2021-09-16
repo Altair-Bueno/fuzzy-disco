@@ -21,6 +21,13 @@ impl FromStr for Visibility {
     }
 }
 
+impl From<Visibility> for mongodb::bson::Bson {
+    fn from(v: Visibility) -> Self {
+        mongodb::bson::to_bson(&v).unwrap()
+    }
+}
+
+
 impl Default for Visibility {
     fn default() -> Self {
         Visibility::Private

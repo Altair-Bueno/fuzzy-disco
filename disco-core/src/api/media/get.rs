@@ -45,7 +45,7 @@ pub async fn get_media_auth(
 ) -> ApiResult<File> {
     let oid = id.extract();
     let filter =
-        doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
+        doc! {MEDIA_ID: oid, MEDIA_STATUS : Status::Assigned };
     let media = mongo_media
         .find_one(filter, None)
         .await?
@@ -67,7 +67,7 @@ pub async fn get_media(
 ) -> ApiResult<File> {
     let oid = id.extract();
     let filter =
-        doc! {MEDIA_ID: oid, MEDIA_STATUS : mongodb::bson::to_bson(&Status::Assigned).unwrap() };
+        doc! {MEDIA_ID: oid, MEDIA_STATUS : Status::Assigned };
     let media = mongo_media
         .find_one(filter, None)
         .await?

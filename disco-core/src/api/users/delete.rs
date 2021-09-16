@@ -51,19 +51,19 @@ pub async fn delete_user(
 ) -> ApiResult<Value> {
     let bearer_token_alias = token.alias();
     // Delete the user
-    let filter = doc! {USER_ALIAS: mongodb::bson::to_bson(bearer_token_alias).unwrap() };
+    let filter = doc! {USER_ALIAS: bearer_token_alias };
     let count = user_collection.delete_one(filter, None).await?;
     if count.deleted_count == 0 {
         Err(ApiError::NotFound("User"))
     } else {
         // Delete user sessions
-        let filter = doc! { SESSION_USER_ALIAS: mongodb::bson::to_bson(token.alias()).unwrap() };
+        let filter = doc! { SESSION_USER_ALIAS: token.alias() };
         session_collection.delete_many(filter, None).await?;
         // Delete user posts
-        let filter = doc! { POSTS_AUTHOR:mongodb::bson::to_bson(token.alias()).unwrap() };
+        let filter = doc! { POSTS_AUTHOR:token.alias() };
         post_collection.delete_many(filter, None).await?;
         // Delete all media uploaded by user
-        let filter = doc! { MEDIA_UPLOADED_BY: mongodb::bson::to_bson(token.alias()).unwrap() };
+        let filter = doc! { MEDIA_UPLOADED_BY: token.alias() };
         let mut remove_list = media_collection.find(Some(filter.clone()), None).await?;
 
         while let Some(next) = remove_list.next().await {
