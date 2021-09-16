@@ -37,3 +37,9 @@ impl FromStr for Format {
         Ok(r)
     }
 }
+
+impl From<Format> for mongodb::bson::Bson {
+    fn from(e: Format) -> Self {
+        mongodb::bson::to_bson(&e).unwrap()
+    }
+}

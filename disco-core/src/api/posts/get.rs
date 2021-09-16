@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use mongodb::bson::doc;
 use mongodb::Collection;
 use rocket::serde::json::Json;

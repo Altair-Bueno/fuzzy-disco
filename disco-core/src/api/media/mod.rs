@@ -5,6 +5,8 @@ use crate::api::result::{ApiError, ApiResult};
 use crate::api::{MEDIA_FORMAT, MEDIA_ID, MEDIA_STATUS, MEDIA_UPLOADED_BY};
 use crate::mongo::media::{Format, Status};
 use crate::mongo::user::Alias;
+use chrono::Utc;
+use crate::api::media::post::FILE_TTL;
 
 /// Data Structures used on this module
 mod data;
@@ -37,6 +39,14 @@ pub async fn delete_media(oid: &ObjectId) -> ApiResult<()> {
 
 pub async fn claim_media_update() -> mongodb::bson::Document {
     doc! { "$set": { MEDIA_STATUS: mongodb::bson::to_bson(&Status::Assigned).unwrap() } }
+}
+pub async fn unclaim_media_update() -> mongodb::bson::Document {
+    doc! { "$set": { MEDIA_STATUS: mongodb::bson::to_bson(&Status::Waiting).unwrap() } }
+}
+pub fn is_expired(oid:&ObjectId) -> bool {
+    let time:chrono::DateTime<Utc> = oid.timestamp().into();
+    let sum = time + chrono::Duration::seconds(FILE_TTL as i64);
+    sum < Utc::now()
 }
 
 pub fn oid_to_path(oid: &mongodb::bson::oid::ObjectId) -> String {

@@ -1,6 +1,5 @@
 use std::option::Option::Some;
 
-use mongodb::Client;
 use mongodb::{bson::doc, Collection};
 use rocket::futures::StreamExt;
 use rocket::http::Status;
@@ -49,7 +48,6 @@ pub async fn delete_user(
     media_collection: &State<Collection<Media>>,
     session_collection: &State<Collection<Session>>,
     post_collection: &State<Collection<Post>>,
-    mongo_client: &State<Client>,
 ) -> ApiResult<Value> {
     let bearer_token_alias = token.alias();
     // Delete the user

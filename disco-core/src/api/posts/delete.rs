@@ -1,6 +1,6 @@
 use mongodb::bson::oid::ObjectId;
 use mongodb::bson::to_bson;
-use mongodb::{bson::doc, Client, Collection};
+use mongodb::{bson::doc, Collection};
 use rocket::State;
 
 use crate::api::media::oid_to_path;

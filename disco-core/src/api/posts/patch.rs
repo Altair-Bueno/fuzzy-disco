@@ -1,5 +1,4 @@
 use mongodb::bson::doc;
-use mongodb::bson::oid::ObjectId;
 use mongodb::bson::to_bson;
 use mongodb::Collection;
 use rocket::serde::json::Json;

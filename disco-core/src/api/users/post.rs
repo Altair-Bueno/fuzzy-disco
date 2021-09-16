@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::str::FromStr;
 
-use mongodb::Client;
 use mongodb::{bson::doc, Collection};
 use rocket::serde::json::Json;
 use rocket::State;
@@ -151,10 +149,12 @@ pub async fn update_user_avatar(
         .await?
         .ok_or(ApiError::NotFound("User"))?;
     // Delete the old media file
-    let filter = doc! {MEDIA_ID: user_before.avatar() };
-    let _ = media_collection.delete_one(filter,None).await?;
-    if let Some(id) = user_before.avatar() {
-        let _ = delete_media(&id).await;
+    if let Some(avatar) = user_before.avatar() {
+        let filter = doc! { MEDIA_ID: avatar };
+        let _ = media_collection.delete_one(filter,None).await?;
+        if let Some(id) = user_before.avatar() {
+            let _ = delete_media(&id).await;
+        }
     }
     Ok(())
 }

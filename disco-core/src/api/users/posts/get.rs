@@ -1,10 +1,8 @@
 use std::option::Option::Some;
 
-use chrono::{DateTime, Utc};
 use mongodb::bson::doc;
 use mongodb::bson::from_document;
 use mongodb::bson::to_bson;
-use mongodb::bson::DateTime as MongoDateTime;
 use mongodb::Collection;
 use rocket::futures::StreamExt;
 use rocket::serde::json::Json;
