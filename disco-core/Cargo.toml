@@ -38,4 +38,4 @@ features = ["serde"]
 
 [dependencies.redis]
 version = "0.21.1"
-features = ["tokio-comp"]
+features = ["tokio-comp", "r2d2", "connection-manager"]
