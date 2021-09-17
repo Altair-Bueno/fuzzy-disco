@@ -24,6 +24,7 @@ pub async fn edit_post(
     let update_result = post_collection.update_one(filter, update, None).await?;
 
     if update_result.matched_count == 1 {
+        // TODO: media should become private
         Ok(())
     } else {
         Err(ApiError::Unauthorized("You are not allowed to modify this post"))
