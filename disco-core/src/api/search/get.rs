@@ -13,10 +13,11 @@ use serde::Deserialize;
 
 use crate::api::data::{ApiPostResponse, ApiUserResponse, ApiDate};
 use crate::api::result::ApiResult;
-use crate::api::{POSTS_CREATION_DATE, USER_CREATION_DATE};
+use crate::api::{POSTS_CREATION_DATE, USER_CREATION_DATE, USER_ALIAS, POSTS_VISIBILITY, POSTS_TITLE, POSTS_CAPTION};
 use crate::mongo::post::Post;
 use crate::mongo::user::User;
 use crate::api::search::data::Window;
+use crate::mongo::visibility::Visibility;
 
 /// # `GET /api/search?s=<string>&date=<string>&user.drop=<usize>&user.get=<u8>&post.drop=<usize>&post.get=<u8>`
 /// Returns matches for the given search string. The method receives the
@@ -70,10 +71,11 @@ pub async fn search(
     let users: Option<Vec<ApiUserResponse>> = if user.get >0 {
         let filter_users = vec![
             doc! { "$match": {
-            "$text": {"$search": s},
-            USER_CREATION_DATE:{ "$lte": date }
-        }},
-            doc! { "$sort": { "score": { "$meta": "textScore" } } },
+                USER_CREATION_DATE:{ "$lte": date },
+                USER_ALIAS: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }
+            }},
+            // Skip sort stage
+            //doc! { "$sort": { "score": { "$meta": "textScore" } } },
             doc! { "$skip": to_bson(&user.drop).unwrap() },
             doc! { "$limit": to_bson(&user.get).unwrap() },
         ];
@@ -84,10 +86,15 @@ pub async fn search(
     let posts: Option<Vec<ApiPostResponse>> = if post.get > 0 {
         let filter_posts = vec![
             doc! { "$match": {
-            "$text": {"$search": s},
-            POSTS_CREATION_DATE:{ "$lte": date }
+                POSTS_CREATION_DATE:{ "$lte": date },
+                POSTS_VISIBILITY : Visibility::Public,
+                "$or": [
+                    {POSTS_TITLE: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }},
+                    {POSTS_CAPTION: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }}
+                ]
         }},
-            doc! { "$sort": { "score": { "$meta": "textScore" } } },
+            // Skip sort stage
+            //doc! { "$sort": { "score": { "$meta": "textScore" } } },
             doc! { "$skip": to_bson(&post.drop).unwrap() },
             doc! { "$limit": to_bson(&post.get).unwrap() },
         ];

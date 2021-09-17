@@ -31,10 +31,10 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
                         "name": "alias",
                         "unique": true
                     },
-                    {
+                    /*{
                         "key": { "alias": "text" },
                         "name": "search",
-                    },
+                    },*/
                     {
                         "key": { "email": 1 },
                         "name": "email",
@@ -84,7 +84,7 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
 
     #[cfg(debug_assertions)]
     println!("[MONGO]: Index creation response {:?}", index_response);
-
+/* Text indexes perform exact match on words. They are not suitable for fuzzy-disco
     let index_response = db
         .run_command(
             doc! {
@@ -103,6 +103,7 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
 
     #[cfg(debug_assertions)]
     println!("[MONGO]: Index creation response {:?}", index_response);
+*/
 
     Ok((db, client))
 }
