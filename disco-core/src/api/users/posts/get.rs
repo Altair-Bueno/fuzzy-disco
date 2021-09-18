@@ -16,13 +16,14 @@ use crate::mongo::post::Post;
 use crate::mongo::user::Alias;
 use crate::mongo::visibility::Visibility;
 
-/// # `GET /api/users/<id>/posts?drop=<usize>&get=<u8>&date=<string>`
+/// Block size for queries
+const BLOCK_SIZE:usize = 40;
+
+/// # `GET /api/users/<id>/posts?block=<usize>&date=<string>`
 /// Returns a list of public posts from the given user. The method receives the
 /// following query parameters:
 ///
-/// - `drop`: Number of posts we want to skip. This avoids repetition on future
-/// queries
-/// - `get`: Number of posts we want to retrieve. The max is 255 posts
+/// - `block`: Block number to get. Each block has [BLOCK_SIZE] posts
 /// - `date`: JSON formatted date, from where to start the query
 ///
 /// # Returns
@@ -31,7 +32,6 @@ use crate::mongo::visibility::Visibility;
 ///
 /// ```json
 /// [
-///     Post,
 ///     Post,
 ///     ...
 /// ]
@@ -50,11 +50,10 @@ use crate::mongo::visibility::Visibility;
 /// | 400 | Bad request |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
-#[get("/<alias>/posts?<drop>&<get>&<date>", rank = 2)]
+#[get("/<alias>/posts?<block>&<date>", rank = 2)]
 pub async fn get_posts_from(
     alias: Alias,
-    drop: usize,
-    get: u8,
+    block:usize,
     date: ApiDate,
     posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Vec<ApiPostResponse>>> {
@@ -69,12 +68,12 @@ pub async fn get_posts_from(
         }},
         // Sort descending
         doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
-        doc! { "$skip": to_bson(&drop).unwrap() },
-        doc! { "$limit": to_bson(&get).unwrap() },
+        doc! { "$skip": to_bson(&(block * BLOCK_SIZE)).unwrap() },
+        doc! { "$limit": to_bson(&BLOCK_SIZE).unwrap() },
     ];
 
     let mut posts_cursor = posts_collection.aggregate(query, None).await?;
-    let mut response = Vec::with_capacity(get as usize);
+    let mut response = Vec::with_capacity(BLOCK_SIZE);
 
     while let Some(r) = posts_cursor.next().await {
         let post: Post = from_document(r?).unwrap();
@@ -84,14 +83,12 @@ pub async fn get_posts_from(
     Ok(Json(response))
 }
 
-/// # AUTH! `GET /api/users/<id>/posts?private&drop=<usize>&get=<u8>&date=<string>`
+/// # AUTH! `GET /api/users/<id>/posts?private&block=<usize>&date=<string>`
 /// Returns a list of private posts from the given user. The user must be the
 /// same user that is authenticated. The method receives the following query
 /// parameters:
 ///
-/// - `drop`: Number of posts we want to skip. This avoids repetition on future
-/// queries
-/// - `get`: Number of posts we want to retrieve. The max is 255 posts
+/// - `block`: Block number to get. Each block has [BLOCK_SIZE] posts
 /// - `date`: JSON formatted date, from where to start the query
 ///
 /// # Returns
@@ -100,7 +97,6 @@ pub async fn get_posts_from(
 ///
 /// ```json
 /// [
-///     Post,
 ///     Post,
 ///     ...
 /// ]
@@ -120,12 +116,11 @@ pub async fn get_posts_from(
 /// | 401 | Unauthorised |
 /// | 404 | User doesn't exist |
 /// | 500 | Couldn't connect to database |
-#[get("/<alias>/posts?private&<drop>&<get>&<date>")]
+#[get("/<alias>/posts?private&<block>&<date>")]
 pub async fn get_private_posts_from(
     token: TokenClaims,
     alias: Alias,
-    drop: usize,
-    get: u8,
+    block: usize,
     date: ApiDate,
     posts_collection: &State<Collection<Post>>,
 ) -> ApiResult<Json<Vec<ApiPostResponse>>> {
@@ -143,12 +138,12 @@ pub async fn get_private_posts_from(
         }},
         // Sort descending
         doc! { "$sort": { POSTS_CREATION_DATE : -1 } },
-        doc! { "$skip": to_bson(&drop).unwrap() },
-        doc! { "$limit": to_bson(&get).unwrap() },
+        doc! { "$skip": to_bson(&(block * BLOCK_SIZE)).unwrap() },
+        doc! { "$limit": to_bson(&BLOCK_SIZE).unwrap() },
     ];
 
     let mut posts_cursor = posts_collection.aggregate(query, None).await?;
-    let mut response = Vec::with_capacity(get as usize);
+    let mut response = Vec::with_capacity(BLOCK_SIZE);
 
     while let Some(r) = posts_cursor.next().await {
         let post: Post = from_document(r?).unwrap();
