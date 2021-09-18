@@ -30,15 +30,15 @@ const BLOCK_SIZE:usize = 10;
 /// - `date`: Date from where to start the search. Use this to avoid race
 /// conditions
 /// - `block`: The block to look for. A block is a sequence of [BLOCK_SIZE]
-/// elements
+/// elements. For example, if you want the 30 latest posts, you'll need 3 calls
+/// to this api with `block = [0,1,2]`
 ///
 /// # Returns
 /// ## Ok(200)
 ///
 /// ```json
 /// [
-///     User/Post,
-///     ...
+///     User/Post x BLOCK_SIZE
 /// ]
 /// ```
 ///
@@ -89,8 +89,7 @@ pub async fn search_post(
                     {POSTS_CAPTION: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }}
                 ]
             }},
-            // Skip sort stage
-            //doc! { "$sort": { "score": { "$meta": "textScore" } } },
+            doc! { "$sort": {POSTS_CREATION_DATE: 1 } },
             doc! { "$skip": to_bson(&(block * BLOCK_SIZE)).unwrap() },
             doc! { "$limit": to_bson(&BLOCK_SIZE).unwrap() },
         ];
@@ -120,8 +119,7 @@ pub async fn search_user(
                 USER_CREATION_DATE:{ "$lte": date },
                 USER_ALIAS: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }
             }},
-            // Skip sort stage
-            //doc! { "$sort": { "score": { "$meta": "textScore" } } },
+            doc! { "$sort": { USER_CREATION_DATE: 1 } },
             doc! { "$skip": to_bson(&(block * BLOCK_SIZE)).unwrap() },
             doc! { "$limit": to_bson(&BLOCK_SIZE).unwrap() },
         ];
