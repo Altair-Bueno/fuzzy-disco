@@ -1,17 +1,19 @@
 use mongodb::bson::doc;
 use mongodb::Client as MongoClient;
 use mongodb::Database as MongoDatabase;
+use redis::RedisResult;
+use redis::aio::MultiplexedConnection;
 
 /// Inits Mongodb. This includes:
 ///
-/// - Reading the enviroment variable `MONGODB_URI`
+/// - Reading the environment variable `MONGODB_URI`
 /// - Creating indexes for the different collections
 /// - Creating a mongodb client
 /// - Creating a mongodb database
 ///
 /// # `MONGODB_URI`
 ///
-/// This enviroment variable should point to a well formated Mongodb URL,
+/// This environment variable should point to a well formatted Mongodb URL,
 /// otherwise it will default to `mongodb:://127.0.0.1/`. If the server cannot
 /// connect to the Mongo instance, it will exit. showing an error message
 pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClient)> {
@@ -106,4 +108,23 @@ pub async fn init_mongo_db() -> mongodb::error::Result<(MongoDatabase, MongoClie
 */
 
     Ok((db, client))
+}
+/// Inits a redis connection. This includes:
+///
+/// - Reading the environment variable `REDIS_URI`
+/// - Creating a redis connection
+///
+/// # `REDIS_URI`
+///
+/// This environment variable should point to a well formatted Redis URL,
+/// otherwise it will default to `redis://127.0.0.1/`. If the server cannot
+/// connect to the redis instance, it will exit. showing an error message
+
+pub async fn init_redis() -> RedisResult<MultiplexedConnection> {
+    let url = std::env::var("REDIS_URI")
+        .unwrap_or("redis://127.0.0.1:6379/".to_string());
+    #[cfg(debug_assertions)]
+    println!("[REDIS]: Expecting redis on {}", url);
+    redis::Client::open(url)?
+        .get_multiplexed_tokio_connection().await
 }
