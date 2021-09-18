@@ -4,7 +4,7 @@ use crate::mongo::visibility::Visibility;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EditPostPayload {
-    visibility: Visibility,
+    pub visibility: Option<Visibility>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

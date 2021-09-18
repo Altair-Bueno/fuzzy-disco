@@ -55,12 +55,15 @@ mod mongo;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
+    // Setting up redis
+    let redis_connection = init_redis().await
+        .map_err(|x| format!("{:?}",x))?;
+
     // Setting up mongodb connection
     println!("Connecting to database...");
-    let (mongo_database, mongo_client) = match init_mongo_db().await {
-        Ok(a) => a,
-        Err(err) => return Err(format!("{:?}", err)),
-    };
+    let (mongo_database, _mongo_client) = init_mongo_db().await
+        .map_err(|err|format!("{:?}", err))?;
+
     println!("Database connection successfully");
     println!("Starting up disco-core...");
 
@@ -68,9 +71,6 @@ async fn main() -> Result<(), String> {
     let mongo_post_collection = mongo_database.collection::<mongo::post::Post>("Posts");
     let mongo_media_collection = mongo_database.collection::<mongo::media::Media>("Media");
     let mongo_session_collection = mongo_database.collection::<mongo::session::Session>("Sessions");
-
-    // Setting up Redis connection
-    // todo https://docs.rs/redis/0.21.1/redis/
 
     if let Err(x) = rocket::tokio::fs::create_dir("temp/").await {
         #[cfg(debug_assertions)]
@@ -84,9 +84,13 @@ async fn main() -> Result<(), String> {
         .manage(mongo_post_collection)
         .manage(mongo_media_collection)
         .manage(mongo_session_collection)
-        .manage(mongo_client)
+        .manage(redis_connection)
+        //.manage(mongo_client)
         // Mounted routes
-        .mount("/api/search", routes![api::search::get::search])
+        .mount("/api/search", routes![
+            api::search::get::search_user,
+            api::search::get::search_post,
+        ])
         .mount(
             "/api/posts",
             routes![

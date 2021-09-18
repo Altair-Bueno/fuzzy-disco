@@ -4,7 +4,7 @@ use mongodb::{bson::doc, Collection};
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::api::media::{claim_media_filter, claim_media_update, delete_media};
+use crate::api::media::{claim_media_filter, claim_media_update, delete_media, is_expired};
 use crate::api::result::ApiError::InternalServerError;
 use crate::api::result::{ApiError, ApiResult};
 use crate::api::sessions::delete_all_sessions_from;
@@ -128,9 +128,11 @@ pub async fn update_user_avatar(
     media_collection: &State<Collection<Media>>,
 ) -> ApiResult<()> {
     let avatar_id = {
-        // TODO check if file has expired
         if let Some(id) = updated.0.media_id {
             let oid = id.extract();
+            if is_expired(&oid) {
+                return Err(ApiError::BadRequest("Expired file"))
+            }
             // Claim media
             let filter = claim_media_filter(&oid, &Format::Image, token.alias()).await;
             let update = claim_media_update().await;

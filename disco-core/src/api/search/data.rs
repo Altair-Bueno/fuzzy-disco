@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use serde::Serialize;
-use crate::api::data::ApiDate;
 
 #[derive(Debug,Serialize,Deserialize, FromForm)]
 pub struct Window {
