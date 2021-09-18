@@ -56,15 +56,15 @@ def change_user_avatar(image_id: str, auth_header: dict[str, str]):
                          headers=auth_header)
 
 
-def get_public_posts(id: str, drop: int, get: int, date: str):
+def get_public_posts(id: str,date: str, block = 0):
     return requests.get(
-        _URL + f'{id}/posts?drop={drop}&get={get}&date={urllib.parse.quote(date)}',
+        _URL + f'{id}/posts?block={block}&date={urllib.parse.quote(date)}',
         headers=_basic_header)
 
 
-def get_private_posts(id: str, drop: int, get: int, date: str, auth_header):
+def get_private_posts(id: str, date: str, auth_header: dict[str,str], block = 0):
     return requests.get(
-        _URL + f'{id}/posts?private&drop={drop}&get={get}&date={urllib.parse.quote(date)}',
+        _URL + f'{id}/posts?private&block={block}&date={urllib.parse.quote(date)}',
         headers=auth_header)
 
 

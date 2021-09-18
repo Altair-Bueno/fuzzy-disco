@@ -20,7 +20,7 @@ use redis::{AsyncCommands, RedisResult};
 
 /// 2^16ms = 65536ms = 1.0922667m. It allows easy extraction by `and` operation
 const SEARCH_CACHE_TTL:i64 = 65536;
-const BLOCK_SIZE:usize = 10;
+const BLOCK_SIZE:usize = 20;
 
 /// # `GET /api/search/<r>?s=<string>&date=<string>&block=<usize>`
 /// Search on database
@@ -38,7 +38,8 @@ const BLOCK_SIZE:usize = 10;
 ///
 /// ```json
 /// [
-///     User/Post x BLOCK_SIZE
+///     User/Post,
+///     ...
 /// ]
 /// ```
 ///
@@ -89,7 +90,7 @@ pub async fn search_post(
                     {POSTS_CAPTION: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }}
                 ]
             }},
-            doc! { "$sort": {POSTS_CREATION_DATE: 1 } },
+            doc! { "$sort": {POSTS_CREATION_DATE: -1 } },
             doc! { "$skip": to_bson(&(block * BLOCK_SIZE)).unwrap() },
             doc! { "$limit": to_bson(&BLOCK_SIZE).unwrap() },
         ];
@@ -119,7 +120,7 @@ pub async fn search_user(
                 USER_CREATION_DATE:{ "$lte": date },
                 USER_ALIAS: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }
             }},
-            doc! { "$sort": { USER_CREATION_DATE: 1 } },
+            doc! { "$sort": { USER_CREATION_DATE: -1 } },
             doc! { "$skip": to_bson(&(block * BLOCK_SIZE)).unwrap() },
             doc! { "$limit": to_bson(&BLOCK_SIZE).unwrap() },
         ];
