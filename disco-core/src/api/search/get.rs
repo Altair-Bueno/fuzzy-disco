@@ -10,12 +10,13 @@ use serde::Deserialize;
 
 use crate::api::data::{ApiPostResponse, ApiUserResponse, ApiDate};
 use crate::api::result::ApiResult;
-use crate::api::{POSTS_CREATION_DATE, USER_CREATION_DATE, USER_ALIAS, POSTS_VISIBILITY, POSTS_TITLE, POSTS_CAPTION};
+use crate::api::{POSTS_CREATION_DATE, USER_CREATION_DATE, USER_ALIAS, POSTS_VISIBILITY, POSTS_TITLE, POSTS_CAPTION, POSTS_AUTHOR};
 use crate::mongo::post::Post;
 use crate::mongo::user::User;
 use crate::mongo::visibility::Visibility;
 use redis::aio::MultiplexedConnection;
 use redis::{AsyncCommands, RedisResult};
+use rocket::serde::json::Json;
 
 
 /// 2^16ms = 65536ms = 1.0922667m. It allows easy extraction by `and` operation
@@ -73,13 +74,16 @@ pub async fn search_post(
     block:usize,
     post_collection: &State<Collection<Post>>,
     redis_cache: &State<MultiplexedConnection>
-) -> ApiResult<String> {
+) -> ApiResult<Json<Vec<ApiPostResponse>>> {
     let date = date.extract().timestamp_millis();
     let date = mongodb::bson::DateTime::from_millis(date - (date % SEARCH_CACHE_TTL));
     let key = format!("post:{}/{}/{}",s,date,block);
     let mut redis_cache = redis_cache.inner().clone();
-    if let Ok(Some(hit)) = redis_cache.get(&key).await {
-        Ok(hit)
+    let redis_response: RedisResult<Option<String>> = redis_cache.get(&key).await;
+    if let Ok(Some(hit)) = redis_response {
+        // Unwrap is safe. We know the content inside the redis is safe
+        let response = serde_json::from_str(&hit).unwrap();
+        Ok(Json(response))
     } else {
         let filter_posts = vec![
             doc! { "$match": {
@@ -87,7 +91,8 @@ pub async fn search_post(
                 POSTS_VISIBILITY : Visibility::Public,
                 "$or": [
                     {POSTS_TITLE: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }},
-                    {POSTS_CAPTION: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }}
+                    {POSTS_CAPTION: mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }},
+                    {POSTS_AUTHOR:mongodb::bson::Regex{ pattern: s.to_string(), options: "".to_string() }}
                 ]
             }},
             doc! { "$sort": {POSTS_CREATION_DATE: -1 } },
@@ -97,7 +102,7 @@ pub async fn search_post(
         let search : Vec<ApiPostResponse> = search_on_collection(filter_posts,post_collection).await?;
         let serialized = serde_json::to_string(&search).unwrap();
         let _ : RedisResult<()> = redis_cache.set(&key,&serialized).await;
-        Ok(serialized)
+        Ok(Json(search))
     }
 }
 #[get("/user?<s>&<date>&<block>", format = "json")]
@@ -107,13 +112,15 @@ pub async fn search_user(
     block:usize,
     user_collection: &State<Collection<User>>,
     redis_cache: &State<MultiplexedConnection>
-) -> ApiResult<String> {
+) -> ApiResult<Json<Vec<ApiUserResponse>>> {
     let date = date.extract().timestamp_millis();
     let date = mongodb::bson::DateTime::from_millis(date - (date % SEARCH_CACHE_TTL));
     let mut redis_cache = redis_cache.inner().clone();
     let key = format!("user:{}/{}/{}",s,date,block);
-    if let Ok(Some(hit)) = redis_cache.get(&key).await {
-        Ok(hit)
+    let redis_response:RedisResult<Option<String>> = redis_cache.get(&key).await;
+    if let Ok(Some(hit)) = redis_response {
+        let response = serde_json::from_str(&hit).unwrap();
+        Ok(Json(response))
     } else {
         let filter_users = vec![
             doc! { "$match": {
@@ -127,7 +134,7 @@ pub async fn search_user(
         let search: Vec<ApiUserResponse> = search_on_collection(filter_users, user_collection).await?;
         let serialized = serde_json::to_string(&search).unwrap();
         let _ :RedisResult<()> = redis_cache.set(&key,&serialized).await;
-        Ok(serialized)
+        Ok(Json(search))
     }
 }
 
