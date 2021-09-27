@@ -43,15 +43,14 @@
 #[macro_use]
 extern crate rocket;
 
-use std::path::PathBuf;
-
-use rocket::fs::{FileServer, NamedFile};
+use rocket::fs::FileServer;
 
 use init::*;
 
 pub mod api;
 mod init;
 mod mongo;
+mod control;
 
 #[rocket::main]
 async fn main() -> Result<(), String> {
@@ -140,14 +139,12 @@ async fn main() -> Result<(), String> {
         )
         // Static website server
         .mount("/", FileServer::from("static").rank(11))
-        .mount("/", routes![redirect])
+        .mount("/", routes![
+            control::index,
+            control::api_bad_request,
+        ])
         //.attach(AdHoc::on_request("Response",|x,_| Box::pin(async move { println!("Request: {:#?}",x)})))
         .launch()
         .await
         .map_err(|e| format!("{:?}", e))
-}
-
-#[get("/<_path..>", rank = 12)]
-async fn redirect(_path: PathBuf) -> std::io::Result<NamedFile> {
-    NamedFile::open("static/index.html").await
 }
