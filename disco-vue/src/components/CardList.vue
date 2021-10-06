@@ -12,23 +12,27 @@ import CardItem from "@/components/card/CardItem";
 export default {
   name: "CardList",
   components: {CardItem},
+  props: {
+    queryURL: String,
+  },
   data() {
     return {
-      cardlist: []
+      cardlist: [],
     }
   },
   methods: {
-    async getIndividualPost(id) {
-      let response = await fetch(`/api/posts/${id}`);
+    async getXPosts() {
+      let response = await fetch(this.queryURL +
+          "block=0&date=" + encodeURIComponent((new Date()).toJSON()));
       if(response.ok) {
-        let server_payload = response.json();
-        this.cardlist.push(server_payload);
+        let server_payload = await response.json();
+        this.cardlist.push(...server_payload);
       }
     }
   },
-  async beforeRouteEnter(to, from, next) {
-    next(vm => vm.getIndividualPost("614091f5f79c92b0de5ec555"));
-  }
+  mounted() {
+    this.getXPosts();
+  },
 }
 </script>
 

@@ -122,8 +122,6 @@ export default {
         });
         //TODO Redirect to Card Page
         if(response.ok) {
-          let server_payload = response.json();
-          console.log(server_payload.post_id);
           await this.$router.push({name: 'home'})
         }
       }

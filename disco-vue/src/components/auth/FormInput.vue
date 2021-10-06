@@ -18,7 +18,11 @@ export default {
     inputType: String,
     field: String,
     inputOk: Boolean,
-    input: String
+  },
+  data() {
+    return {
+      input: "",
+    }
   },
   emit: {
     'input-update': null

@@ -20,7 +20,18 @@ export default {
   computed: {
     cssVars() {
       return  {
-        '--card-background': "url(" + this.card.photo + ")",
+        '--card-background': "url(" + this.loadData() + ")",
+      }
+    }
+  },
+  methods: {
+    async loadData() {
+      console.log("ok")
+      let response = await fetch(`/api/media/${this.card.photo}`);
+      console.log(response.ok);
+      if(response.ok) {
+        console.log(response);
+        return response;
       }
     }
   }

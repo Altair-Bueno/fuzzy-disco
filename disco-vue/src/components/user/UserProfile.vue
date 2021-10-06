@@ -3,6 +3,7 @@
     <div class="profile">
       <Navbar></Navbar>
       <ProfileHeader :alias="alias" :description="description" :avatar="avatar" :email="email"></ProfileHeader>
+      <CardList :query-u-r-l="`/api/users/${alias}/posts?`"></CardList>
     </div>
    </div>
 
@@ -12,10 +13,11 @@
 
 import Navbar from "@/components/Navbar";
 import ProfileHeader from "@/components/user/ProfileHeader";
+import CardList from "@/components/CardList";
 
 export default {
   name: "UserProfile",
-  components: {Navbar, ProfileHeader},
+  components: {CardList, Navbar, ProfileHeader},
   data() {
     return {
       alias: "",
@@ -102,7 +104,7 @@ export default {
       return cookie.split("=")[1];
     },
   },
-  mounted() {
+  created() {
     this.alias = this.$route.params.user;
     this.loadUserData(this.alias);
   }
