@@ -3,6 +3,11 @@
 //!
 //! - Providing a fast and reliable JSON API
 //! - Serving a website written in [Vue.js](../disco-vue)
+//! 
+//! # Required services
+//! 
+//! - [Mongodb](https://www.mongodb.com/es)
+//! - [Redis](https://redis.io)
 //!
 //! # API
 //!
@@ -25,12 +30,16 @@
 //!
 //! ```bash
 //! export MONGODB_URI="mongodb://<username>:<password>@<ip>:<port>/"
+//! export REDIS_URI="redis://<username>:<password>@<ip>:<port>/"
 //! ```
 //!
 //! 4. Copy your static website to `static/`
 //! ```bash
 //! cp <static> static/
 //! ```
+//! 
+//! > If you don't have any website, just create an empty `static/` folder
+//! 
 //!
 //! 5. Build and run
 //!
