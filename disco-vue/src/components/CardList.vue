@@ -7,62 +7,32 @@
 </template>
 
 <script>
-import CardItem from "@/components/CardItem";
+import CardItem from "@/components/card/CardItem";
+
 export default {
   name: "CardList",
   components: {CardItem},
+  props: {
+    queryURL: String,
+  },
   data() {
     return {
-      cardlist: [{
-        id: 0,
-        title: "Killua and Gon",
-        caption: "Daichi wo fumishimete kimi wa mezameteiku Tenshi no hohoemi de tsuredashite!",
-        author_id: "Carlos",
-        photo_path: require("../assets/sample-image.png"),
-        audio_path: ""
-      },
-      {
-        id: 1,
-        title: "Only Killua",
-        caption: "aaaaaaaaaaa sisisisisisiis siisi sisi",
-        author_id: "Altair",
-        photo_path: require("../assets/sample-image-2.png"),
-        audio_path: ""
-      },
-      {
-        id: 2,
-        title: "Wing te amo",
-        caption: "te amo",
-        author_id: "Pito",
-        photo_path: require("../assets/sample-image-3.jpg"),
-        audio_path: ""
-      },
-      {
-        id: 3,
-        title: "Killua and Gon",
-        caption: "Daichi wo fumishimete kimi wa mezameteiku Tenshi no hohoemi de tsuredashite!",
-        author_id: "Carlos",
-        photo_path: require("../assets/sample-image.png"),
-        audio_path: ""
-      },
-      {
-        id: 4,
-        title: "Only Killua",
-        caption: "aaaaaaaaaaa sisisisisisiis siisi sisi",
-        author_id: "Altair",
-        photo_path: require("../assets/sample-image-2.png"),
-        audio_path: ""
-      },
-      {
-        id: 5,
-        title: "Wing te amo",
-        caption: "te amo",
-        author_id: "Pito",
-        photo_path: require("../assets/sample-image-3.jpg"),
-        audio_path: ""
-      }]
+      cardlist: [],
     }
-  }
+  },
+  methods: {
+    async getXPosts() {
+      let response = await fetch(this.queryURL +
+          "block=0&date=" + encodeURIComponent((new Date()).toJSON()));
+      if(response.ok) {
+        let server_payload = await response.json();
+        this.cardlist.push(...server_payload);
+      }
+    }
+  },
+  mounted() {
+    this.getXPosts();
+  },
 }
 </script>
 

@@ -8,14 +8,34 @@
 <script>
 export default {
   name: "PlayComp",
+  props: ['audio'],
   data() {
     return {
-      audio_url: "https://example.org/",
+      isPlaying: false,
+      isCreated: false,
+      audio_player: new Audio()
     }
   },
   methods: {
     playAudio() {
-
+      if(this.isCreated) {
+        if(this.isPlaying) {
+          this.audio_player.pause();
+          this.isPlaying = false;
+        } else {
+          this.audio_player.loop;
+          this.audio_player.play();
+          this.isPlaying = true;
+        }
+      } else {
+        if(this.audio) {
+          this.audio_player = new Audio(this.audio);
+          this.audio_player.volume = 0.5;
+          this.audio_player.play();
+          this.isCreated = true;
+          this.isPlaying = true;
+        }
+      }
     }
   }
 }
@@ -29,7 +49,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #444444;
+    color: whitesmoke;
     cursor: pointer;
     transition: 350ms;
   }
@@ -38,7 +58,7 @@ export default {
     position: absolute;
     font-size: 80px;
     border-radius: 50%;
-    box-shadow: rgba(0, 0, 0, 0.66) 0 30px 60px 0, inset #333 0 0 0 5px;
+    box-shadow: rgba(0, 0, 0, 0.66) 0 30px 60px 0, inset #ccc 0 0 0 5px;
     animation: play-reverse 200ms ease-out;
     animation-fill-mode: forwards;
   }

@@ -8,14 +8,14 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link">
+          <RouterLink to="/home" class="nav-link">
             Home
-          </a>
+          </RouterLink>
         </li>
         <li class="nav-item">
-          <a class="nav-link">
-            Explore
-          </a>
+          <RouterLink to="/new-post" class="nav-link">
+            New Post
+          </RouterLink>
         </li>
         <li class="nav-item">
           <div class="search-cont">
@@ -25,8 +25,8 @@
         <li class="nav-item">
           <button class="drop-btn">User</button>
           <div class="drop-content">
-            <a href="#">Profile</a>
-            <a href="#">Settings</a>
+            <RouterLink :to="aliasRoute">Profile</RouterLink>
+            <RouterLink to="/user/sample-user/settings">Settings</RouterLink>
           </div>
         </li>
       </ul>
@@ -36,7 +36,75 @@
 
 <script>
 export default {
-  name: "Navbar"
+  name: "Navbar",
+  data() {
+    return {
+      aliasRoute: ""
+    }
+  },
+  methods: {
+    async loadUserData() {
+      await this.isAuthenticated();
+      let response = await fetch(`/api/users`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer' + this.getCookieValue(this.findCookie("access_token"))
+        }
+      });
+      if(response.ok) {
+        let server_payload = await response.json();
+        this.aliasRoute = "/user/" + server_payload["alias"] + "/profile";
+        console.log(this.aliasRoute)
+      }
+    },
+    async isAuthenticated() {
+      let res = false;
+      let refreshToken = this.findCookie("refresh_token");
+      if(refreshToken) {
+        let accessToken = this.findCookie("access_token");
+        if(!accessToken) {
+          let payload = {
+            refresh_token: this.getCookieValue(refreshToken)
+          }
+          //Fixme: Localhost
+          let response = await fetch("/api/users/auth/login?using=refresh_token", {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+          let server_payload = await response.json();
+          console.log(server_payload);
+          let status_code = response.status;
+          if(status_code >= 200 && status_code <= 299) {
+            let ttl = server_payload.expires_in * 1000;
+            console.log(ttl);
+            let a = "access_token=" + server_payload.access_token + "; SameSite=Lax; expires=" + (new Date(Date.now() + ttl)).toUTCString() + ";";
+            document.cookie = a;
+            console.log(a);
+            console.log(document.cookie);
+
+            res = true;
+          } else {
+            alert(status_code + " error");
+          }
+        } else {
+          res = true;
+        }
+      }
+      return res;
+    },
+    findCookie(name) {
+      return document.cookie.split('; ').find(row => row.startsWith(`${name}=`));
+    },
+    getCookieValue(cookie) {
+      return cookie.split("=")[1];
+    },
+  },
+  mounted() {
+    this.loadUserData();
+  }
 }
 </script>
 
@@ -48,7 +116,6 @@ export default {
   .navbar {
     position: relative;
     display: flex;
-    top: 0;
     height: 4rem;
     width: 100vw;
     background-color: var(--navbar-color);
@@ -67,6 +134,7 @@ export default {
 
   .nav-link {
     display: flex;
+    color: whitesmoke;
     align-items: center;
     justify-content: center;
     height: 4rem;
